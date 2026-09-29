@@ -30,6 +30,9 @@ public class AccountService {
 
     // Tài khoản đại lý phải gắn với một khách hàng nên không tạo ở form quản trị
     private static final String CUSTOMER_ROLE = "CUSTOMER";
+    private static final List<String> WAREHOUSE_ROLES = List.of("WH_MANAGER", "WAREHOUSE");
+    private static final String SALES_REP_ROLE = "SALES_REP";
+    private static final String ADMIN_ROLE = "ADMIN";
 
     private static final Pattern USERNAME_PATTERN = Pattern.compile("[A-Za-z0-9._-]{3,50}");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("[^\\s@]+@[^\\s@]+\\.[^\\s@]+");
@@ -87,6 +90,11 @@ public class AccountService {
         validateFullName(form.getFullName(), errors);
         validateEmail(form.getEmail(), account.getId(), errors);
         validateContactAndAssignments(form, account.hasCustomerRole(), errors);
+        // S1-09: tránh trường hợp hệ thống không còn ai quản trị được
+        if (account.getId() == actorUserId && account.getForm().hasRole(ADMIN_ROLE) && !form.hasRole(ADMIN_ROLE)
+                && !errors.containsKey("roleCodes")) {
+            errors.put("roleCodes", "Không thể tự thu hồi vai trò Quản trị hệ thống của chính mình.");
+        }
         return errors;
     }
 
@@ -108,11 +116,20 @@ public class AccountService {
             errors.put("roleCodes", "Vai trò không hợp lệ.");
         }
 
-        if (form.getWarehouseId() != null && !containsId(getWarehouses(), form.getWarehouseId())) {
+        boolean needsWarehouse = form.getRoleCodes().stream().anyMatch(WAREHOUSE_ROLES::contains);
+        if (form.getWarehouseId() == null) {
+            if (needsWarehouse) {
+                errors.put("warehouseId", "Vui lòng chọn kho phụ trách.");
+            }
+        } else if (!containsId(getWarehouses(), form.getWarehouseId())) {
             errors.put("warehouseId", "Kho không hợp lệ.");
         }
 
-        if (form.getRegionId() != null && !containsId(getRegions(), form.getRegionId())) {
+        if (form.getRegionId() == null) {
+            if (form.hasRole(SALES_REP_ROLE)) {
+                errors.put("regionId", "Vui lòng chọn địa bàn phụ trách.");
+            }
+        } else if (!containsId(getRegions(), form.getRegionId())) {
             errors.put("regionId", "Địa bàn không hợp lệ.");
         }
     }

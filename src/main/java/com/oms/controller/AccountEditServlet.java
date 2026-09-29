@@ -2,7 +2,10 @@ package com.oms.controller;
 
 import com.oms.model.AccountForm;
 import com.oms.model.EditableAccount;
+import com.oms.model.SessionUser;
+import com.oms.security.SessionRegistry;
 import com.oms.service.AccountService;
+import com.oms.service.AuthService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -21,6 +24,7 @@ public class AccountEditServlet extends HttpServlet {
     public static final String FLASH_MESSAGE = "flashMessage";
 
     private final AccountService accountService = new AccountService();
+    private final AuthService authService = new AuthService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -59,6 +63,11 @@ public class AccountEditServlet extends HttpServlet {
             if (errors.isEmpty()) {
                 try {
                     accountService.update(account, form, activate, actorUserId, request.getRemoteAddr());
+                    // Vai trò/kho/địa bàn mới có hiệu lực ngay với các phiên đang đăng nhập của tài khoản này
+                    SessionUser refreshed = authService.loadSessionUser(account.getId());
+                    if (refreshed != null) {
+                        SessionRegistry.replaceUser(refreshed);
+                    }
                     String message = activate
                             ? "Đã cập nhật và kích hoạt tài khoản " + account.getUsername() + "."
                             : "Đã cập nhật tài khoản " + account.getUsername() + ".";
