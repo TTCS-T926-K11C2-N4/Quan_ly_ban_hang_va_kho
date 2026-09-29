@@ -1,14 +1,18 @@
 package com.oms.service;
 
+import com.oms.dao.AuditLogDao;
 import com.oms.dao.PermissionDao;
 import com.oms.dao.SystemSettingDao;
 import com.oms.dao.UserDao;
+import com.oms.model.AuditLogEntry;
 import com.oms.model.LoginAccount;
 import com.oms.model.LoginResult;
 import com.oms.model.SessionUser;
 import com.oms.security.UnknownLoginAttempts;
+import com.oms.util.DbConnection;
 import com.oms.util.PasswordUtil;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 // Đăng nhập (S1-01), đổi mật khẩu (S1-04), quên và đặt lại mật khẩu qua email (S1-03)
@@ -24,6 +28,7 @@ public class AuthService {
     private final UserDao userDao = new UserDao();
     private final PermissionDao permissionDao = new PermissionDao();
     private final SystemSettingDao settingDao = new SystemSettingDao();
+    private final AuditLogDao auditLogDao = new AuditLogDao();
 
     // Tên đăng nhập không tồn tại đi qua đúng các bước như tài khoản thật (kiểm khóa tạm, chạy bcrypt, đếm số lần
     // sai) để thông báo và thời gian phản hồi không để lộ tài khoản có tồn tại hay không (S1-01)
@@ -67,5 +72,55 @@ public class AuthService {
 
     public SessionUser loadSessionUser(long userId) throws SQLException {
         return userDao.findSessionUser(userId, permissionDao.findCodesByUserId(userId));
+    }
+
+    // Trả về thông báo lỗi đầu tiên; null nếu hợp lệ. Câu chữ khớp change-password.js.
+    public String validateNewPassword(String newPassword, String confirmPassword) {
+        if (newPassword == null || newPassword.isEmpty()) {
+            return "Vui lòng nhập mật khẩu mới.";
+        }
+        if (!PasswordUtil.meetsPolicy(newPassword)) {
+            return "Mật khẩu mới phải có 8–64 ký tự, gồm cả chữ và số.";
+        }
+        if (confirmPassword == null || confirmPassword.isEmpty()) {
+            return "Vui lòng xác nhận mật khẩu mới.";
+        }
+        if (!confirmPassword.equals(newPassword)) {
+            return "Mật khẩu xác nhận không khớp.";
+        }
+        return null;
+    }
+
+    // Trả về thông báo lỗi; null nếu đổi thành công
+    public String changePassword(long userId, String currentPassword, String newPassword, String confirmPassword,
+                                 String ipAddress) throws SQLException {
+        if (currentPassword == null || currentPassword.isEmpty()) {
+            return "Vui lòng nhập mật khẩu hiện tại.";
+        }
+        String error = validateNewPassword(newPassword, confirmPassword);
+        if (error != null) {
+            return error;
+        }
+        if (!PasswordUtil.matches(currentPassword, userDao.findPasswordHash(userId))) {
+            return "Mật khẩu hiện tại không đúng.";
+        }
+        if (newPassword.equals(currentPassword)) {
+            return "Mật khẩu mới phải khác mật khẩu hiện tại.";
+        }
+
+        String passwordHash = PasswordUtil.hash(newPassword);
+        try (Connection connection = DbConnection.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                userDao.updatePassword(connection, userId, passwordHash);
+                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.PASSWORD_CHANGE, null, null,
+                        ipAddress);
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        }
+        return null;
     }
 }

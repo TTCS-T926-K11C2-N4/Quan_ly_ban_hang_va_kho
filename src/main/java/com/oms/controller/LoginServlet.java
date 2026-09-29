@@ -85,7 +85,8 @@ public class LoginServlet extends HttpServlet {
 
         // returnTo do AuthFilter lưu (luôn là đường dẫn trong ứng dụng) nên không bị chuyển hướng ra ngoài
         // Không có returnTo thì vào trang chủ theo vai trò (S1-01)
-        String target = returnTo == null ? user.getHomePath() : returnTo;
+        String target = user.isMustChangePassword() ? "/change-password"
+                : returnTo == null ? user.getHomePath() : returnTo;
         response.sendRedirect(request.getContextPath() + target);
     }
 

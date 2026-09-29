@@ -58,6 +58,12 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // Mật khẩu tạm do quản trị viên cấp: phải đổi trước khi dùng các chức năng khác (S1-04)
+        if (user.isMustChangePassword() && !"/change-password".equals(path)) {
+            response.sendRedirect(contextPath + "/change-password");
+            return;
+        }
+
         String servletName = request.getHttpServletMapping().getServletName();
         if (!CONTAINER_SERVLETS.contains(servletName) && !AccessRules.isAllowed(path, user.getPermissions())) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
