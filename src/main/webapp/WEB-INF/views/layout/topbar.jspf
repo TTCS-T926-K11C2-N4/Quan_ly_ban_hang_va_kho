@@ -1,0 +1,32 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Trang include cần đặt breadcrumbSection và breadcrumbPage --%>
+<header class="app-topbar">
+    <button class="app-topbar__menu-toggle" type="button" id="sidebar-toggle"
+            aria-controls="app-sidebar" aria-expanded="false" aria-label="Mở menu">
+        <span class="app-topbar__menu-bar"></span>
+        <span class="app-topbar__menu-bar"></span>
+        <span class="app-topbar__menu-bar"></span>
+    </button>
+
+    <nav class="app-breadcrumb" aria-label="Breadcrumb">
+        <ol class="app-breadcrumb__list">
+            <li><c:out value="${breadcrumbSection}"/></li>
+            <li aria-current="page"><c:out value="${breadcrumbPage}"/></li>
+        </ol>
+    </nav>
+
+    <form class="app-search" id="global-search-form" action="<c:url value='/search'/>" method="get" role="search">
+        <label class="visually-hidden" for="keyword">Tìm kiếm</label>
+        <img class="app-search__icon" src="<c:url value='/assets/img/icons/search.svg'/>" alt="" width="20" height="20">
+        <input class="app-search__input" type="search" id="keyword" name="keyword"
+               value="<c:out value='${param.keyword}'/>" placeholder="Tìm kiếm..." maxlength="100">
+    </form>
+
+    <button class="app-topbar__notification" type="button" id="notification-button"
+            aria-label="Thông báo${unreadNotificationCount > 0 ? ' (có thông báo mới)' : ''}">
+        <img src="<c:url value='/assets/img/icons/bell.svg'/>" alt="" width="24" height="24">
+        <c:if test="${unreadNotificationCount > 0}">
+            <span class="app-topbar__notification-dot" aria-hidden="true"></span>
+        </c:if>
+    </button>
+</header>
