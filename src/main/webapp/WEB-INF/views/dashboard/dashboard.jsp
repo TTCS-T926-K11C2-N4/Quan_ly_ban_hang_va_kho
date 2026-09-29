@@ -1,0 +1,154 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<c:set var="activeMenu" value="dashboard"/>
+<c:set var="breadcrumbSection" value="Tổng quan"/>
+<c:set var="breadcrumbPage" value="Bảng điều khiển"/>
+<fmt:setLocale value="vi_VN"/>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tổng quan hệ thống | Hệ thống quản lý bán hàng &amp; kho</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="<c:url value='/assets/css/app.css'/>">
+    <link rel="stylesheet" href="<c:url value='/assets/css/dashboard.css'/>">
+</head>
+<body class="app-page">
+    <%@ include file="/WEB-INF/views/layout/sidebar.jspf" %>
+
+    <div class="app-shell">
+        <%@ include file="/WEB-INF/views/layout/topbar.jspf" %>
+
+        <main class="app-content">
+            <header class="page-header">
+                <h1 class="page-header__title">Tổng quan hệ thống</h1>
+                <p class="page-header__subtitle">Theo dõi nhanh hoạt động bán hàng và kho hôm nay.</p>
+            </header>
+
+            <section class="summary-grid" aria-label="Chỉ số hôm nay">
+                <article class="summary-card">
+                    <span class="summary-card__icon tone--blue" aria-hidden="true">₫</span>
+                    <div class="summary-card__body">
+                        <div>
+                            <p class="summary-card__label">Doanh thu hôm nay</p>
+                            <p class="summary-card__value"><fmt:formatNumber value="${summary.todayRevenue}" maxFractionDigits="0"/> ₫</p>
+                        </div>
+                        <span class="badge tone--blue"><fmt:formatNumber value="${summary.revenueChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</span>
+                    </div>
+                </article>
+
+                <article class="summary-card">
+                    <span class="summary-card__icon tone--teal" aria-hidden="true">#</span>
+                    <div class="summary-card__body">
+                        <div>
+                            <p class="summary-card__label">Đơn hàng</p>
+                            <p class="summary-card__value"><fmt:formatNumber value="${summary.todayOrderCount}"/></p>
+                        </div>
+                        <span class="badge tone--teal"><fmt:formatNumber value="${summary.orderChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</span>
+                    </div>
+                </article>
+
+                <article class="summary-card">
+                    <span class="summary-card__icon tone--amber" aria-hidden="true">!</span>
+                    <div class="summary-card__body">
+                        <div>
+                            <p class="summary-card__label">Sản phẩm sắp hết</p>
+                            <p class="summary-card__value"><fmt:formatNumber value="${summary.lowStockProductCount}"/></p>
+                        </div>
+                        <c:if test="${summary.lowStockProductCount > 0}">
+                            <span class="badge tone--amber">Cần xử lý</span>
+                        </c:if>
+                    </div>
+                </article>
+            </section>
+
+            <div class="dashboard-grid">
+                <section class="panel panel--orders" aria-labelledby="recent-orders-title">
+                    <header class="panel__header">
+                        <h2 class="panel__title" id="recent-orders-title">Đơn hàng gần đây</h2>
+                        <a class="panel__link" id="view-all-orders-link" href="<c:url value='/orders'/>">Xem tất cả</a>
+                    </header>
+                    <div class="table-scroll">
+                        <table class="data-table data-table--recent-orders">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Mã đơn</th>
+                                    <th scope="col">Khách hàng</th>
+                                    <th scope="col">Trạng thái</th>
+                                    <th scope="col">Tổng tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="order" items="${recentOrders}">
+                                    <tr>
+                                        <td class="data-table__code"><c:out value="${order.code}"/></td>
+                                        <td><c:out value="${order.customerName}"/></td>
+                                        <td><c:out value="${order.statusLabel}"/></td>
+                                        <td><fmt:formatNumber value="${order.totalAmount}" maxFractionDigits="0"/> ₫</td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <div class="dashboard-grid__side">
+                    <%-- S1-06: chỉ hiện thao tác người dùng có quyền làm --%>
+                    <c:set var="canCreateOrder" value="${currentUser.can('ORDER_MANAGE')}"/>
+                    <c:set var="canStockIn" value="${currentUser.can('INVENTORY_MANAGE')}"/>
+                    <c:set var="canCreateAccount" value="${currentUser.can('USER_MANAGE')}"/>
+                    <c:if test="${canCreateOrder or canStockIn or canCreateAccount}">
+                    <section class="panel panel--compact" aria-labelledby="quick-actions-title">
+                        <h2 class="panel__title" id="quick-actions-title">Thao tác nhanh</h2>
+                        <ul class="quick-actions">
+                            <c:if test="${canCreateOrder}">
+                            <li>
+                                <a class="quick-action tone--light-blue" id="quick-create-order" href="<c:url value='/orders/new'/>">
+                                    Tạo đơn hàng<span class="quick-action__arrow" aria-hidden="true">→</span>
+                                </a>
+                            </li>
+                            </c:if>
+                            <c:if test="${canStockIn}">
+                            <li>
+                                <a class="quick-action tone--light-green" id="quick-stock-in" href="<c:url value='/warehouse/receipts/new'/>">
+                                    Nhập kho<span class="quick-action__arrow" aria-hidden="true">→</span>
+                                </a>
+                            </li>
+                            </c:if>
+                            <c:if test="${canCreateAccount}">
+                            <li>
+                                <a class="quick-action tone--light-violet" id="quick-create-account" href="<c:url value='/accounts/new'/>">
+                                    Thêm tài khoản<span class="quick-action__arrow" aria-hidden="true">→</span>
+                                </a>
+                            </li>
+                            </c:if>
+                        </ul>
+                    </section>
+                    </c:if>
+
+                    <section class="panel panel--compact" aria-labelledby="access-scope-title">
+                        <h2 class="panel__title" id="access-scope-title">Phạm vi truy cập</h2>
+                        <div class="access-scope">
+                            <img class="access-scope__icon" src="<c:url value='/assets/img/icons/shield.svg'/>" alt="" width="24" height="24">
+                            <div>
+                                <p class="access-scope__role">Vai trò: <c:out value="${currentUser.roleName}"/></p>
+                                <p class="access-scope__area">Kho / địa bàn: <c:out value="${empty currentUser.scope ? 'Chưa gắn kho hoặc địa bàn' : currentUser.scope}"/></p>
+                            </div>
+                        </div>
+                        <p class="access-scope__note">
+                            Menu được hiển thị theo đúng quyền của tài khoản.<br>
+                            Các chức năng không có quyền sẽ được ẩn hoàn toàn.
+                        </p>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="<c:url value='/assets/js/app.js'/>"></script>
+</body>
+</html>

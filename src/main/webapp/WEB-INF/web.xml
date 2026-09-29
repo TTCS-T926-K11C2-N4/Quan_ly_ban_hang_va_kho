@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <!-- Thứ tự filter-mapping là thứ tự chạy: đặt UTF-8 trước khi kiểm đăng nhập/quyền -->
+    <filter>
+        <filter-name>EncodingFilter</filter-name>
+        <filter-class>com.oms.filter.EncodingFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>AuthFilter</filter-name>
+        <filter-class>com.oms.filter.AuthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>EncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <session-config>
+        <!-- Phiên hết hạn sau 30 phút không hoạt động; mỗi request lại gia hạn thêm 30 phút (S1-02) -->
+        <session-timeout>30</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+        </cookie-config>
+        <!-- Không để session id lộ trên URL (;jsessionid=...) -->
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
+
+    <!-- Mọi lỗi (403, 404, 500, exception...) hiện trang lỗi chung của ứng dụng (S1-07) -->
+    <error-page>
+        <location>/error</location>
+    </error-page>
+</web-app>

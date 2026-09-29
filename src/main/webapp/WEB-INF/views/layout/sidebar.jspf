@@ -1,0 +1,86 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Trang include cần đặt activeMenu: dashboard | accounts | sales | products | warehouse | reports.
+     S1-06: mục menu chỉ hiện khi có quyền xem module đó; quyền còn được kiểm lại ở AuthFilter. --%>
+<aside class="app-sidebar" id="app-sidebar">
+    <div class="app-sidebar__brand">
+        <img class="app-sidebar__logo" src="<c:url value='/assets/img/logo.png'/>" alt="" width="63" height="63">
+        <div>
+            <p class="app-sidebar__brand-title">BÁN HÀNG &amp; KHO</p>
+            <p class="app-sidebar__brand-subtitle">Hệ thống quản lý</p>
+        </div>
+    </div>
+
+    <nav class="app-menu" aria-labelledby="app-menu-title">
+        <p class="app-menu__title" id="app-menu-title">MENU CHỨC NĂNG</p>
+        <ul class="app-menu__list">
+            <li>
+                <a class="app-menu__link${activeMenu == 'dashboard' ? ' app-menu__link--active' : ''}" id="menu-dashboard"
+                   href="<c:url value='${currentUser.homePath}'/>"${activeMenu == 'dashboard' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--dashboard" aria-hidden="true"></span>${currentUser.customer ? 'Trang chủ' : 'Tổng quan'}
+                </a>
+            </li>
+            <c:if test="${currentUser.can('USER_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'accounts' ? ' app-menu__link--active' : ''}" id="menu-accounts"
+                   href="<c:url value='/accounts'/>"${activeMenu == 'accounts' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--accounts" aria-hidden="true"></span>Quản lý tài khoản
+                </a>
+            </li>
+            </c:if>
+            <c:if test="${currentUser.can('ORDER_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'sales' ? ' app-menu__link--active' : ''}" id="menu-sales"
+                   href="<c:url value='/sales'/>"${activeMenu == 'sales' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Bán hàng
+                </a>
+            </li>
+            </c:if>
+            <c:if test="${currentUser.can('PRODUCT_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'products' ? ' app-menu__link--active' : ''}" id="menu-products"
+                   href="<c:url value='/products'/>"${activeMenu == 'products' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--products" aria-hidden="true"></span>Sản phẩm
+                </a>
+            </li>
+            </c:if>
+            <c:if test="${currentUser.can('INVENTORY_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'warehouse' ? ' app-menu__link--active' : ''}" id="menu-warehouse"
+                   href="<c:url value='/warehouse'/>"${activeMenu == 'warehouse' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--warehouse" aria-hidden="true"></span>Kho hàng
+                </a>
+            </li>
+            </c:if>
+            <c:if test="${currentUser.can('REPORT_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'reports' ? ' app-menu__link--active' : ''}" id="menu-reports"
+                   href="<c:url value='/reports'/>"${activeMenu == 'reports' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--reports" aria-hidden="true"></span>Báo cáo
+                </a>
+            </li>
+            </c:if>
+        </ul>
+    </nav>
+
+    <c:if test="${not empty currentUser}">
+        <div class="app-user">
+            <div class="app-user__info">
+                <span class="app-user__avatar" aria-hidden="true"><c:out value="${currentUser.initials}"/></span>
+                <div>
+                    <p class="app-user__name"><c:out value="${currentUser.fullName}"/></p>
+                    <p class="app-user__role"><c:out value="${currentUser.roleName}"/></p>
+                    <c:if test="${not empty currentUser.scope}">
+                        <p class="app-user__scope"><c:out value="${currentUser.scope}"/></p>
+                    </c:if>
+                </div>
+            </div>
+            <div class="app-user__actions">
+                <a class="app-user__action" id="change-password-link" href="<c:url value='/change-password'/>">Đổi mật khẩu</a>
+                <form action="<c:url value='/logout'/>" method="post">
+                    <button class="app-user__action" type="submit" id="logout-button">Đăng xuất</button>
+                </form>
+            </div>
+        </div>
+    </c:if>
+</aside>
+<div class="app-sidebar-backdrop" id="app-sidebar-backdrop" hidden></div>
