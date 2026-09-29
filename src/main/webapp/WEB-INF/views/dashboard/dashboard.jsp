@@ -97,26 +97,38 @@
                 </section>
 
                 <div class="dashboard-grid__side">
+                    <%-- S1-06: chỉ hiện thao tác người dùng có quyền làm --%>
+                    <c:set var="canCreateOrder" value="${currentUser.can('ORDER_MANAGE')}"/>
+                    <c:set var="canStockIn" value="${currentUser.can('INVENTORY_MANAGE')}"/>
+                    <c:set var="canCreateAccount" value="${currentUser.can('USER_MANAGE')}"/>
+                    <c:if test="${canCreateOrder or canStockIn or canCreateAccount}">
                     <section class="panel panel--compact" aria-labelledby="quick-actions-title">
                         <h2 class="panel__title" id="quick-actions-title">Thao tác nhanh</h2>
                         <ul class="quick-actions">
+                            <c:if test="${canCreateOrder}">
                             <li>
                                 <a class="quick-action tone--light-blue" id="quick-create-order" href="<c:url value='/orders/new'/>">
                                     Tạo đơn hàng<span class="quick-action__arrow" aria-hidden="true">→</span>
                                 </a>
                             </li>
+                            </c:if>
+                            <c:if test="${canStockIn}">
                             <li>
                                 <a class="quick-action tone--light-green" id="quick-stock-in" href="<c:url value='/warehouse/receipts/new'/>">
                                     Nhập kho<span class="quick-action__arrow" aria-hidden="true">→</span>
                                 </a>
                             </li>
+                            </c:if>
+                            <c:if test="${canCreateAccount}">
                             <li>
                                 <a class="quick-action tone--light-violet" id="quick-create-account" href="<c:url value='/accounts/new'/>">
                                     Thêm tài khoản<span class="quick-action__arrow" aria-hidden="true">→</span>
                                 </a>
                             </li>
+                            </c:if>
                         </ul>
                     </section>
+                    </c:if>
 
                     <section class="panel panel--compact" aria-labelledby="access-scope-title">
                         <h2 class="panel__title" id="access-scope-title">Phạm vi truy cập</h2>

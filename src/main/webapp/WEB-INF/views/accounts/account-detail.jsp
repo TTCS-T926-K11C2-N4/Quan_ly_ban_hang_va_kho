@@ -30,8 +30,8 @@
                     <h1 class="page-header__title">Chi tiết tài khoản</h1>
                     <p class="page-header__subtitle">Xem thông tin, vai trò và trạng thái hoạt động của tài khoản.</p>
                 </div>
-                <%-- Không tự khóa tài khoản của chính mình --%>
-                <c:if test="${account.id != currentUser.id}">
+                <%-- Người chỉ có quyền xem (vd Quản lý kinh doanh) không thấy nút; không tự khóa chính mình --%>
+                <c:if test="${currentUser.can('USER_MANAGE') and account.id != currentUser.id}">
                 <c:choose>
                     <c:when test="${account.status.locked}">
                         <a class="button button--success" id="unlock-account-link"
