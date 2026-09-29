@@ -31,6 +31,11 @@ public class LoginServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + current.getHomePath());
             return;
         }
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute(RegisterServlet.FLASH_REGISTERED) != null) {
+            session.removeAttribute(RegisterServlet.FLASH_REGISTERED);
+            request.setAttribute("success", "Đăng ký thành công. Tài khoản đang chờ quản trị viên duyệt.");
+        }
         Flash.moveToRequest(request, ResetPasswordServlet.FLASH_PASSWORD_RESET, "success");
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
