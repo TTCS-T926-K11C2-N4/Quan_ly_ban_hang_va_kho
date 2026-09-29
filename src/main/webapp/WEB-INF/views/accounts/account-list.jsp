@@ -114,7 +114,21 @@
                                     </td>
                                     <td>
                                         <div class="row-actions">
+                                            <a class="row-actions__link" href="<c:url value='/accounts/view'><c:param name='id' value='${account.id}'/></c:url>">Xem</a>
                                             <a class="row-actions__link" href="<c:url value='/accounts/edit'><c:param name='id' value='${account.id}'/></c:url>">Sửa</a>
+                                            <details class="row-menu">
+                                                <summary class="row-menu__toggle" aria-label="Thao tác khác cho tài khoản ${fn:escapeXml(account.username)}">⋮</summary>
+                                                <div class="row-menu__list">
+                                                    <c:choose>
+                                                        <c:when test="${account.status.locked}">
+                                                            <a class="row-menu__item" href="<c:url value='/accounts/unlock'><c:param name='id' value='${account.id}'/></c:url>">Mở khóa</a>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <a class="row-menu__item row-menu__item--danger" href="<c:url value='/accounts/lock'><c:param name='id' value='${account.id}'/></c:url>">Khóa tài khoản</a>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                            </details>
                                         </div>
                                     </td>
                                 </tr>
