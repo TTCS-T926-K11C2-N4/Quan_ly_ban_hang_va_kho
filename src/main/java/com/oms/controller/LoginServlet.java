@@ -31,6 +31,7 @@ public class LoginServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + current.getHomePath());
             return;
         }
+        Flash.moveToRequest(request, ResetPasswordServlet.FLASH_PASSWORD_RESET, "success");
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 

@@ -60,6 +60,17 @@ public class UserDao {
         }
     }
 
+    public Long findActiveIdByEmail(String email) throws SQLException {
+        String sql = "SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND status = 'ACTIVE'";
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, email);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getLong(1) : null;
+            }
+        }
+    }
+
     public String findPasswordHash(long userId) throws SQLException {
         try (Connection connection = DbConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(
