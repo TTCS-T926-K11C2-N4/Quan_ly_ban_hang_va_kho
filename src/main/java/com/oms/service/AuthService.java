@@ -4,13 +4,16 @@ import com.oms.dao.AuditLogDao;
 import com.oms.dao.PermissionDao;
 import com.oms.dao.SystemSettingDao;
 import com.oms.dao.UserDao;
+import com.oms.dao.UserTokenDao;
 import com.oms.model.AuditLogEntry;
 import com.oms.model.LoginAccount;
 import com.oms.model.LoginResult;
 import com.oms.model.SessionUser;
 import com.oms.security.UnknownLoginAttempts;
 import com.oms.util.DbConnection;
+import com.oms.util.MailSender;
 import com.oms.util.PasswordUtil;
+import com.oms.util.TokenUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,6 +24,7 @@ public class AuthService {
     // Giá trị dùng khi system_settings chưa có khóa tương ứng
     private static final int DEFAULT_MAX_FAILED_LOGINS = 5;
     private static final int DEFAULT_LOCK_MINUTES = 15;
+    private static final int DEFAULT_RESET_TOKEN_MINUTES = 30;
 
     // Tài khoản không tồn tại vẫn chạy bcrypt một lần để thời gian phản hồi không để lộ tài khoản có tồn tại hay không
     private static final String DUMMY_HASH = PasswordUtil.hash("khong-phai-mat-khau-that");
@@ -28,6 +32,7 @@ public class AuthService {
     private final UserDao userDao = new UserDao();
     private final PermissionDao permissionDao = new PermissionDao();
     private final SystemSettingDao settingDao = new SystemSettingDao();
+    private final UserTokenDao userTokenDao = new UserTokenDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
 
     // Tên đăng nhập không tồn tại đi qua đúng các bước như tài khoản thật (kiểm khóa tạm, chạy bcrypt, đếm số lần
@@ -122,5 +127,66 @@ public class AuthService {
             }
         }
         return null;
+    }
+
+    // Email không tồn tại hoặc tài khoản không hoạt động thì im lặng bỏ qua: màn hình vẫn báo "đã gửi" như nhau
+    public void requestPasswordReset(String email, String resetPageUrl) throws SQLException {
+        Long userId = userDao.findActiveIdByEmail(email);
+        if (userId == null) {
+            return;
+        }
+        int validMinutes = settingDao.getInt("auth.reset_token_minutes", DEFAULT_RESET_TOKEN_MINUTES);
+        String token = TokenUtil.generate();
+        try (Connection connection = DbConnection.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                userTokenDao.expireUnusedPasswordResets(connection, userId);
+                userTokenDao.insertPasswordReset(connection, userId, TokenUtil.sha256Hex(token), validMinutes);
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        }
+
+        String link = resetPageUrl + "?token=" + token;
+        String body = "Chào bạn,\n\n"
+                + "Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn trên Hệ thống quản lý bán hàng & kho.\n"
+                + "Mở liên kết dưới đây để đặt mật khẩu mới. Liên kết có hiệu lực trong " + validMinutes
+                + " phút và chỉ dùng được một lần:\n\n"
+                + link + "\n\n"
+                + "Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này. Mật khẩu hiện tại vẫn giữ nguyên.\n";
+        MailSender.sendAsync(email, "Đặt lại mật khẩu", body);
+    }
+
+    public boolean isResetTokenValid(String token) throws SQLException {
+        return token != null && !token.isEmpty() && userTokenDao.isValidPasswordReset(TokenUtil.sha256Hex(token));
+    }
+
+    // Trả về id tài khoản vừa đặt lại mật khẩu; null nếu liên kết không còn hiệu lực.
+    // Gọi validateNewPassword trước.
+    public Long resetPassword(String token, String newPassword, String ipAddress) throws SQLException {
+        if (token == null || token.isEmpty()) {
+            return null;
+        }
+        String passwordHash = PasswordUtil.hash(newPassword);
+        try (Connection connection = DbConnection.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                Long userId = userTokenDao.consumePasswordReset(connection, TokenUtil.sha256Hex(token));
+                if (userId == null) {
+                    connection.rollback();
+                    return null;
+                }
+                userDao.updatePassword(connection, userId, passwordHash);
+                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.PASSWORD_RESET, null, null,
+                        ipAddress);
+                connection.commit();
+                return userId;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        }
     }
 }
