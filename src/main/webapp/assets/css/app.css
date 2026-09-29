@@ -162,7 +162,7 @@ ol {
 }
 
 .app-menu__link:focus-visible,
-.app-user__logout:focus-visible {
+.app-user__action:focus-visible {
     outline: 2px solid #ffffff;
     outline-offset: 2px;
 }
@@ -236,22 +236,29 @@ ol {
     color: var(--color-sidebar-text);
 }
 
-.app-user__logout {
-    width: 100%;
+.app-user__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin-top: 12px;
-    padding: 10px 0 0;
-    border: 0;
+    padding-top: 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.app-user__action {
+    padding: 0;
+    border: 0;
     background: none;
     font: inherit;
     font-size: 12px;
     font-weight: 600;
     color: var(--color-sidebar-text);
-    text-align: left;
+    text-decoration: none;
     cursor: pointer;
 }
 
-.app-user__logout:hover {
+.app-user__action:hover {
     color: #ffffff;
 }
 

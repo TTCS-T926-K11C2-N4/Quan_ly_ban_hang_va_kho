@@ -4,6 +4,8 @@
 <c:set var="activeMenu" value="accounts"/>
 <c:set var="breadcrumbSection" value="Tổng quan"/>
 <c:set var="breadcrumbPage" value="Quản lý tài khoản"/>
+<%-- Người chỉ có quyền xem (vd Quản lý kinh doanh) không thấy nút tạo, sửa, khóa --%>
+<c:set var="canManage" value="${currentUser.can('USER_MANAGE')}"/>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -76,9 +78,11 @@
                     </div>
                 </div>
 
-                <a class="account-filters__create" id="create-account-link" href="<c:url value='/accounts/new'/>">
-                    <span aria-hidden="true">+</span> Tạo tài khoản
-                </a>
+                <c:if test="${canManage}">
+                    <a class="account-filters__create" id="create-account-link" href="<c:url value='/accounts/new'/>">
+                        <span aria-hidden="true">+</span> Tạo tài khoản
+                    </a>
+                </c:if>
             </form>
 
             <section class="account-table-card" aria-label="Danh sách tài khoản">
@@ -115,6 +119,7 @@
                                     <td>
                                         <div class="row-actions">
                                             <a class="row-actions__link" href="<c:url value='/accounts/view'><c:param name='id' value='${account.id}'/></c:url>">Xem</a>
+                                            <c:if test="${canManage}">
                                             <a class="row-actions__link" href="<c:url value='/accounts/edit'><c:param name='id' value='${account.id}'/></c:url>">Sửa</a>
                                             <details class="row-menu">
                                                 <summary class="row-menu__toggle" aria-label="Thao tác khác cho tài khoản ${fn:escapeXml(account.username)}">⋮</summary>
@@ -129,6 +134,7 @@
                                                     </c:choose>
                                                 </div>
                                             </details>
+                                            </c:if>
                                         </div>
                                     </td>
                                 </tr>
