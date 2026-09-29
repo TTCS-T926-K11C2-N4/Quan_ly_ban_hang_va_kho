@@ -5,6 +5,7 @@ import com.oms.dao.RegionDao;
 import com.oms.dao.RoleDao;
 import com.oms.dao.UserDao;
 import com.oms.dao.WarehouseDao;
+import com.oms.model.AccountDetail;
 import com.oms.model.AccountFilter;
 import com.oms.model.AccountForm;
 import com.oms.model.AccountListItem;
@@ -39,6 +40,8 @@ public class AccountService {
     private static final Pattern PHONE_PATTERN = Pattern.compile("\\d{10}");
     private static final int NAME_MAX_LENGTH = 150;
     private static final int EMAIL_MAX_LENGTH = 150;
+    public static final int LOCK_REASON_MIN_LENGTH = 10;
+    private static final int LOCK_REASON_MAX_LENGTH = 1000;
 
     private final UserDao userDao = new UserDao();
     private final RoleDao roleDao = new RoleDao();
@@ -240,6 +243,95 @@ public class AccountService {
                 throw e;
             }
         }
+    }
+
+    public AccountDetail getDetail(long userId) throws SQLException {
+        return userDao.findDetail(userId, auditLogDao.findLatestForUser(userId));
+    }
+
+    public List<SelectOption> getHandoverCandidates(long userId) throws SQLException {
+        return userDao.findHandoverCandidates(userId);
+    }
+
+    public Map<String, String> validateLock(AccountDetail account, String reason, Long handoverUserId,
+                                            List<SelectOption> candidates, long actorUserId) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        if (account.getId() == actorUserId) {
+            errors.put("lockReason", "Không thể tự khóa tài khoản của chính mình.");
+            return errors;
+        }
+        if (reason == null) {
+            errors.put("lockReason", "Vui lòng nhập lý do khóa.");
+        } else if (reason.length() < LOCK_REASON_MIN_LENGTH) {
+            errors.put("lockReason", "Lý do khóa tối thiểu " + LOCK_REASON_MIN_LENGTH + " ký tự.");
+        } else if (reason.length() > LOCK_REASON_MAX_LENGTH) {
+            errors.put("lockReason", "Lý do khóa tối đa " + LOCK_REASON_MAX_LENGTH + " ký tự.");
+        }
+
+        if (account.isHandoverRequired()) {
+            if (candidates.isEmpty()) {
+                errors.put("handoverUserId", "Chưa có nhân viên kinh doanh nào khác đang hoạt động để nhận bàn giao.");
+            } else if (handoverUserId == null) {
+                errors.put("handoverUserId", "Vui lòng chọn người nhận bàn giao.");
+            } else if (!containsId(candidates, handoverUserId)) {
+                errors.put("handoverUserId", "Người nhận bàn giao không hợp lệ.");
+            }
+        }
+        return errors;
+    }
+
+    // Khóa + bàn giao địa bàn/đại lý + thu hồi token + ghi nhật ký trong một transaction.
+    // Trả về false nếu tài khoản đã bị khóa trước đó.
+    public boolean lock(AccountDetail account, String reason, Long handoverUserId, long actorUserId, String ipAddress)
+            throws SQLException {
+        try (Connection connection = DbConnection.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                long userId = account.getId();
+                if (!userDao.lock(connection, userId, reason)) {
+                    connection.rollback();
+                    return false;
+                }
+                String newValues = null;
+                if (account.isHandoverRequired()) {
+                    userDao.transferRegions(connection, userId, handoverUserId);
+                    userDao.transferCustomers(connection, userId, handoverUserId, reason);
+                    newValues = "{\"handoverToUserId\":" + handoverUserId + "}";
+                }
+                userDao.revokeRefreshTokens(connection, userId);
+                auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_LOCK, newValues, reason,
+                        ipAddress);
+                connection.commit();
+                return true;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        }
+    }
+
+    // Trả về false nếu tài khoản không còn bị khóa (vd người khác vừa mở khóa)
+    public boolean unlock(AccountDetail account, long actorUserId, String ipAddress) throws SQLException {
+        try (Connection connection = DbConnection.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                if (!userDao.unlock(connection, account.getId())) {
+                    connection.rollback();
+                    return false;
+                }
+                auditLogDao.insertUserAction(connection, actorUserId, account.getId(), AuditLogEntry.USER_UNLOCK, null, null,
+                        ipAddress);
+                connection.commit();
+                return true;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        }
+    }
+
+    public boolean lastLockHadHandover(long userId) throws SQLException {
+        return auditLogDao.lastLockHadHandover(userId);
     }
 
     private static void validateFullName(String fullName, Map<String, String> errors) {

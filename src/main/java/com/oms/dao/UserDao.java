@@ -1,10 +1,13 @@
 package com.oms.dao;
 
+import com.oms.model.AccountDetail;
 import com.oms.model.AccountFilter;
 import com.oms.model.AccountForm;
 import com.oms.model.AccountListItem;
+import com.oms.model.AuditLogEntry;
 import com.oms.model.EditableAccount;
 import com.oms.model.LoginAccount;
+import com.oms.model.SelectOption;
 import com.oms.model.AccountStatus;
 import com.oms.model.Role;
 import com.oms.model.SessionUser;
@@ -15,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -243,6 +247,138 @@ public class UserDao {
 
             AccountForm form = new AccountForm(fullName, username, email, phone, roleCodes, warehouseId, regionId);
             return new EditableAccount(userId, status, roleCodes, form);
+        }
+    }
+
+    public AccountDetail findDetail(long userId, AuditLogEntry latestActivity) throws SQLException {
+        String userSql = "SELECT u.full_name, u.username, u.email, u.phone, u.created_at, u.last_login_at, "
+                + DISPLAY_STATUS_SQL + " AS display_status FROM users u WHERE u.id = ?";
+        try (Connection connection = DbConnection.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(userSql)) {
+                statement.setLong(1, userId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) {
+                        return null;
+                    }
+                    List<Role> roles = new ArrayList<>();
+                    try (PreparedStatement roleStatement = connection.prepareStatement(
+                            "SELECT r.code, r.name FROM user_roles ur JOIN roles r ON r.id = ur.role_id"
+                                    + " WHERE ur.user_id = ? ORDER BY r.id")) {
+                        roleStatement.setLong(1, userId);
+                        try (ResultSet roleRows = roleStatement.executeQuery()) {
+                            while (roleRows.next()) {
+                                roles.add(new Role(roleRows.getString("code"), roleRows.getString("name")));
+                            }
+                        }
+                    }
+                    return new AccountDetail(userId,
+                            resultSet.getString("full_name"),
+                            resultSet.getString("username"),
+                            resultSet.getString("email"),
+                            resultSet.getString("phone"),
+                            AccountStatus.fromCode(resultSet.getString("display_status")),
+                            resultSet.getObject("created_at", LocalDateTime.class),
+                            resultSet.getObject("last_login_at", LocalDateTime.class),
+                            roles,
+                            findNames(connection, "SELECT w.name FROM user_warehouses uw"
+                                    + " JOIN warehouses w ON w.id = uw.warehouse_id WHERE uw.user_id = ? ORDER BY w.name", userId),
+                            findNames(connection, "SELECT g.name FROM user_regions ug"
+                                    + " JOIN regions g ON g.id = ug.region_id WHERE ug.user_id = ? ORDER BY g.name", userId),
+                            countCustomers(connection, userId),
+                            latestActivity);
+                }
+            }
+        }
+    }
+
+    // Người nhận bàn giao địa bàn/đại lý: nhân viên kinh doanh đang hoạt động, trừ chính người bị khóa
+    public List<SelectOption> findHandoverCandidates(long excludeUserId) throws SQLException {
+        String sql = "SELECT u.id, u.full_name, r.name AS role_name FROM users u"
+                + " JOIN user_roles ur ON ur.user_id = u.id JOIN roles r ON r.id = ur.role_id"
+                + " WHERE r.code = 'SALES_REP' AND u.status = 'ACTIVE' AND u.id <> ? ORDER BY u.full_name";
+        List<SelectOption> candidates = new ArrayList<>();
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, excludeUserId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    candidates.add(new SelectOption(resultSet.getLong("id"),
+                            resultSet.getString("full_name") + " — " + resultSet.getString("role_name")));
+                }
+            }
+        }
+        return candidates;
+    }
+
+    // Trả về false nếu tài khoản đã bị khóa trước đó (vd hai admin cùng khóa một lúc)
+    public boolean lock(Connection connection, long userId, String reason) throws SQLException {
+        String sql = "UPDATE users SET status = 'LOCKED', lock_reason = ?, updated_at = UTC_TIMESTAMP()"
+                + " WHERE id = ? AND status <> 'LOCKED'";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, reason);
+            statement.setLong(2, userId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    // Mở cả khóa hẳn (LOCKED) lẫn khóa tạm do nhập sai mật khẩu (locked_until); trả về false nếu không có gì để mở
+    public boolean unlock(Connection connection, long userId) throws SQLException {
+        String sql = "UPDATE users SET status = CASE WHEN status = 'LOCKED' THEN 'ACTIVE' ELSE status END,"
+                + " lock_reason = NULL, locked_until = NULL, failed_login_count = 0, updated_at = UTC_TIMESTAMP()"
+                + " WHERE id = ? AND (status = 'LOCKED' OR locked_until > UTC_TIMESTAMP())";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    // Người bị khóa không đăng nhập được nữa nên thu hồi luôn các refresh token còn hiệu lực
+    public void revokeRefreshTokens(Connection connection, long userId) throws SQLException {
+        executeForUser(connection, "UPDATE refresh_tokens SET revoked_at = UTC_TIMESTAMP()"
+                + " WHERE user_id = ? AND revoked_at IS NULL", userId);
+    }
+
+    public void transferRegions(Connection connection, long fromUserId, long toUserId) throws SQLException {
+        // INSERT IGNORE: người nhận có thể đã phụ trách sẵn một số địa bàn này
+        try (PreparedStatement statement = connection.prepareStatement(
+                "INSERT IGNORE INTO user_regions (user_id, region_id)"
+                        + " SELECT ?, region_id FROM user_regions WHERE user_id = ?")) {
+            statement.setLong(1, toUserId);
+            statement.setLong(2, fromUserId);
+            statement.executeUpdate();
+        }
+        deleteRegions(connection, fromUserId);
+    }
+
+    // Ghi customer_assignment_history trước rồi mới đổi sales_rep_id để giữ được người phụ trách cũ
+    public void transferCustomers(Connection connection, long fromUserId, long toUserId, String reason)
+            throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "INSERT INTO customer_assignment_history (customer_id, from_sales_rep_id, to_sales_rep_id, reason, created_at)"
+                        + " SELECT id, ?, ?, ?, UTC_TIMESTAMP() FROM customers WHERE sales_rep_id = ?")) {
+            statement.setLong(1, fromUserId);
+            statement.setLong(2, toUserId);
+            statement.setString(3, reason);
+            statement.setLong(4, fromUserId);
+            statement.executeUpdate();
+        }
+        try (PreparedStatement statement = connection.prepareStatement(
+                "UPDATE customers SET sales_rep_id = ?, version = version + 1, updated_at = UTC_TIMESTAMP()"
+                        + " WHERE sales_rep_id = ?")) {
+            statement.setLong(1, toUserId);
+            statement.setLong(2, fromUserId);
+            statement.executeUpdate();
+        }
+    }
+
+    private int countCustomers(Connection connection, long userId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT COUNT(*) FROM customers WHERE sales_rep_id = ?")) {
+            statement.setLong(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
         }
     }
 
