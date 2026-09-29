@@ -60,6 +60,30 @@ public class UserDao {
         }
     }
 
+    public String findPasswordHash(long userId) throws SQLException {
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT password_hash FROM users WHERE id = ?")) {
+            statement.setLong(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getString(1) : null;
+            }
+        }
+    }
+
+    // Đổi hoặc đặt lại mật khẩu: bỏ luôn yêu cầu đổi mật khẩu tạm và khóa tạm do nhập sai
+    public void updatePassword(Connection connection, long userId, String passwordHash) throws SQLException {
+        String sql = "UPDATE users SET password_hash = ?, password_changed_at = UTC_TIMESTAMP(),"
+                + " must_change_password = false, failed_login_count = 0, locked_until = NULL,"
+                + " updated_at = UTC_TIMESTAMP(), updated_by = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, passwordHash);
+            statement.setLong(2, userId);
+            statement.setLong(3, userId);
+            statement.executeUpdate();
+        }
+    }
+
     // Thông tin hiển thị ở sidebar: tên, các vai trò, kho và địa bàn đang phụ trách
     public SessionUser findSessionUser(long userId, Set<String> permissions) throws SQLException {
         String sql = "SELECT username, full_name, must_change_password FROM users WHERE id = ?";
