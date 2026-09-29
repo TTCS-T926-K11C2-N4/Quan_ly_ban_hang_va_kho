@@ -1,7 +1,9 @@
 package com.oms.controller;
 
+import com.oms.filter.AuthFilter;
 import com.oms.model.LoginResult;
 import com.oms.model.SessionUser;
+import com.oms.security.SessionRegistry;
 import com.oms.service.AuthService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -74,12 +76,16 @@ public class LoginServlet extends HttpServlet {
             throws IOException, SQLException {
         SessionUser user = authService.loadSessionUser(userId);
         HttpSession session = request.getSession();
+        String returnTo = (String) session.getAttribute(AuthFilter.RETURN_TO);
+        session.removeAttribute(AuthFilter.RETURN_TO);
         // Đổi mã phiên sau khi đăng nhập để chống chiếm phiên (session fixation)
         request.changeSessionId();
         session.setAttribute(SessionUser.SESSION_KEY, user);
+        SessionRegistry.register(userId, session);
 
-        // Vào trang chủ theo vai trò (S1-01)
-        String target = user.getHomePath();
+        // returnTo do AuthFilter lưu (luôn là đường dẫn trong ứng dụng) nên không bị chuyển hướng ra ngoài
+        // Không có returnTo thì vào trang chủ theo vai trò (S1-01)
+        String target = returnTo == null ? user.getHomePath() : returnTo;
         response.sendRedirect(request.getContextPath() + target);
     }
 
