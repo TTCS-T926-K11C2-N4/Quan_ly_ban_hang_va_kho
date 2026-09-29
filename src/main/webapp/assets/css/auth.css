@@ -1,0 +1,525 @@
+:root {
+    --color-primary: #2563eb;
+    --color-navy: #1e3a8a;
+    --color-text: #0f172a;
+    --color-text-muted: #475569;
+    --color-placeholder: #94a3b8;
+    --color-border: #e2e8f0;
+    --color-page-bg: #fafbfc;
+    --color-surface: #ffffff;
+    --color-hero-overlay: rgba(30, 58, 138, 0.9);
+    --color-error-bg: #fee2e2;
+    --color-error-border: #f87171;
+    --color-error-text: #b91c1c;
+    --color-error-field: #ef4444;
+    --color-locked-card-bg: #fff2e8;
+    --color-disabled-field-bg: #f5f5f5;
+    --color-disabled-button-bg: #d9d9d9;
+    --color-disabled-button-text: #8c8c8c;
+    --color-success-bg: #f0fdf4;
+    --color-success-border: #bbf7d0;
+    --color-success-text: #15803d;
+    --font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --radius-control: 8px;
+    --radius-card: 20px;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+.auth-page {
+    display: flex;
+    min-height: 100vh;
+    background: var(--color-page-bg);
+    font-family: var(--font-family);
+    color: var(--color-text);
+}
+
+/* Left panel */
+.auth-hero {
+    position: relative;
+    flex: 0 0 min(600px, 41.667%);
+    padding: 64px;
+    overflow: hidden;
+    background:
+        linear-gradient(var(--color-hero-overlay), var(--color-hero-overlay)),
+        url("../img/login-bg.jpg") center / cover no-repeat;
+}
+
+.auth-hero__logo {
+    display: block;
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+}
+
+/* Figma đặt tiêu đề tuyệt đối (left 47, top 295), không theo padding 64 của panel */
+.auth-hero__title {
+    position: absolute;
+    top: 295px;
+    left: 47px;
+    right: 24px;
+    margin: 0;
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #ffffff;
+}
+
+/* Right panel */
+.auth-main {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 80px;
+}
+
+.auth-card {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+    width: 100%;
+    max-width: 480px;
+    padding: 40px;
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    filter: drop-shadow(0 16px 16px rgba(0, 0, 0, 0.03));
+}
+
+.auth-card__header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auth-card--wide {
+    max-width: 600px;
+}
+
+/* Nút mắt ở trang Đăng ký chỉ có icon 20px (trang Đăng nhập có chữ "Hiện" + icon 18px) */
+.form-field__toggle[data-password-toggle] img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Form đăng ký nhiều ô: khoảng cách giữa các ô theo Figma (82px mỗi hàng) */
+.auth-form__fields.auth-form__fields--compact {
+    gap: 10px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.form-check__input {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    background: var(--color-surface) center / 20px 20px no-repeat;
+    appearance: none;
+    cursor: pointer;
+}
+
+.form-check__input:checked {
+    background-image: url("../img/icons/checkbox-check.svg");
+}
+
+.form-check__input:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.form-check--invalid .form-check__input {
+    border: 1.5px solid var(--color-error-field);
+}
+
+.form-check__label {
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.form-check__highlight {
+    color: var(--color-navy);
+}
+
+.auth-form__footer--divided {
+    margin-top: 16px;
+    padding-top: 24px;
+    border-top: 1px solid #cbd5e1;
+}
+
+.auth-card--centered {
+    text-align: center;
+}
+
+.auth-card--centered .auth-card__header {
+    align-items: center;
+}
+
+.auth-card__illustration {
+    display: block;
+    width: 64px;
+    height: 64px;
+}
+
+.auth-card__status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.auth-card__eyebrow,
+.auth-card__title,
+.auth-card__subtitle {
+    margin: 0;
+    line-height: normal;
+}
+
+.auth-card__eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-primary);
+}
+
+.auth-card__title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--color-text);
+}
+
+.auth-card__subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-text-muted);
+}
+
+/* Form */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+}
+
+.auth-form__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.auth-form__error {
+    margin: 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-error-text);
+    background: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
+    border-radius: var(--radius-control);
+}
+
+.auth-form__success {
+    margin: 0;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--color-success-text);
+    background: var(--color-success-bg);
+    border: 1px solid var(--color-success-border);
+    border-radius: var(--radius-control);
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-field__label {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+    color: var(--color-text);
+}
+
+.form-field__control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 48px;
+    padding: 0 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+}
+
+.form-field__control:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Icon là ảnh nền để tự đổi sang bản đỏ khi ô có class --invalid (do JSP hoặc JS gắn) */
+.form-field__icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background: center / 20px 20px no-repeat;
+}
+
+.form-field__icon--user {
+    background-image: url("../img/icons/user.svg");
+}
+
+.form-field__icon--lock {
+    background-image: url("../img/icons/lock-keyhole.svg");
+}
+
+/* Trang Đăng nhập không có icon email nên chưa có bản đỏ riêng: dùng SVG làm mask để tô màu */
+.form-field__icon--email {
+    background-color: var(--color-placeholder);
+    -webkit-mask: url("../img/icons/email.svg") center / 20px 20px no-repeat;
+    mask: url("../img/icons/email.svg") center / 20px 20px no-repeat;
+}
+
+.form-field__control--invalid .form-field__icon--email {
+    background-color: var(--color-error-field);
+}
+
+.form-field__control--invalid .form-field__icon--user {
+    background-image: url("../img/icons/user-error.svg");
+}
+
+.form-field__control--invalid .form-field__icon--lock {
+    background-image: url("../img/icons/lock-keyhole-error.svg");
+}
+
+.form-field__input {
+    flex: 1 1 0;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--color-text);
+}
+
+.form-field__input::placeholder {
+    color: var(--color-placeholder);
+    opacity: 1;
+}
+
+/* Trình duyệt tự làm mờ chữ của ô disabled; Figma giữ chữ màu thường */
+.form-field__input:disabled {
+    color: var(--color-text);
+    -webkit-text-fill-color: var(--color-text);
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+.form-field__control--disabled {
+    background: var(--color-disabled-field-bg);
+}
+
+.form-field__toggle {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-primary);
+    cursor: pointer;
+}
+
+.form-field__toggle img {
+    width: 18px;
+    height: 18px;
+}
+
+/* Viền 1.5px theo Figma; bớt 0.5px padding để nội dung không bị xê dịch */
+.form-field__control--invalid {
+    padding: 0 15.5px;
+    border: 1.5px solid var(--color-error-field);
+}
+
+.form-field__control--invalid:focus-within {
+    border-color: var(--color-error-field);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.form-field__hint,
+.form-field__error {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.form-field__hint {
+    color: var(--color-text-muted);
+}
+
+.form-field__error {
+    color: var(--color-error-text);
+}
+
+.auth-form__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.auth-form__link,
+.auth-form__footer-link {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.auth-form__link {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.auth-form__link:hover,
+.auth-form__footer-link:hover {
+    text-decoration: underline;
+}
+
+.auth-form__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-form__submit {
+    height: 48px;
+    width: 100%;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--color-primary);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.auth-form__submit:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+/* Link điều hướng nhưng hiển thị như nút chính */
+.auth-form__submit--link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.auth-form__submit:disabled {
+    background: var(--color-disabled-button-bg);
+    color: var(--color-disabled-button-text);
+    cursor: not-allowed;
+}
+
+.form-field__toggle:disabled {
+    cursor: not-allowed;
+}
+
+.auth-card--locked {
+    background: var(--color-locked-card-bg);
+    border: 1px solid var(--color-locked-card-bg);
+}
+
+.auth-form__submit:focus-visible,
+.form-field__toggle:focus-visible,
+.auth-form__link:focus-visible,
+.auth-form__footer-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.auth-form__footer,
+.auth-card__footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 14px;
+    line-height: normal;
+    color: var(--color-text-muted);
+}
+
+.auth-form__footer-link {
+    font-weight: 700;
+}
+
+.auth-form__footer-link--regular {
+    font-weight: 400;
+}
+
+/* Nút submit (vd: đăng xuất) nhưng hiển thị như link */
+.auth-form__footer-link--button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 1199px) {
+    .auth-main {
+        padding: 40px;
+    }
+}
+
+@media (max-width: 899px) {
+    .auth-hero {
+        display: none;
+    }
+
+    .auth-main {
+        padding: 32px 16px;
+    }
+}
+
+@media (max-width: 479px) {
+    .auth-card {
+        padding: 24px;
+    }
+
+    .auth-card__title {
+        font-size: 24px;
+    }
+}

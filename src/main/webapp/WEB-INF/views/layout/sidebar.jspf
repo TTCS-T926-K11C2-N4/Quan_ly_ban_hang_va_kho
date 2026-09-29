@@ -14,8 +14,8 @@
         <ul class="app-menu__list">
             <li>
                 <a class="app-menu__link${activeMenu == 'dashboard' ? ' app-menu__link--active' : ''}" id="menu-dashboard"
-                   href="<c:url value='/dashboard'/>"${activeMenu == 'dashboard' ? ' aria-current="page"' : ''}>
-                    <span class="app-menu__icon app-menu__icon--dashboard" aria-hidden="true"></span>Tổng quan
+                   href="<c:url value='${currentUser.homePath}'/>"${activeMenu == 'dashboard' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--dashboard" aria-hidden="true"></span>${currentUser.customer ? 'Trang chủ' : 'Tổng quan'}
                 </a>
             </li>
             <li>
