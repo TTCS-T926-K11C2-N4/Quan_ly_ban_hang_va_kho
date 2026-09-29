@@ -31,4 +31,9 @@
         <!-- Không để session id lộ trên URL (;jsessionid=...) -->
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
+
+    <!-- Mọi lỗi (403, 404, 500, exception...) hiện trang lỗi chung của ứng dụng (S1-07) -->
+    <error-page>
+        <location>/error</location>
+    </error-page>
 </web-app>
