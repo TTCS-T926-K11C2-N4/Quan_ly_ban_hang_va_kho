@@ -1,0 +1,5 @@
+<%@ page pageEncoding="UTF-8" %>
+<aside class="auth-hero" aria-hidden="true">
+    <img class="auth-hero__logo" src="<c:url value='/assets/img/logo.png'/>" alt="" width="160" height="160">
+    <p class="auth-hero__title">HỆ THỐNG<br>QUẢN LÝ BÁN HÀNG &amp; KHO</p>
+</aside>
