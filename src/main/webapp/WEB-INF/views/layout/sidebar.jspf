@@ -65,7 +65,15 @@
     <c:if test="${not empty currentUser}">
         <div class="app-user">
             <div class="app-user__info">
-                <span class="app-user__avatar" aria-hidden="true"><c:out value="${currentUser.initials}"/></span>
+                <c:choose>
+                    <c:when test="${not empty currentUser.avatarFileId}">
+                        <img class="app-user__avatar" alt="" width="44" height="44"
+                             src="<c:url value='/avatar'><c:param name='user' value='${currentUser.id}'/><c:param name='v' value='${currentUser.avatarFileId}'/></c:url>">
+                    </c:when>
+                    <c:otherwise>
+                        <span class="app-user__avatar" aria-hidden="true"><c:out value="${currentUser.initials}"/></span>
+                    </c:otherwise>
+                </c:choose>
                 <div>
                     <p class="app-user__name"><c:out value="${currentUser.fullName}"/></p>
                     <p class="app-user__role"><c:out value="${currentUser.roleName}"/></p>

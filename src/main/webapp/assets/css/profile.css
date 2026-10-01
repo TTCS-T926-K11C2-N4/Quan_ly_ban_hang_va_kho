@@ -34,6 +34,21 @@
     color: var(--color-text-muted);
 }
 
+.profile-avatar__error {
+    max-width: 200px;
+    text-align: center;
+}
+
+.profile-avatar input:focus-visible + .profile-button {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.profile-avatar .profile-button[aria-disabled="true"] {
+    background: #94a3b8;
+    cursor: progress;
+}
+
 .profile-fields {
     display: flex;
     flex-direction: column;

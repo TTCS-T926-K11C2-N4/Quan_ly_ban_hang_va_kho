@@ -202,7 +202,9 @@ ol {
     gap: 12px;
 }
 
+/* Ảnh đại diện (img) hoặc chữ viết tắt (span) khi chưa có ảnh */
 .app-user__avatar {
+    object-fit: cover;
     display: flex;
     flex-shrink: 0;
     align-items: center;

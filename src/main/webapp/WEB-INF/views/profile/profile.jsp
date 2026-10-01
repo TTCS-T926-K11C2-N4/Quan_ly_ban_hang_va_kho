@@ -31,10 +31,28 @@
             </c:if>
 
             <section class="profile-card" aria-label="Thông tin cá nhân">
-                <div class="profile-avatar">
-                    <img class="profile-avatar__image" id="profile-avatar-image"
-                         src="<c:url value='/assets/img/avatar-placeholder.svg'/>" alt="Ảnh đại diện" width="160" height="160">
-                </div>
+                <%-- Tải ảnh: chọn tệp là gửi luôn (profile.js), không cần nút Lưu riêng --%>
+                <form class="profile-avatar" id="profile-avatar-form" action="<c:url value='/profile/avatar'/>"
+                      method="post" enctype="multipart/form-data" data-max-bytes="2097152">
+                    <c:choose>
+                        <c:when test="${not empty currentUser.avatarFileId}">
+                            <img class="profile-avatar__image" id="profile-avatar-image" alt="Ảnh đại diện" width="160" height="160"
+                                 src="<c:url value='/avatar'><c:param name='user' value='${currentUser.id}'/><c:param name='size' value='full'/><c:param name='v' value='${currentUser.avatarFileId}'/></c:url>">
+                        </c:when>
+                        <c:otherwise>
+                            <img class="profile-avatar__image" id="profile-avatar-image" alt="Chưa có ảnh đại diện" width="160" height="160"
+                                 src="<c:url value='/assets/img/avatar-placeholder.svg'/>">
+                        </c:otherwise>
+                    </c:choose>
+                    <p class="profile-avatar__hint">JPG/PNG tối đa 2MB</p>
+                    <input class="visually-hidden" type="file" id="profile-avatar-file" name="avatar"
+                           accept="image/jpeg,image/png,.jpg,.jpeg,.png">
+                    <label class="profile-button" for="profile-avatar-file" id="profile-avatar-upload">
+                        <img src="<c:url value='/assets/img/icons/upload.svg'/>" alt="" width="16" height="16">
+                        <span id="profile-avatar-upload-text">Tải ảnh lên</span>
+                    </label>
+                    <p class="profile-field__error profile-avatar__error" id="profile-avatar-error"${empty flashError ? ' hidden' : ''} role="alert"><c:out value="${flashError}"/></p>
+                </form>
 
                 <%-- Chỉ gửi họ tên và số điện thoại; các ô khác chỉ để xem nên không có name --%>
                 <form class="profile-fields" id="profile-form" action="<c:url value='/profile'/>" method="post">
@@ -117,5 +135,6 @@
     </div>
 
     <script src="<c:url value='/assets/js/app.js'/>"></script>
+    <script src="<c:url value='/assets/js/profile.js'/>"></script>
 </body>
 </html>
