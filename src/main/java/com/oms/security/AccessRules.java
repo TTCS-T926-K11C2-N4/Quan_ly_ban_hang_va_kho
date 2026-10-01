@@ -21,6 +21,8 @@ public final class AccessRules {
             Map.entry("/portal", AUTHENTICATED),
             Map.entry("/change-password", AUTHENTICATED),
             Map.entry("/profile", AUTHENTICATED),
+            Map.entry("/profile/avatar", AUTHENTICATED),
+            Map.entry("/avatar", AUTHENTICATED),
             Map.entry("/accounts", Permission.USER_VIEW),
             Map.entry("/accounts/view", Permission.USER_VIEW),
             Map.entry("/accounts/new", Permission.USER_MANAGE),

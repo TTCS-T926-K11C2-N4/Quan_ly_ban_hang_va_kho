@@ -32,6 +32,7 @@ public class ProfileServlet extends HttpServlet {
         try {
             AccountDetail profile = profileService.getProfile(CurrentUser.get(request).getId());
             Flash.moveToRequest(request, FLASH_MESSAGE, "flashMessage");
+            Flash.moveToRequest(request, ProfileAvatarServlet.FLASH_ERROR, "flashError");
             show(request, response, profile, profile.getFullName(), profile.getPhone(), Map.of());
         } catch (SQLException e) {
             log("Không tải được hồ sơ cá nhân", e);
