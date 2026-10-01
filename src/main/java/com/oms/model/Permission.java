@@ -6,6 +6,7 @@ public final class Permission {
 
     public static final String USER_VIEW = "USER_VIEW";
     public static final String USER_MANAGE = "USER_MANAGE";
+    public static final String AUDIT_LOG_VIEW = "AUDIT_LOG_VIEW";
 
     private Permission() {
     }

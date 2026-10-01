@@ -38,6 +38,11 @@ public class AuditLogEntry {
     }
 
     public String getLabel() {
+        return labelOf(action);
+    }
+
+    // Mã chưa có tên hiển thị (vd thao tác của module mới) thì hiện nguyên mã
+    public static String labelOf(String action) {
         return LABELS.getOrDefault(action, action);
     }
 

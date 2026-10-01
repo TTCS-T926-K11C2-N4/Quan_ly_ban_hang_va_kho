@@ -9,6 +9,7 @@
 --   có dấu * -> data_scope OWN (Đại lý) hoặc ASSIGNED (Nhân viên kinh doanh), còn lại ALL
 --   Khác biệt W và F (ghi được trường nào, thao tác nào) kiểm ở từng chức năng khi làm module đó.
 -- Giá vốn và biên lợi nhuận: quyền riêng COST_PRICE_VIEW, chỉ Quản lý kinh doanh có (kể cả Admin cũng không).
+-- Nhật ký thao tác: quyền riêng AUDIT_LOG_VIEW, chỉ Admin có (S2-04), dù Quản lý kinh doanh có USER_VIEW.
 -- ADMIN có mọi quyền còn lại (xem câu lệnh cuối file).
 --
 -- src/test/java/com/oms/security/AccessRulesTest.java đọc trực tiếp file này:
@@ -39,7 +40,8 @@ INSERT INTO `permissions` (`code`, `module`, `action`, `description`) VALUES
   ('RETURN_MANAGE', 'Trả hàng & điều chỉnh', 'MANAGE', 'Lập phiếu trả hàng và điều chỉnh'),
   ('REPORT_VIEW', 'Báo cáo & dashboard', 'VIEW', 'Xem báo cáo và dashboard'),
   ('USER_VIEW', 'Người dùng & nhật ký', 'VIEW', 'Xem tài khoản người dùng và nhật ký'),
-  ('USER_MANAGE', 'Người dùng & nhật ký', 'MANAGE', 'Tạo, sửa, khoá tài khoản người dùng')
+  ('USER_MANAGE', 'Người dùng & nhật ký', 'MANAGE', 'Tạo, sửa, khoá tài khoản người dùng'),
+  ('AUDIT_LOG_VIEW', 'Người dùng & nhật ký', 'VIEW', 'Xem nhật ký thao tác trên tồn kho, giá, công nợ, hoá đơn')
 AS new_row
 ON DUPLICATE KEY UPDATE `module` = new_row.`module`, `action` = new_row.`action`,
   `description` = new_row.`description`;

@@ -111,6 +111,13 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/change-password", Set.of()));
     }
 
+    // S2-04: chỉ Quản trị hệ thống xem nhật ký, kể cả Quản lý kinh doanh (có USER_VIEW) cũng không
+    @Test
+    void onlyAdminCanViewAuditLogs() {
+        rolePermissions.forEach((role, permissions) ->
+                assertEquals("ADMIN".equals(role), AccessRules.isAllowed("/audit-logs", permissions), role));
+    }
+
     @Test
     void undeclaredPathIsDeniedEvenForAdmin() {
         assertFalse(AccessRules.isAllowed("/chuc-nang-moi", permissionsOf("ADMIN")));

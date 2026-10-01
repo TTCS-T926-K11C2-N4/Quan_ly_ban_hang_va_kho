@@ -25,7 +25,8 @@ public final class AccessRules {
             "/accounts/new", Permission.USER_MANAGE,
             "/accounts/edit", Permission.USER_MANAGE,
             "/accounts/lock", Permission.USER_MANAGE,
-            "/accounts/unlock", Permission.USER_MANAGE);
+            "/accounts/unlock", Permission.USER_MANAGE,
+            "/audit-logs", Permission.AUDIT_LOG_VIEW);
 
     private AccessRules() {
     }

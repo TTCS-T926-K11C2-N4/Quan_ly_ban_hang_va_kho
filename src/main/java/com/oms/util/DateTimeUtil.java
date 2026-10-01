@@ -1,5 +1,6 @@
 package com.oms.util;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -22,6 +23,11 @@ public final class DateTimeUtil {
 
     public static String formatDateTime(LocalDateTime utc) {
         return utc == null ? null : toDisplayZone(utc).format(DATE_TIME);
+    }
+
+    // Đầu ngày (00:00 giờ Việt Nam) đổi sang UTC để so với cột DATETIME, vd 01/10 -> 30/09 17:00 UTC
+    public static LocalDateTime startOfDayUtc(LocalDate date) {
+        return date.atStartOfDay(DISPLAY_ZONE).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
     }
 
     private static ZonedDateTime toDisplayZone(LocalDateTime utc) {
