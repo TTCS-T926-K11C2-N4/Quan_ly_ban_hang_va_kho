@@ -34,6 +34,8 @@ public class AvatarServlet extends HttpServlet {
                     : AvatarService.thumbnailKey(file.getStorageKey());
             Path path = FileStorage.resolve(key);
 
+            // EncodingFilter đã đặt UTF-8 cho mọi response; ảnh không có charset nên bỏ đi
+            response.setCharacterEncoding((String) null);
             response.setContentType(file.getContentType());
             response.setContentLengthLong(Files.size(path));
             // Đổi ảnh thì đổi id nên nội dung theo id không bao giờ đổi: cho trình duyệt giữ lâu
