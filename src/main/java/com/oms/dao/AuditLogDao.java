@@ -18,25 +18,32 @@ public class AuditLogDao {
     // actorUserId: người thực hiện; null khi chưa đăng nhập (vd tự đăng ký tài khoản)
     public void insertUserAction(Connection connection, Long actorUserId, long userId, String action,
                                  String newValuesJson, String reason, String ipAddress) throws SQLException {
-        String sql = "INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, new_values, reason,"
-                + " ip_address, occurred_at) VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())";
+        insert(connection, actorUserId, action, USER_ENTITY, userId, null, newValuesJson, reason, ipAddress);
+    }
+
+    // Ghi một thao tác trên đối tượng bất kỳ (nhóm hàng, giá...); old/new là JSON giá trị trước và sau (S2-04)
+    public void insert(Connection connection, Long actorUserId, String action, String entityType, Long entityId,
+                       String oldValuesJson, String newValuesJson, String reason, String ipAddress) throws SQLException {
+        String sql = "INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, old_values, new_values,"
+                + " reason, ip_address, occurred_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            if (actorUserId == null) {
-                statement.setNull(1, Types.BIGINT);
-            } else {
-                statement.setLong(1, actorUserId);
-            }
+            setNullableLong(statement, 1, actorUserId);
             statement.setString(2, action);
-            statement.setString(3, USER_ENTITY);
-            statement.setLong(4, userId);
-            if (newValuesJson == null) {
-                statement.setNull(5, Types.VARCHAR);
-            } else {
-                statement.setString(5, newValuesJson);
-            }
-            statement.setString(6, reason);
-            statement.setString(7, ipAddress);
+            statement.setString(3, entityType);
+            setNullableLong(statement, 4, entityId);
+            statement.setString(5, oldValuesJson);
+            statement.setString(6, newValuesJson);
+            statement.setString(7, reason);
+            statement.setString(8, ipAddress);
             statement.executeUpdate();
+        }
+    }
+
+    private static void setNullableLong(PreparedStatement statement, int index, Long value) throws SQLException {
+        if (value == null) {
+            statement.setNull(index, Types.BIGINT);
+        } else {
+            statement.setLong(index, value);
         }
     }
 

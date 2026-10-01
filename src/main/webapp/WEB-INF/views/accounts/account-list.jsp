@@ -34,8 +34,8 @@
                 <div class="account-flash" id="account-created-message" role="status">
                     <p>Đã tạo tài khoản <strong><c:out value="${createdUsername}"/></strong>.</p>
                     <p>
-                        Mật khẩu tạm: <code class="account-flash__password"><c:out value="${temporaryPassword}"/></code>
-                        — chỉ hiển thị một lần, hãy gửi cho người dùng. Người dùng phải đổi mật khẩu ở lần đăng nhập đầu tiên.
+                        Mật khẩu tạm đã được gửi tới <strong><c:out value="${createdEmail}"/></strong>.
+                        Người dùng phải đổi mật khẩu ở lần đăng nhập đầu tiên.
                     </p>
                 </div>
             </c:if>
@@ -79,6 +79,9 @@
                 </div>
 
                 <c:if test="${canManage}">
+                    <a class="account-filters__import" id="import-accounts-link" href="<c:url value='/accounts/import'/>">
+                        Import Excel
+                    </a>
                     <a class="account-filters__create" id="create-account-link" href="<c:url value='/accounts/new'/>">
                         <span aria-hidden="true">+</span> Tạo tài khoản
                     </a>

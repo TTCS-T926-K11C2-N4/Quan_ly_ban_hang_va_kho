@@ -41,18 +41,18 @@ public class MailSender implements ServletContextListener {
         EXECUTOR.execute(() -> {
             try {
                 send(to, subject, body);
-            } catch (MessagingException | UnsupportedEncodingException | IllegalStateException e) {
+            } catch (MessagingException e) {
                 LOGGER.log(Level.SEVERE, "Không gửi được email tới " + to, e);
             }
         });
     }
 
-    private static void send(String to, String subject, String body)
-            throws MessagingException, UnsupportedEncodingException {
+    // Gửi ngay trên luồng hiện tại; dùng khi phải biết chắc thư đã gửi được (vd gửi mật khẩu tạm của tài khoản mới)
+    public static void send(String to, String subject, String body) throws MessagingException {
         String user = System.getenv("SMTP_USER");
         String password = System.getenv("SMTP_PASSWORD");
         if (user == null || password == null) {
-            throw new IllegalStateException("Chưa cấu hình biến môi trường SMTP_USER / SMTP_PASSWORD");
+            throw new MessagingException("Chưa cấu hình biến môi trường SMTP_USER / SMTP_PASSWORD");
         }
         String from = envOrDefault("SMTP_FROM", user);
 
@@ -74,7 +74,11 @@ public class MailSender implements ServletContextListener {
         });
 
         MimeMessage message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(from, SENDER_NAME, StandardCharsets.UTF_8.name()));
+        try {
+            message.setFrom(new InternetAddress(from, SENDER_NAME, StandardCharsets.UTF_8.name()));
+        } catch (UnsupportedEncodingException e) {
+            throw new MessagingException("Không mã hoá được tên người gửi", e);
+        }
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
         message.setSubject(subject, StandardCharsets.UTF_8.name());
         message.setText(body, StandardCharsets.UTF_8.name());

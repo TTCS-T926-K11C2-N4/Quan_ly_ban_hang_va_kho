@@ -160,11 +160,12 @@ public class UserDao {
 
     // Thông tin hiển thị ở sidebar: tên, các vai trò, kho và địa bàn đang phụ trách
     public SessionUser findSessionUser(long userId, Set<String> permissions) throws SQLException {
-        String sql = "SELECT username, full_name, must_change_password FROM users WHERE id = ?";
+        String sql = "SELECT username, full_name, must_change_password, avatar_file_id FROM users WHERE id = ?";
         try (Connection connection = DbConnection.getConnection()) {
             String username;
             String fullName;
             boolean mustChangePassword;
+            Long avatarFileId;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, userId);
                 try (ResultSet resultSet = statement.executeQuery()) {
@@ -174,6 +175,7 @@ public class UserDao {
                     username = resultSet.getString("username");
                     fullName = resultSet.getString("full_name");
                     mustChangePassword = resultSet.getBoolean("must_change_password");
+                    avatarFileId = resultSet.getObject("avatar_file_id", Long.class);
                 }
             }
             List<String> roleNames = findNames(connection, "SELECT r.name FROM user_roles ur"
@@ -185,7 +187,7 @@ public class UserDao {
             scopes.addAll(findNames(connection, "SELECT g.name FROM user_regions ug"
                     + " JOIN regions g ON g.id = ug.region_id WHERE ug.user_id = ? ORDER BY g.name", userId));
             return new SessionUser(userId, username, fullName, String.join(", ", roleNames),
-                    String.join(" • ", scopes), mustChangePassword, Set.copyOf(roleCodes), permissions);
+                    String.join(" • ", scopes), mustChangePassword, Set.copyOf(roleCodes), permissions, avatarFileId);
         }
     }
 
@@ -396,6 +398,30 @@ public class UserDao {
     }
 
     // activate: chuyển PENDING -> ACTIVE (chỉ khi tài khoản đang PENDING)
+    public void updateAvatar(Connection connection, long userId, long fileId) throws SQLException {
+        String sql = "UPDATE users SET avatar_file_id = ?, updated_at = UTC_TIMESTAMP(), updated_by = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, fileId);
+            statement.setLong(2, userId);
+            statement.setLong(3, userId);
+            statement.executeUpdate();
+        }
+    }
+
+    // Người dùng tự sửa hồ sơ (S2-02): chỉ họ tên và số điện thoại
+    public void updateOwnProfile(Connection connection, long userId, String fullName, String phone)
+            throws SQLException {
+        String sql = "UPDATE users SET full_name = ?, phone = ?, updated_at = UTC_TIMESTAMP(), updated_by = ?"
+                + " WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, fullName);
+            statement.setString(2, phone);
+            statement.setLong(3, userId);
+            statement.setLong(4, userId);
+            statement.executeUpdate();
+        }
+    }
+
     public void updateProfile(Connection connection, long userId, String fullName, String email, String phone,
                               boolean activate) throws SQLException {
         String sql = "UPDATE users SET full_name = ?, email = ?, phone = ?,"

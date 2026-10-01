@@ -42,7 +42,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
 
         try {
-            authService.requestPasswordReset(email, resetPageUrl(request));
+            authService.requestPasswordReset(email, AppUrl.of(request, "/reset-password"));
         } catch (SQLException e) {
             log("Không tạo được liên kết đặt lại mật khẩu", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -50,16 +50,5 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
         // Email có tồn tại hay không đều sang cùng một trang (S1-03)
         response.sendRedirect(request.getContextPath() + "/forgot-password/sent");
-    }
-
-    // Ưu tiên APP_BASE_URL (vd http://localhost:8080/du-an-ttcs) vì header Host do trình duyệt gửi lên
-    // có thể bị giả mạo để liên kết trong email trỏ sang trang của kẻ tấn công.
-    private static String resetPageUrl(HttpServletRequest request) {
-        String baseUrl = System.getenv("APP_BASE_URL");
-        if (baseUrl == null || baseUrl.isBlank()) {
-            String url = request.getRequestURL().toString();
-            baseUrl = url.substring(0, url.length() - request.getServletPath().length());
-        }
-        return baseUrl.replaceAll("/+$", "") + "/reset-password";
     }
 }

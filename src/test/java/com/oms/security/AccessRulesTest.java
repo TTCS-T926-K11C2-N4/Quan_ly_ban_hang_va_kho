@@ -88,8 +88,49 @@ class AccessRulesTest {
     void adminCanManageAccounts() {
         Set<String> admin = permissionsOf("ADMIN");
         for (String path : new String[] {"/accounts", "/accounts/view", "/accounts/new", "/accounts/edit",
-                "/accounts/lock", "/accounts/unlock"}) {
+                "/accounts/lock", "/accounts/unlock", "/accounts/import", "/accounts/import/template",
+                "/accounts/import/preview", "/accounts/import/result", "/accounts/import/errors"}) {
             assertTrue(AccessRules.isAllowed(path, admin), path);
+        }
+    }
+
+    // S2-02: ai đã đăng nhập cũng xem và sửa được hồ sơ của chính mình
+    @Test
+    void everyRoleCanOpenOwnProfile() {
+        for (String role : new String[] {"CUSTOMER", "SALES_REP", "SALES_MANAGER", "WAREHOUSE", "WH_MANAGER",
+                "ACCOUNTANT", "ADMIN"}) {
+            assertTrue(AccessRules.isAllowed("/profile", permissionsOf(role)), role);
+        }
+    }
+
+    // S2-01: nhập người dùng từ Excel tạo tài khoản hàng loạt nên cần quyền quản lý tài khoản
+    @Test
+    void onlyUserManagersCanImportAccounts() {
+        Set<String> salesManager = permissionsOf("SALES_MANAGER");
+        for (String path : new String[] {"/accounts/import", "/accounts/import/template", "/accounts/import/preview",
+                "/accounts/import/result", "/accounts/import/errors"}) {
+            assertFalse(AccessRules.isAllowed(path, salesManager), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+        }
+    }
+
+    // S2-06: mọi vai trò nội bộ xem được nhóm hàng; chỉ Quản lý kinh doanh và Admin được thêm/sửa/xoá/chuyển
+    @Test
+    void onlyProductManagersCanChangeCategories() {
+        String[] managePaths = {"/categories/new", "/categories/edit", "/categories/delete", "/categories/status",
+                "/categories/products/move"};
+        for (String role : new String[] {"SALES_MANAGER", "ADMIN"}) {
+            assertTrue(AccessRules.isAllowed("/categories", permissionsOf(role)), role);
+            for (String path : managePaths) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+        for (String role : new String[] {"SALES_REP", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT"}) {
+            assertTrue(AccessRules.isAllowed("/categories", permissionsOf(role)), role);
+            assertTrue(AccessRules.isAllowed("/categories/products", permissionsOf(role)), role);
+            for (String path : managePaths) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
         }
     }
 

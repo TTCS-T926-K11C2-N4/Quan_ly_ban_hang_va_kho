@@ -1,0 +1,194 @@
+/* Quản lý nhóm hàng (S2-06). Dùng chung bộ lọc, bảng, badge, menu ⋮, phân trang, form của accounts.css;
+   file này chỉ thêm phần riêng của cây nhóm hàng. */
+
+/* Độ rộng cột riêng (accounts.css đặt độ rộng theo cột của bảng tài khoản) */
+.category-table th:nth-child(1) { width: 96px; }
+.category-table th:nth-child(2) { width: auto; min-width: 260px; }
+.category-table th:nth-child(3) { width: 30%; }
+.category-table th:nth-child(4) { width: 110px; }
+.category-table th:nth-child(5) { width: 150px; }
+.category-table th:nth-child(6) { width: 140px; }
+
+.category-table td {
+    height: 46px;
+}
+
+/* Thụt lề theo cấp: mỗi cấp 24px (cấp 1 không thụt) */
+.category-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: calc((var(--category-level, 1) - 1) * 24px);
+    font-weight: 500;
+}
+
+.category-name--level-1 { --category-level: 1; font-weight: 600; }
+.category-name--level-2 { --category-level: 2; }
+.category-name--level-3 { --category-level: 3; }
+.category-name--level-4 { --category-level: 4; }
+.category-name--level-5 { --category-level: 5; }
+
+.category-toggle,
+.category-toggle-spacer {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+}
+
+.category-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    cursor: pointer;
+}
+
+.category-toggle:hover {
+    background: var(--color-account-row-line);
+}
+
+.category-toggle img {
+    transition: transform 0.15s;
+}
+
+.category-toggle[aria-expanded="false"] img {
+    transform: rotate(-90deg);
+}
+
+.category-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+}
+
+.category-description {
+    color: var(--color-account-muted);
+}
+
+/* Nhóm cha chỉ hiện để giữ ngữ cảnh khi tìm kiếm/lọc, bản thân không khớp */
+.category-row--context td {
+    color: var(--color-account-placeholder);
+}
+
+.category-row--context .category-name {
+    font-weight: 400;
+}
+
+.category-table__empty {
+    height: 96px;
+    text-align: center;
+    color: var(--color-account-muted);
+}
+
+.status-badge--inactive {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Nút trong menu ⋮ (xoá, đổi trạng thái gửi POST nên là button) */
+.row-menu__item--button {
+    width: 100%;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.row-menu form,
+.row-actions form {
+    margin: 0;
+}
+
+/* Nút Xóa gửi POST nhưng trông như link "Sửa" bên cạnh (Figma: "Sửa | Xóa") */
+.row-actions__button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.account-flash--error {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* Form thêm/sửa: ô mô tả chiếm cả hàng */
+.form-group--full {
+    grid-column: 1 / -1;
+}
+
+/* Trang sản phẩm của một nhóm */
+.category-products__back {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.category-products__back:hover {
+    text-decoration: underline;
+}
+
+.category-move {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    margin-top: 21px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: var(--color-surface);
+}
+
+.category-move .form-group {
+    flex: 0 1 360px;
+}
+
+.category-move .button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.category-move__hint {
+    flex-basis: 100%;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.product-table th:nth-child(1) { width: 56px; }
+.product-table th:nth-child(2) { width: 180px; }
+.product-table th:nth-child(3) { width: auto; }
+.product-table th:nth-child(4) { width: 170px; }
+
+.product-table__check {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-navy);
+}
+
+.status-badge--discontinued {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+@media (max-width: 1023px) {
+    .category-table,
+    .product-table {
+        min-width: 760px;
+    }
+}
+
+@media (max-width: 639px) {
+    .category-move .form-group,
+    .category-move .button {
+        flex: 1 1 100%;
+    }
+}

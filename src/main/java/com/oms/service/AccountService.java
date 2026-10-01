@@ -16,7 +16,9 @@ import com.oms.model.RegistrationForm;
 import com.oms.model.Role;
 import com.oms.model.SelectOption;
 import com.oms.util.DbConnection;
+import com.oms.util.MailSender;
 import com.oms.util.PasswordUtil;
+import jakarta.mail.MessagingException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -176,8 +178,11 @@ public class AccountService {
         }
     }
 
-    // Tạo tài khoản kèm vai trò/kho/địa bàn trong một transaction; trả về mật khẩu tạm (chỉ hiển thị một lần)
-    public String create(AccountForm form, long actorUserId, String ipAddress) throws SQLException {
+    // Tạo tài khoản kèm vai trò/kho/địa bàn trong một transaction và gửi mật khẩu tạm về email người dùng.
+    // Thư gửi trước khi commit: gửi lỗi thì không tạo tài khoản, để không có tài khoản nào thiếu mật khẩu.
+    // Mật khẩu tạm không trả về cho quản trị viên.
+    public void create(AccountForm form, long actorUserId, String ipAddress, String loginUrl)
+            throws SQLException, MessagingException {
         String temporaryPassword = PasswordUtil.generateTemporary();
         String passwordHash = PasswordUtil.hash(temporaryPassword);
 
@@ -195,13 +200,24 @@ public class AccountService {
                 }
                 auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_CREATE, null, null,
                         ipAddress);
+                MailSender.send(form.getEmail(), "Tài khoản đăng nhập hệ thống",
+                        newAccountMail(form, temporaryPassword, loginUrl));
                 connection.commit();
-            } catch (SQLException e) {
+            } catch (SQLException | MessagingException e) {
                 connection.rollback();
                 throw e;
             }
         }
-        return temporaryPassword;
+    }
+
+    private static String newAccountMail(AccountForm form, String temporaryPassword, String loginUrl) {
+        return "Chào " + form.getFullName() + ",\n\n"
+                + "Quản trị viên đã tạo cho bạn tài khoản trên Hệ thống quản lý bán hàng & kho.\n\n"
+                + "Tên đăng nhập: " + form.getUsername() + "\n"
+                + "Mật khẩu tạm: " + temporaryPassword + "\n\n"
+                + "Đăng nhập tại: " + loginUrl + "\n\n"
+                + "Bạn sẽ được yêu cầu đổi mật khẩu ngay ở lần đăng nhập đầu tiên. "
+                + "Không chia sẻ email này cho người khác.\n";
     }
 
     public Map<String, String> validateRegistration(RegistrationForm form) throws SQLException {

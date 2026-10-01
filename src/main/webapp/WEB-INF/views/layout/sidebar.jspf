@@ -1,5 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Trang include cần đặt activeMenu: dashboard | accounts | sales | products | warehouse | reports.
+<%-- Trang include cần đặt activeMenu: dashboard | accounts | sales | products | warehouse | reports | profile.
      S1-06: mục menu chỉ hiện khi có quyền xem module đó; quyền còn được kiểm lại ở AuthFilter. --%>
 <aside class="app-sidebar" id="app-sidebar">
     <div class="app-sidebar__brand">
@@ -37,8 +37,9 @@
             </c:if>
             <c:if test="${currentUser.can('PRODUCT_VIEW')}">
             <li>
+                <%-- Chưa có trang danh sách sản phẩm (S2-05) nên menu mở trang Nhóm hàng (S2-06) --%>
                 <a class="app-menu__link${activeMenu == 'products' ? ' app-menu__link--active' : ''}" id="menu-products"
-                   href="<c:url value='/products'/>"${activeMenu == 'products' ? ' aria-current="page"' : ''}>
+                   href="<c:url value='/categories'/>"${activeMenu == 'products' ? ' aria-current="page"' : ''}>
                     <span class="app-menu__icon app-menu__icon--products" aria-hidden="true"></span>Sản phẩm
                 </a>
             </li>
@@ -65,7 +66,15 @@
     <c:if test="${not empty currentUser}">
         <div class="app-user">
             <div class="app-user__info">
-                <span class="app-user__avatar" aria-hidden="true"><c:out value="${currentUser.initials}"/></span>
+                <c:choose>
+                    <c:when test="${not empty currentUser.avatarFileId}">
+                        <img class="app-user__avatar" alt="" width="44" height="44"
+                             src="<c:url value='/avatar'><c:param name='user' value='${currentUser.id}'/><c:param name='v' value='${currentUser.avatarFileId}'/></c:url>">
+                    </c:when>
+                    <c:otherwise>
+                        <span class="app-user__avatar" aria-hidden="true"><c:out value="${currentUser.initials}"/></span>
+                    </c:otherwise>
+                </c:choose>
                 <div>
                     <p class="app-user__name"><c:out value="${currentUser.fullName}"/></p>
                     <p class="app-user__role"><c:out value="${currentUser.roleName}"/></p>
@@ -75,6 +84,8 @@
                 </div>
             </div>
             <div class="app-user__actions">
+                <a class="app-user__action${activeMenu == 'profile' ? ' app-user__action--active' : ''}" id="profile-link"
+                   href="<c:url value='/profile'/>"${activeMenu == 'profile' ? ' aria-current="page"' : ''}>Hồ sơ</a>
                 <a class="app-user__action" id="change-password-link" href="<c:url value='/change-password'/>">Đổi mật khẩu</a>
                 <form action="<c:url value='/logout'/>" method="post">
                     <button class="app-user__action" type="submit" id="logout-button">Đăng xuất</button>

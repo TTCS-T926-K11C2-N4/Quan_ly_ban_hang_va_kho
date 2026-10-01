@@ -126,6 +126,33 @@
     background: #1d4ed8;
 }
 
+/* Nút Import Excel (S2-01) đứng trước nút Tạo tài khoản và nhận khoảng trống đẩy cả hai sang phải */
+.account-filters__import {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    height: 45px;
+    margin-left: auto;
+    padding: 0 18px;
+    border: 1px solid #a5b4fc;
+    border-radius: 8px;
+    background: var(--color-surface);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-navy);
+    text-decoration: none;
+}
+
+.account-filters__import:hover {
+    background: #eef2ff;
+}
+
+.account-filters__import + .account-filters__create {
+    margin-left: 0;
+}
+
+.account-filters__import:focus-visible,
 .account-filters__create:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
@@ -382,17 +409,6 @@ a.pagination__item:hover {
     font-size: 13px;
     line-height: 1.5;
     color: #15803d;
-}
-
-.account-flash__password {
-    padding: 1px 6px;
-    border-radius: 4px;
-    background: #dcfce7;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: #14532d;
-    user-select: all;
 }
 
 /* Form tạo / sửa tài khoản (S1-09) */
@@ -959,8 +975,10 @@ a.pagination__item:hover {
         flex: 1 1 140px;
     }
 
+    .account-filters__import,
     .account-filters__create {
         flex: 1 1 100%;
+        margin-left: 0;
     }
 
     .account-pagination {
