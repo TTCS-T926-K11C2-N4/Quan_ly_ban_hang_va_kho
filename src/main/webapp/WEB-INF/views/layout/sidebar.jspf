@@ -1,5 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Trang include cần đặt activeMenu: dashboard | accounts | sales | products | warehouse | reports.
+<%-- Trang include cần đặt activeMenu: dashboard | accounts | audit-logs | sales | products | warehouse | reports.
      S1-06: mục menu chỉ hiện khi có quyền xem module đó; quyền còn được kiểm lại ở AuthFilter. --%>
 <aside class="app-sidebar" id="app-sidebar">
     <div class="app-sidebar__brand">
@@ -24,6 +24,14 @@
                 <a class="app-menu__link${activeMenu == 'accounts' ? ' app-menu__link--active' : ''}" id="menu-accounts"
                    href="<c:url value='/accounts'/>"${activeMenu == 'accounts' ? ' aria-current="page"' : ''}>
                     <span class="app-menu__icon app-menu__icon--accounts" aria-hidden="true"></span>Quản lý tài khoản
+                </a>
+            </li>
+            </c:if>
+            <c:if test="${currentUser.can('AUDIT_LOG_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'audit-logs' ? ' app-menu__link--active' : ''}" id="menu-audit-logs"
+                   href="<c:url value='/audit-logs'/>"${activeMenu == 'audit-logs' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--audit-logs" aria-hidden="true"></span>Nhật ký thao tác
                 </a>
             </li>
             </c:if>

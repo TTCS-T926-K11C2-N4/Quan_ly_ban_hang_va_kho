@@ -1,0 +1,85 @@
+/* Nhật ký thao tác (S2-04). Bộ lọc, bảng, phân trang dùng lại accounts.css; ở đây chỉ phần khác */
+.audit-filters {
+    flex-wrap: wrap;
+}
+
+.audit-filters__field--actor {
+    flex: 1 1 240px;
+}
+
+.audit-filters__field--type {
+    flex: 0 1 190px;
+}
+
+.audit-filters__field--date {
+    flex: 0 1 160px;
+}
+
+.audit-filters__field--date.form-group--invalid .account-filters__control {
+    border-color: #dc2626;
+}
+
+.audit-filters__clear {
+    height: 44px;
+    margin-left: auto;
+}
+
+.audit-filters__error {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #dc2626;
+}
+
+/* Độ rộng cột riêng, thay cho độ rộng cột của bảng tài khoản */
+.audit-table th:nth-child(n) { width: auto; }
+.audit-table th:nth-child(1) { width: 130px; }
+.audit-table th:nth-child(2) { width: 170px; }
+.audit-table th:nth-child(4) { width: 120px; }
+
+.audit-table td {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    vertical-align: top;
+}
+
+.audit-table__time {
+    white-space: nowrap;
+}
+
+.audit-table__sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--color-account-muted);
+}
+
+.audit-table__json {
+    display: block;
+    max-width: 260px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: var(--color-account-row-line);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.audit-table__empty {
+    color: var(--color-account-muted);
+    text-align: center;
+}
+
+@media (max-width: 1023px) {
+    .audit-table {
+        min-width: 960px;
+    }
+}
+
+@media (max-width: 639px) {
+    .audit-filters__field--type,
+    .audit-filters__field--date,
+    .audit-filters__clear {
+        flex: 1 1 140px;
+    }
+}
