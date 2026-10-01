@@ -17,14 +17,15 @@ import java.sql.SQLException;
 public class ChangePasswordServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/auth/change-password.jsp";
-    private static final String FLASH_CHANGED = "flashPasswordChanged";
+
+    // Trang Đăng nhập lấy ra để hiện thông báo một lần sau khi đổi mật khẩu
+    public static final String FLASH_CHANGED = "flashPasswordChanged";
 
     private final AuthService authService = new AuthService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Flash.moveToRequest(request, FLASH_CHANGED, "success");
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
@@ -42,13 +43,20 @@ public class ChangePasswordServlet extends HttpServlet {
                 return;
             }
 
-            // S1-04: đăng xuất mọi thiết bị khác; phiên hiện tại được giữ nhưng đổi mã phiên
-            HttpSession session = request.getSession();
-            SessionRegistry.invalidateAll(user.getId(), session);
-            request.changeSessionId();
-            session.setAttribute(SessionUser.SESSION_KEY, authService.loadSessionUser(user.getId()));
-            session.setAttribute(FLASH_CHANGED, "Đổi mật khẩu thành công. Các phiên đăng nhập khác đã bị đăng xuất.");
-            response.sendRedirect(request.getContextPath() + "/change-password");
+            // Đổi xong đăng xuất mọi phiên, kể cả phiên hiện tại, để người dùng đăng nhập lại bằng mật khẩu mới
+            // (S1-04 thu hồi phiên ở thiết bị khác)
+            SessionRegistry.invalidateAll(user.getId(), null);
+            HttpSession current = request.getSession(false);
+            if (current != null) {
+                try {
+                    current.invalidate();
+                } catch (IllegalStateException e) {
+                    // invalidateAll đã hủy phiên này
+                }
+            }
+            request.getSession().setAttribute(FLASH_CHANGED,
+                    "Đổi mật khẩu thành công. Vui lòng đăng nhập lại bằng mật khẩu mới.");
+            response.sendRedirect(request.getContextPath() + "/login");
         } catch (SQLException e) {
             log("Không đổi được mật khẩu", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

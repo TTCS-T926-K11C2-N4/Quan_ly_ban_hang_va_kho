@@ -37,6 +37,7 @@ public class LoginServlet extends HttpServlet {
             request.setAttribute("success", "Đăng ký thành công. Tài khoản đang chờ quản trị viên duyệt.");
         }
         Flash.moveToRequest(request, ResetPasswordServlet.FLASH_PASSWORD_RESET, "success");
+        Flash.moveToRequest(request, ChangePasswordServlet.FLASH_CHANGED, "success");
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
