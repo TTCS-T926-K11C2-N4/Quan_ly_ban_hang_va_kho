@@ -384,17 +384,6 @@ a.pagination__item:hover {
     color: #15803d;
 }
 
-.account-flash__password {
-    padding: 1px 6px;
-    border-radius: 4px;
-    background: #dcfce7;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: #14532d;
-    user-select: all;
-}
-
 /* Form tạo / sửa tài khoản (S1-09) */
 .account-form {
     margin-top: 21px;
