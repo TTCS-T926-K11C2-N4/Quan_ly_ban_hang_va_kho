@@ -111,6 +111,25 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/change-password", Set.of()));
     }
 
+    // S2-09: kho quản lý nhà cung cấp; kinh doanh, kế toán chỉ xem; đại lý không vào được
+    @Test
+    void warehouseManagesSuppliersOthersOnlyView() {
+        String[] managePaths = {"/suppliers/new", "/suppliers/edit", "/suppliers/status", "/suppliers/delete"};
+        for (String role : new String[] {"WAREHOUSE", "WH_MANAGER", "ADMIN"}) {
+            assertTrue(AccessRules.isAllowed("/suppliers", permissionsOf(role)), role);
+            for (String path : managePaths) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+        for (String role : new String[] {"SALES_REP", "SALES_MANAGER", "ACCOUNTANT"}) {
+            assertTrue(AccessRules.isAllowed("/suppliers", permissionsOf(role)), role);
+            for (String path : managePaths) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+        assertFalse(AccessRules.isAllowed("/suppliers", permissionsOf("CUSTOMER")));
+    }
+
     @Test
     void undeclaredPathIsDeniedEvenForAdmin() {
         assertFalse(AccessRules.isAllowed("/chuc-nang-moi", permissionsOf("ADMIN")));

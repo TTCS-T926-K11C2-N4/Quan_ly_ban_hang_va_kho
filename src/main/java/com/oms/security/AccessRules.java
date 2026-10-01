@@ -16,16 +16,23 @@ public final class AccessRules {
             "/login", "/logout", "/register", "/forgot-password", "/forgot-password/sent", "/reset-password",
             "/session-expired", "/error");
 
-    private static final Map<String, String> REQUIRED_PERMISSIONS = Map.of(
-            "/dashboard", AUTHENTICATED,
-            "/portal", AUTHENTICATED,
-            "/change-password", AUTHENTICATED,
-            "/accounts", Permission.USER_VIEW,
-            "/accounts/view", Permission.USER_VIEW,
-            "/accounts/new", Permission.USER_MANAGE,
-            "/accounts/edit", Permission.USER_MANAGE,
-            "/accounts/lock", Permission.USER_MANAGE,
-            "/accounts/unlock", Permission.USER_MANAGE);
+    // Map.ofEntries vì Map.of chỉ nhận tối đa 10 cặp
+    private static final Map<String, String> REQUIRED_PERMISSIONS = Map.ofEntries(
+            Map.entry("/dashboard", AUTHENTICATED),
+            Map.entry("/portal", AUTHENTICATED),
+            Map.entry("/change-password", AUTHENTICATED),
+            Map.entry("/accounts", Permission.USER_VIEW),
+            Map.entry("/accounts/view", Permission.USER_VIEW),
+            Map.entry("/accounts/new", Permission.USER_MANAGE),
+            Map.entry("/accounts/edit", Permission.USER_MANAGE),
+            Map.entry("/accounts/lock", Permission.USER_MANAGE),
+            Map.entry("/accounts/unlock", Permission.USER_MANAGE),
+            // Nhà cung cấp thuộc module "Tồn kho & nhập kho" trong ma trận phân quyền (S2-09)
+            Map.entry("/suppliers", Permission.INVENTORY_VIEW),
+            Map.entry("/suppliers/new", Permission.INVENTORY_MANAGE),
+            Map.entry("/suppliers/edit", Permission.INVENTORY_MANAGE),
+            Map.entry("/suppliers/status", Permission.INVENTORY_MANAGE),
+            Map.entry("/suppliers/delete", Permission.INVENTORY_MANAGE));
 
     private AccessRules() {
     }
