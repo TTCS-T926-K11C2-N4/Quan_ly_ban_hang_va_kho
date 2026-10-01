@@ -2,6 +2,7 @@ package com.oms.controller;
 
 import com.oms.model.AccountForm;
 import com.oms.service.AccountService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -21,7 +22,7 @@ public class AccountCreateServlet extends HttpServlet {
 
     // Tên attribute session dùng để hiện thông báo một lần ở trang danh sách (Post/Redirect/Get)
     public static final String FLASH_CREATED_USERNAME = "flashCreatedUsername";
-    public static final String FLASH_TEMPORARY_PASSWORD = "flashTemporaryPassword";
+    public static final String FLASH_CREATED_EMAIL = "flashCreatedEmail";
 
     private final AccountService accountService = new AccountService();
 
@@ -42,19 +43,23 @@ public class AccountCreateServlet extends HttpServlet {
                 return;
             }
 
-            String temporaryPassword;
             try {
-                temporaryPassword = accountService.create(form, CurrentUser.get(request).getId(),
-                        request.getRemoteAddr());
+                accountService.create(form, CurrentUser.get(request).getId(), request.getRemoteAddr(),
+                        AppUrl.of(request, "/login"));
             } catch (SQLIntegrityConstraintViolationException e) {
                 // Người khác vừa tạo trùng tên đăng nhập/email giữa lúc kiểm tra và lúc lưu
                 showForm(request, response, form, accountService.validateNewAccount(form));
+                return;
+            } catch (MessagingException e) {
+                log("Không gửi được mật khẩu tạm tới " + form.getEmail(), e);
+                showForm(request, response, form, Map.of("email",
+                        "Không gửi được email tới địa chỉ này nên tài khoản chưa được tạo. Kiểm tra lại email rồi thử lại."));
                 return;
             }
 
             HttpSession session = request.getSession();
             session.setAttribute(FLASH_CREATED_USERNAME, form.getUsername());
-            session.setAttribute(FLASH_TEMPORARY_PASSWORD, temporaryPassword);
+            session.setAttribute(FLASH_CREATED_EMAIL, form.getEmail());
             response.sendRedirect(request.getContextPath() + "/accounts");
         } catch (SQLException e) {
             log("Không tạo được tài khoản", e);

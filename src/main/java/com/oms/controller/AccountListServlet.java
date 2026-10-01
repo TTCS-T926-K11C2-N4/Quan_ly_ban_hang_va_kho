@@ -42,12 +42,8 @@ public class AccountListServlet extends HttpServlet {
         }
 
         Flash.moveToRequest(request, AccountCreateServlet.FLASH_CREATED_USERNAME, "createdUsername");
-        Flash.moveToRequest(request, AccountCreateServlet.FLASH_TEMPORARY_PASSWORD, "temporaryPassword");
+        Flash.moveToRequest(request, AccountCreateServlet.FLASH_CREATED_EMAIL, "createdEmail");
         Flash.moveToRequest(request, AccountEditServlet.FLASH_MESSAGE, "flashMessage");
-        if (request.getAttribute("temporaryPassword") != null) {
-            // Trang có mật khẩu tạm: không để trình duyệt lưu lại (bấm Back không xem lại được)
-            response.setHeader("Cache-Control", "no-store");
-        }
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("roleFilter", roleFilter);
