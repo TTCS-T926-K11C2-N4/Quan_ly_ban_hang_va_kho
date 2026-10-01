@@ -232,6 +232,7 @@ CREATE TABLE `product_categories` (
   CONSTRAINT fk_product_categories_parent_id FOREIGN KEY (`parent_id`) REFERENCES `product_categories`(`id`),
   `code` varchar(30) NOT NULL UNIQUE,
   `name` varchar(150) NOT NULL,
+  `description` varchar(500),
   `level` integer NOT NULL DEFAULT 1,
   `path` varchar(300) NOT NULL COMMENT 'Materialized path, vd ''/1/5/12/'' để lấy cả nhánh bằng LIKE',
   `sort_order` integer NOT NULL DEFAULT 0,

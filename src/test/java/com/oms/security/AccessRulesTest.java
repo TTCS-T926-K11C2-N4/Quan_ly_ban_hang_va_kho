@@ -93,6 +93,26 @@ class AccessRulesTest {
         }
     }
 
+    // S2-06: mọi vai trò nội bộ xem được nhóm hàng; chỉ Quản lý kinh doanh và Admin được thêm/sửa/xoá/chuyển
+    @Test
+    void onlyProductManagersCanChangeCategories() {
+        String[] managePaths = {"/categories/new", "/categories/edit", "/categories/delete", "/categories/status",
+                "/categories/products/move"};
+        for (String role : new String[] {"SALES_MANAGER", "ADMIN"}) {
+            assertTrue(AccessRules.isAllowed("/categories", permissionsOf(role)), role);
+            for (String path : managePaths) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+        for (String role : new String[] {"SALES_REP", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT"}) {
+            assertTrue(AccessRules.isAllowed("/categories", permissionsOf(role)), role);
+            assertTrue(AccessRules.isAllowed("/categories/products", permissionsOf(role)), role);
+            for (String path : managePaths) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
     @Test
     void customerAndAccountantCannotOpenAccounts() {
         assertFalse(AccessRules.isAllowed("/accounts", permissionsOf("CUSTOMER")));
