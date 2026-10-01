@@ -20,9 +20,10 @@ public class SessionUser {
     private final boolean mustChangePassword;
     private final Set<String> roleCodes;
     private final Set<String> permissions;
+    private final Long avatarFileId;
 
     public SessionUser(long id, String username, String fullName, String roleName, String scope,
-                       boolean mustChangePassword, Set<String> roleCodes, Set<String> permissions) {
+                       boolean mustChangePassword, Set<String> roleCodes, Set<String> permissions, Long avatarFileId) {
         this.id = id;
         this.username = username;
         this.fullName = fullName;
@@ -31,10 +32,17 @@ public class SessionUser {
         this.mustChangePassword = mustChangePassword;
         this.roleCodes = Set.copyOf(roleCodes);
         this.permissions = Set.copyOf(permissions);
+        this.avatarFileId = avatarFileId;
     }
 
     public long getId() {
         return id;
+    }
+
+    // null nếu chưa có ảnh đại diện (sidebar hiện chữ viết tắt). Đổi ảnh thì id đổi theo nên dùng
+    // làm tham số v= trong đường dẫn ảnh để trình duyệt không hiện ảnh cũ trong bộ nhớ đệm.
+    public Long getAvatarFileId() {
+        return avatarFileId;
     }
 
     public String getUsername() {

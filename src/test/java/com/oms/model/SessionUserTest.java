@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class SessionUserTest {
 
     private static SessionUser userWithRoles(String... roleCodes) {
-        return new SessionUser(1, "u", "Người dùng", "", "", false, Set.of(roleCodes), Set.of());
+        return new SessionUser(1, "u", "Người dùng", "", "", false, Set.of(roleCodes), Set.of(), null);
     }
 
     @Test

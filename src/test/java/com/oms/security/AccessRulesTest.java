@@ -94,6 +94,15 @@ class AccessRulesTest {
         }
     }
 
+    // S2-02: ai đã đăng nhập cũng xem và sửa được hồ sơ của chính mình
+    @Test
+    void everyRoleCanOpenOwnProfile() {
+        for (String role : new String[] {"CUSTOMER", "SALES_REP", "SALES_MANAGER", "WAREHOUSE", "WH_MANAGER",
+                "ACCOUNTANT", "ADMIN"}) {
+            assertTrue(AccessRules.isAllowed("/profile", permissionsOf(role)), role);
+        }
+    }
+
     // S2-01: nhập người dùng từ Excel tạo tài khoản hàng loạt nên cần quyền quản lý tài khoản
     @Test
     void onlyUserManagersCanImportAccounts() {
