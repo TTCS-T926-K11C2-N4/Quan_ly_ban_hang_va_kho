@@ -411,6 +411,20 @@ public class UserDao {
         }
     }
 
+    // Người dùng tự sửa hồ sơ (S2-02): chỉ họ tên và số điện thoại
+    public void updateOwnProfile(Connection connection, long userId, String fullName, String phone)
+            throws SQLException {
+        String sql = "UPDATE users SET full_name = ?, phone = ?, updated_at = UTC_TIMESTAMP(), updated_by = ?"
+                + " WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, fullName);
+            statement.setString(2, phone);
+            statement.setLong(3, userId);
+            statement.setLong(4, userId);
+            statement.executeUpdate();
+        }
+    }
+
     public void deleteRolesExcept(Connection connection, long userId, String keptRoleCode) throws SQLException {
         String sql = "DELETE FROM user_roles WHERE user_id = ?"
                 + " AND role_id NOT IN (SELECT id FROM roles WHERE code = ?)";

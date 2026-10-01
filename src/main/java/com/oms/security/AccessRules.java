@@ -20,6 +20,7 @@ public final class AccessRules {
             "/dashboard", AUTHENTICATED,
             "/portal", AUTHENTICATED,
             "/change-password", AUTHENTICATED,
+            "/profile", AUTHENTICATED,
             "/accounts", Permission.USER_VIEW,
             "/accounts/view", Permission.USER_VIEW,
             "/accounts/new", Permission.USER_MANAGE,

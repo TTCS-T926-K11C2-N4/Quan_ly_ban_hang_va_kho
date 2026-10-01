@@ -16,6 +16,7 @@ public class AuditLogEntry {
     public static final String USER_UNLOCK = "USER_UNLOCK";
     public static final String PASSWORD_CHANGE = "PASSWORD_CHANGE";
     public static final String PASSWORD_RESET = "PASSWORD_RESET";
+    public static final String PROFILE_UPDATE = "PROFILE_UPDATE";
 
     private static final Map<String, String> LABELS = Map.of(
             USER_REGISTER, "Đăng ký tài khoản",
@@ -25,7 +26,8 @@ public class AuditLogEntry {
             USER_LOCK, "Khóa tài khoản",
             USER_UNLOCK, "Mở khóa tài khoản",
             PASSWORD_CHANGE, "Đổi mật khẩu",
-            PASSWORD_RESET, "Đặt lại mật khẩu qua email");
+            PASSWORD_RESET, "Đặt lại mật khẩu qua email",
+            PROFILE_UPDATE, "Cập nhật hồ sơ cá nhân");
 
     private final String action;
     private final String reason;

@@ -111,6 +111,13 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/change-password", Set.of()));
     }
 
+    // S2-02: mọi vai trò, kể cả Đại lý, đều tự xem và sửa được hồ sơ của mình
+    @Test
+    void everyLoggedInUserCanOpenOwnProfile() {
+        assertTrue(AccessRules.isAllowed("/profile", Set.of()));
+        assertTrue(AccessRules.isAllowed("/profile", permissionsOf("CUSTOMER")));
+    }
+
     @Test
     void undeclaredPathIsDeniedEvenForAdmin() {
         assertFalse(AccessRules.isAllowed("/chuc-nang-moi", permissionsOf("ADMIN")));
