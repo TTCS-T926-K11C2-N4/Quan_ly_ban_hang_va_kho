@@ -37,8 +37,9 @@
             </c:if>
             <c:if test="${currentUser.can('PRODUCT_VIEW')}">
             <li>
+                <%-- Chưa có trang danh sách sản phẩm (S2-05) nên menu mở trang Nhóm hàng (S2-06) --%>
                 <a class="app-menu__link${activeMenu == 'products' ? ' app-menu__link--active' : ''}" id="menu-products"
-                   href="<c:url value='/products'/>"${activeMenu == 'products' ? ' aria-current="page"' : ''}>
+                   href="<c:url value='/categories'/>"${activeMenu == 'products' ? ' aria-current="page"' : ''}>
                     <span class="app-menu__icon app-menu__icon--products" aria-hidden="true"></span>Sản phẩm
                 </a>
             </li>

@@ -30,7 +30,14 @@ public final class AccessRules {
             Map.entry("/accounts/import/template", Permission.USER_MANAGE),
             Map.entry("/accounts/import/preview", Permission.USER_MANAGE),
             Map.entry("/accounts/import/result", Permission.USER_MANAGE),
-            Map.entry("/accounts/import/errors", Permission.USER_MANAGE));
+            Map.entry("/accounts/import/errors", Permission.USER_MANAGE),
+            Map.entry("/categories", Permission.PRODUCT_VIEW),
+            Map.entry("/categories/products", Permission.PRODUCT_VIEW),
+            Map.entry("/categories/new", Permission.PRODUCT_MANAGE),
+            Map.entry("/categories/edit", Permission.PRODUCT_MANAGE),
+            Map.entry("/categories/delete", Permission.PRODUCT_MANAGE),
+            Map.entry("/categories/status", Permission.PRODUCT_MANAGE),
+            Map.entry("/categories/products/move", Permission.PRODUCT_MANAGE));
 
     private AccessRules() {
     }
