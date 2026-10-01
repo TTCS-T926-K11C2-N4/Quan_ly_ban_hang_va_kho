@@ -34,7 +34,8 @@ public class SupplierListServlet extends HttpServlet {
             keyword = keyword.substring(0, KEYWORD_MAX_LENGTH);
         }
         String statusFilter = SupplierFormParser.normalize(request.getParameter("statusFilter"));
-        if (!List.of(Supplier.ACTIVE, Supplier.INACTIVE).contains(statusFilter)) {
+        // List.of(...).contains(null) ném NullPointerException nên phải kiểm null trước
+        if (statusFilter != null && !List.of(Supplier.ACTIVE, Supplier.INACTIVE).contains(statusFilter)) {
             statusFilter = null;
         }
 
