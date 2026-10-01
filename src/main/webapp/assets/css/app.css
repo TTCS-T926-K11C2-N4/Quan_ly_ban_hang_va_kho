@@ -258,8 +258,14 @@ ol {
     cursor: pointer;
 }
 
-.app-user__action:hover {
+.app-user__action:hover,
+.app-user__action--active {
     color: #ffffff;
+}
+
+.app-user__action--active {
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 .app-sidebar-backdrop {
