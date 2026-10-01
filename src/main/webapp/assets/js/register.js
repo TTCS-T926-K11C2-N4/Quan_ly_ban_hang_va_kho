@@ -1,16 +1,6 @@
 (function () {
     var form = document.getElementById("register-form");
 
-    // Nút mắt: hiện/ẩn ô mật khẩu mà nó trỏ tới (data-password-toggle = id của ô)
-    document.querySelectorAll("[data-password-toggle]").forEach(function (button) {
-        var input = document.getElementById(button.getAttribute("data-password-toggle"));
-        button.addEventListener("click", function () {
-            var isHidden = input.type === "password";
-            input.type = isHidden ? "text" : "password";
-            button.setAttribute("aria-pressed", String(isHidden));
-        });
-    });
-
     // Cùng quy tắc với AccountService.validateRegistration (server vẫn kiểm tra lại, kể cả trùng tên/email)
     var USERNAME_PATTERN = /^[A-Za-z0-9._-]{3,50}$/;
     var EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

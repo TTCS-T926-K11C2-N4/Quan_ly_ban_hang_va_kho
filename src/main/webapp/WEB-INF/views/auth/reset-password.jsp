@@ -42,6 +42,10 @@
                                     <input class="form-field__input" type="password" id="newPassword" name="newPassword"
                                            autocomplete="new-password" minlength="8" maxlength="64"
                                            aria-describedby="new-password-hint" required autofocus>
+                                    <button class="form-field__toggle" type="button" data-password-toggle="newPassword"
+                                            aria-controls="newPassword" aria-pressed="false" aria-label="Hiện mật khẩu mới">
+                                        <img src="<c:url value='/assets/img/icons/eye-open.svg'/>" alt="" width="20" height="20">
+                                    </button>
                                 </div>
                                 <p class="form-field__hint" id="new-password-hint">Tối thiểu 8 ký tự, có chữ và số</p>
                             </div>
@@ -52,6 +56,10 @@
                                     <span class="form-field__icon form-field__icon--lock" aria-hidden="true"></span>
                                     <input class="form-field__input" type="password" id="confirmPassword" name="confirmPassword"
                                            autocomplete="new-password" maxlength="64" required>
+                                    <button class="form-field__toggle" type="button" data-password-toggle="confirmPassword"
+                                            aria-controls="confirmPassword" aria-pressed="false" aria-label="Hiện mật khẩu xác nhận">
+                                        <img src="<c:url value='/assets/img/icons/eye-open.svg'/>" alt="" width="20" height="20">
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -82,5 +90,7 @@
             </c:choose>
         </section>
     </main>
+
+    <script src="<c:url value='/assets/js/password-toggle.js'/>"></script>
 </body>
 </html>

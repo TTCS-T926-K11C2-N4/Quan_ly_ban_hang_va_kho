@@ -25,9 +25,6 @@
             <%-- novalidate: kiểm tra bằng change-password.js để hiện lỗi ngay dưới từng ô --%>
             <form class="auth-form" id="change-password-form" action="<c:url value='/change-password'/>" method="post" novalidate>
                 <div class="auth-form__fields">
-                    <c:if test="${not empty success}">
-                        <p class="auth-form__success" id="change-password-success" role="status"><c:out value="${success}"/></p>
-                    </c:if>
                     <c:if test="${not empty error}">
                         <p class="auth-form__error" id="change-password-error" role="alert"><c:out value="${error}"/></p>
                     </c:if>
@@ -38,6 +35,10 @@
                             <span class="form-field__icon form-field__icon--lock" aria-hidden="true"></span>
                             <input class="form-field__input" type="password" id="currentPassword" name="currentPassword"
                                    autocomplete="current-password" aria-describedby="current-password-error" required autofocus>
+                            <button class="form-field__toggle" type="button" data-password-toggle="currentPassword"
+                                    aria-controls="currentPassword" aria-pressed="false" aria-label="Hiện mật khẩu hiện tại">
+                                <img src="<c:url value='/assets/img/icons/eye-open.svg'/>" alt="" width="20" height="20">
+                            </button>
                         </div>
                         <p class="form-field__error" id="current-password-error" hidden></p>
                     </div>
@@ -49,6 +50,10 @@
                             <input class="form-field__input" type="password" id="newPassword" name="newPassword"
                                    autocomplete="new-password" minlength="8"
                                    aria-describedby="new-password-hint new-password-error" required>
+                            <button class="form-field__toggle" type="button" data-password-toggle="newPassword"
+                                    aria-controls="newPassword" aria-pressed="false" aria-label="Hiện mật khẩu mới">
+                                <img src="<c:url value='/assets/img/icons/eye-open.svg'/>" alt="" width="20" height="20">
+                            </button>
                         </div>
                         <p class="form-field__hint" id="new-password-hint">Tối thiểu 8 ký tự, có chữ và số</p>
                         <p class="form-field__error" id="new-password-error" hidden></p>
@@ -60,6 +65,10 @@
                             <span class="form-field__icon form-field__icon--lock" aria-hidden="true"></span>
                             <input class="form-field__input" type="password" id="confirmPassword" name="confirmPassword"
                                    autocomplete="new-password" aria-describedby="confirm-password-error" required>
+                            <button class="form-field__toggle" type="button" data-password-toggle="confirmPassword"
+                                    aria-controls="confirmPassword" aria-pressed="false" aria-label="Hiện mật khẩu xác nhận">
+                                <img src="<c:url value='/assets/img/icons/eye-open.svg'/>" alt="" width="20" height="20">
+                            </button>
                         </div>
                         <p class="form-field__error" id="confirm-password-error" hidden></p>
                     </div>
@@ -88,6 +97,7 @@
         </section>
     </main>
 
+    <script src="<c:url value='/assets/js/password-toggle.js'/>"></script>
     <script src="<c:url value='/assets/js/change-password.js'/>"></script>
 </body>
 </html>
