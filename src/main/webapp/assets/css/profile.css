@@ -1,0 +1,41 @@
+/* Trang Hồ sơ cá nhân: phần ảnh đại diện (S2-03). Phần còn lại dùng lại accounts.css */
+.avatar-upload__image {
+    object-fit: cover;
+}
+
+/* .account-profile__avatar và .button tự đặt display nên thuộc tính hidden không có tác dụng nếu thiếu dòng này */
+.avatar-upload [hidden],
+.avatar-upload__form [hidden] {
+    display: none;
+}
+
+.avatar-upload__form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 16px;
+}
+
+.avatar-upload__hint,
+.avatar-upload__error {
+    flex-basis: 100%;
+    margin-top: 0;
+}
+
+/* Ô chọn tệp bị ẩn (visually-hidden) nên hiện viền focus lên nhãn thay thế */
+#avatar-file:focus-visible + .avatar-upload__choose {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (max-width: 639px) {
+    .account-profile {
+        flex-direction: column;
+    }
+
+    .avatar-upload__form .button {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+}

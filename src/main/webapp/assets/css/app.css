@@ -215,6 +215,8 @@ ol {
     font-size: 13px;
     font-weight: 700;
     color: var(--color-navy);
+    /* Khi là ảnh đại diện (S2-03): cắt vừa khung tròn, không méo */
+    object-fit: cover;
 }
 
 .app-user__name {

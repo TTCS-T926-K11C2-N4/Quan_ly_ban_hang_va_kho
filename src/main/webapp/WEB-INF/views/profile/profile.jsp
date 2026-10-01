@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="<c:url value='/assets/css/app.css'/>">
     <%-- Dùng lại khung thông tin, form và nút của nhóm màn hình Quản lý tài khoản --%>
     <link rel="stylesheet" href="<c:url value='/assets/css/accounts.css'/>">
+    <link rel="stylesheet" href="<c:url value='/assets/css/profile.css'/>">
 </head>
 <body class="app-page">
     <%@ include file="/WEB-INF/views/layout/sidebar.jspf" %>
@@ -37,7 +38,20 @@
 
             <section class="account-detail" aria-labelledby="profile-name">
                 <div class="account-profile">
-                    <span class="account-profile__avatar" aria-hidden="true"><c:out value="${profile.initials}"/></span>
+                    <%-- Ảnh đại diện (S2-03): hồ sơ luôn của người đang đăng nhập nên lấy ảnh từ currentUser --%>
+                    <div class="avatar-upload">
+                        <c:choose>
+                            <c:when test="${currentUser.hasAvatar}">
+                                <img class="account-profile__avatar avatar-upload__image" id="avatar-image" width="72" height="72"
+                                     src="<c:url value='/avatar'><c:param name='id' value='${currentUser.avatarFileId}'/><c:param name='size' value='full'/></c:url>"
+                                     alt="Ảnh đại diện của ${fn:escapeXml(profile.fullName)}">
+                            </c:when>
+                            <c:otherwise>
+                                <span class="account-profile__avatar" id="avatar-initials" aria-hidden="true"><c:out value="${profile.initials}"/></span>
+                                <img class="account-profile__avatar avatar-upload__image" id="avatar-image" width="72" height="72" alt="" hidden>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
                     <div>
                         <h2 class="account-profile__name" id="profile-name"><c:out value="${profile.fullName}"/></h2>
                         <p class="account-profile__username">@<c:out value="${profile.username}"/></p>
@@ -46,6 +60,21 @@
                                 <span class="role-badge role-badge--${fn:toLowerCase(role.code)}"><c:out value="${role.name}"/></span>
                             </c:forEach>
                         </div>
+
+                        <%-- novalidate: profile-avatar.js kiểm tra định dạng, dung lượng và hiện ảnh xem trước; server kiểm tra lại --%>
+                        <form class="avatar-upload__form" id="avatar-form" method="post" enctype="multipart/form-data" novalidate
+                              action="<c:url value='/profile/avatar'/>">
+                            <input class="visually-hidden" type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png"
+                                   aria-describedby="avatar-hint avatar-error">
+                            <label class="button button--secondary avatar-upload__choose" for="avatar-file">
+                                ${currentUser.hasAvatar ? 'Đổi ảnh đại diện' : 'Chọn ảnh đại diện'}
+                            </label>
+                            <button class="button button--primary" type="submit" id="avatar-submit" hidden>Tải ảnh lên</button>
+                            <p class="form-group__hint avatar-upload__hint" id="avatar-hint">
+                                JPG hoặc PNG, tối đa 2MB. Ảnh được cắt vuông ở giữa.
+                            </p>
+                            <p class="form-group__error avatar-upload__error" id="avatar-error" role="alert"${empty avatarError ? ' hidden' : ''}><c:out value="${avatarError}"/></p>
+                        </form>
                     </div>
                 </div>
 
@@ -108,5 +137,6 @@
 
     <script src="<c:url value='/assets/js/app.js'/>"></script>
     <script src="<c:url value='/assets/js/profile.js'/>"></script>
+    <script src="<c:url value='/assets/js/profile-avatar.js'/>"></script>
 </body>
 </html>
