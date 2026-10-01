@@ -22,7 +22,9 @@ import java.util.Map;
 public class ProfileServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/profile/profile.jsp";
-    private static final String FLASH_UPDATED = "flashProfileUpdated";
+    // AvatarUploadServlet cũng dùng hai khoá này vì tải ảnh xong quay về trang hồ sơ
+    static final String FLASH_UPDATED = "flashProfileUpdated";
+    static final String FLASH_AVATAR_ERROR = "flashAvatarError";
 
     private final ProfileService profileService = new ProfileService();
     private final AuthService authService = new AuthService();
@@ -37,6 +39,7 @@ public class ProfileServlet extends HttpServlet {
                 return;
             }
             Flash.moveToRequest(request, FLASH_UPDATED, "success");
+            Flash.moveToRequest(request, FLASH_AVATAR_ERROR, "avatarError");
             showForm(request, response, profile, new ProfileForm(profile.getFullName(), profile.getPhone()), Map.of());
         } catch (SQLException e) {
             log("Không tải được hồ sơ cá nhân", e);

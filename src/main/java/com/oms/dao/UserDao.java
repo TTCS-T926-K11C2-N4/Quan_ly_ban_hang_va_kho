@@ -160,11 +160,12 @@ public class UserDao {
 
     // Thông tin hiển thị ở sidebar: tên, các vai trò, kho và địa bàn đang phụ trách
     public SessionUser findSessionUser(long userId, Set<String> permissions) throws SQLException {
-        String sql = "SELECT username, full_name, must_change_password FROM users WHERE id = ?";
+        String sql = "SELECT username, full_name, must_change_password, avatar_file_id FROM users WHERE id = ?";
         try (Connection connection = DbConnection.getConnection()) {
             String username;
             String fullName;
             boolean mustChangePassword;
+            Long avatarFileId;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setLong(1, userId);
                 try (ResultSet resultSet = statement.executeQuery()) {
@@ -174,6 +175,8 @@ public class UserDao {
                     username = resultSet.getString("username");
                     fullName = resultSet.getString("full_name");
                     mustChangePassword = resultSet.getBoolean("must_change_password");
+                    long fileId = resultSet.getLong("avatar_file_id");
+                    avatarFileId = resultSet.wasNull() ? null : fileId;
                 }
             }
             List<String> roleNames = findNames(connection, "SELECT r.name FROM user_roles ur"
@@ -185,7 +188,7 @@ public class UserDao {
             scopes.addAll(findNames(connection, "SELECT g.name FROM user_regions ug"
                     + " JOIN regions g ON g.id = ug.region_id WHERE ug.user_id = ? ORDER BY g.name", userId));
             return new SessionUser(userId, username, fullName, String.join(", ", roleNames),
-                    String.join(" • ", scopes), mustChangePassword, Set.copyOf(roleCodes), permissions);
+                    String.join(" • ", scopes), mustChangePassword, Set.copyOf(roleCodes), permissions, avatarFileId);
         }
     }
 
@@ -421,6 +424,31 @@ public class UserDao {
             statement.setString(2, phone);
             statement.setLong(3, userId);
             statement.setLong(4, userId);
+            statement.executeUpdate();
+        }
+    }
+
+    // Khoá dòng người dùng tới hết transaction để hai lần đổi ảnh cùng lúc không làm sót tệp ảnh cũ
+    public Long findAvatarFileIdForUpdate(Connection connection, long userId) throws SQLException {
+        String sql = "SELECT avatar_file_id FROM users WHERE id = ? FOR UPDATE";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return null;
+                }
+                long fileId = resultSet.getLong("avatar_file_id");
+                return resultSet.wasNull() ? null : fileId;
+            }
+        }
+    }
+
+    public void updateAvatar(Connection connection, long userId, long fileId) throws SQLException {
+        String sql = "UPDATE users SET avatar_file_id = ?, updated_at = UTC_TIMESTAMP(), updated_by = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, fileId);
+            statement.setLong(2, userId);
+            statement.setLong(3, userId);
             statement.executeUpdate();
         }
     }

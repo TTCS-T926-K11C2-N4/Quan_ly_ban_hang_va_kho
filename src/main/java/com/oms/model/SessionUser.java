@@ -20,9 +20,10 @@ public class SessionUser {
     private final boolean mustChangePassword;
     private final Set<String> roleCodes;
     private final Set<String> permissions;
+    private final Long avatarFileId;
 
     public SessionUser(long id, String username, String fullName, String roleName, String scope,
-                       boolean mustChangePassword, Set<String> roleCodes, Set<String> permissions) {
+                       boolean mustChangePassword, Set<String> roleCodes, Set<String> permissions, Long avatarFileId) {
         this.id = id;
         this.username = username;
         this.fullName = fullName;
@@ -31,6 +32,7 @@ public class SessionUser {
         this.mustChangePassword = mustChangePassword;
         this.roleCodes = Set.copyOf(roleCodes);
         this.permissions = Set.copyOf(permissions);
+        this.avatarFileId = avatarFileId;
     }
 
     public long getId() {
@@ -79,5 +81,14 @@ public class SessionUser {
 
     public String getInitials() {
         return NameUtil.initials(fullName);
+    }
+
+    // Ảnh đại diện (S2-03): JSP ghép /avatar?id=${currentUser.avatarFileId}&size=thumb; null thì hiện chữ viết tắt
+    public Long getAvatarFileId() {
+        return avatarFileId;
+    }
+
+    public boolean isHasAvatar() {
+        return avatarFileId != null;
     }
 }

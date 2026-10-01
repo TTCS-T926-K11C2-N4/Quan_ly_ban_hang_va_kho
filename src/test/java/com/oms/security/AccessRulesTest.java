@@ -118,6 +118,15 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/profile", permissionsOf("CUSTOMER")));
     }
 
+    // S2-03: ai đăng nhập cũng tải được ảnh của mình và xem được ảnh đại diện của người khác
+    @Test
+    void everyLoggedInUserCanUploadAndSeeAvatars() {
+        for (String path : new String[] {"/profile/avatar", "/avatar"}) {
+            assertTrue(AccessRules.isAllowed(path, Set.of()), path);
+        }
+        assertFalse(AccessRules.isPublic("/avatar"), "Ảnh đại diện không mở công khai khi chưa đăng nhập");
+    }
+
     @Test
     void undeclaredPathIsDeniedEvenForAdmin() {
         assertFalse(AccessRules.isAllowed("/chuc-nang-moi", permissionsOf("ADMIN")));
