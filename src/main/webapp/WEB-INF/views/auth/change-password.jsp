@@ -100,6 +100,7 @@
         </section>
     </main>
 
+    <script src="<c:url value='/assets/js/password-toggle.js'/>"></script>
     <script src="<c:url value='/assets/js/change-password.js'/>"></script>
 </body>
 </html>
