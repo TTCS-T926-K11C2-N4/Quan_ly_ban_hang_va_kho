@@ -4,6 +4,16 @@
     var newPassword = document.getElementById("newPassword");
     var confirmPassword = document.getElementById("confirmPassword");
 
+    // Nút mắt: hiện/ẩn ô mật khẩu mà nó trỏ tới (data-password-toggle = id của ô), giống trang Đăng ký
+    document.querySelectorAll("[data-password-toggle]").forEach(function (button) {
+        var input = document.getElementById(button.getAttribute("data-password-toggle"));
+        button.addEventListener("click", function () {
+            var isHidden = input.type === "password";
+            input.type = isHidden ? "text" : "password";
+            button.setAttribute("aria-pressed", String(isHidden));
+        });
+    });
+
     var errorIds = {
         currentPassword: "current-password-error",
         newPassword: "new-password-error",

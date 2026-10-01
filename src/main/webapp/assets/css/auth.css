@@ -105,7 +105,7 @@ body {
     max-width: 600px;
 }
 
-/* Nút mắt ở trang Đăng ký chỉ có icon 20px (trang Đăng nhập có chữ "Hiện" + icon 18px) */
+/* Nút mắt ở trang Đăng ký, Đổi mật khẩu chỉ có icon 20px (trang Đăng nhập có chữ "Hiện" + icon 18px) */
 .form-field__toggle[data-password-toggle] img {
     width: 20px;
     height: 20px;

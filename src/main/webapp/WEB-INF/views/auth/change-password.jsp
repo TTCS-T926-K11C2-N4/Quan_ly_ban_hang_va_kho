@@ -38,6 +38,10 @@
                             <span class="form-field__icon form-field__icon--lock" aria-hidden="true"></span>
                             <input class="form-field__input" type="password" id="currentPassword" name="currentPassword"
                                    autocomplete="current-password" aria-describedby="current-password-error" required autofocus>
+                            <button class="form-field__toggle" type="button" data-password-toggle="currentPassword"
+                                    aria-controls="currentPassword" aria-pressed="false" aria-label="Hiện mật khẩu hiện tại">
+                                <img src="<c:url value='/assets/img/icons/eye-open.svg'/>" alt="" width="20" height="20">
+                            </button>
                         </div>
                         <p class="form-field__error" id="current-password-error" hidden></p>
                     </div>
@@ -49,6 +53,10 @@
                             <input class="form-field__input" type="password" id="newPassword" name="newPassword"
                                    autocomplete="new-password" minlength="8"
                                    aria-describedby="new-password-hint new-password-error" required>
+                            <button class="form-field__toggle" type="button" data-password-toggle="newPassword"
+                                    aria-controls="newPassword" aria-pressed="false" aria-label="Hiện mật khẩu mới">
+                                <img src="<c:url value='/assets/img/icons/eye-open.svg'/>" alt="" width="20" height="20">
+                            </button>
                         </div>
                         <p class="form-field__hint" id="new-password-hint">Tối thiểu 8 ký tự, có chữ và số</p>
                         <p class="form-field__error" id="new-password-error" hidden></p>
@@ -60,6 +68,10 @@
                             <span class="form-field__icon form-field__icon--lock" aria-hidden="true"></span>
                             <input class="form-field__input" type="password" id="confirmPassword" name="confirmPassword"
                                    autocomplete="new-password" aria-describedby="confirm-password-error" required>
+                            <button class="form-field__toggle" type="button" data-password-toggle="confirmPassword"
+                                    aria-controls="confirmPassword" aria-pressed="false" aria-label="Hiện mật khẩu xác nhận">
+                                <img src="<c:url value='/assets/img/icons/eye-open.svg'/>" alt="" width="20" height="20">
+                            </button>
                         </div>
                         <p class="form-field__error" id="confirm-password-error" hidden></p>
                     </div>
