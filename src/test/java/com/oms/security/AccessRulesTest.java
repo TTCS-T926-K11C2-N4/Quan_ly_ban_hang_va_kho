@@ -93,6 +93,15 @@ class AccessRulesTest {
         }
     }
 
+    // S2-02: ai đã đăng nhập cũng xem và sửa được hồ sơ của chính mình
+    @Test
+    void everyRoleCanOpenOwnProfile() {
+        for (String role : new String[] {"CUSTOMER", "SALES_REP", "SALES_MANAGER", "WAREHOUSE", "WH_MANAGER",
+                "ACCOUNTANT", "ADMIN"}) {
+            assertTrue(AccessRules.isAllowed("/profile", permissionsOf(role)), role);
+        }
+    }
+
     @Test
     void customerAndAccountantCannotOpenAccounts() {
         assertFalse(AccessRules.isAllowed("/accounts", permissionsOf("CUSTOMER")));

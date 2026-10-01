@@ -396,6 +396,20 @@ public class UserDao {
     }
 
     // activate: chuyển PENDING -> ACTIVE (chỉ khi tài khoản đang PENDING)
+    // Người dùng tự sửa hồ sơ (S2-02): chỉ họ tên và số điện thoại
+    public void updateOwnProfile(Connection connection, long userId, String fullName, String phone)
+            throws SQLException {
+        String sql = "UPDATE users SET full_name = ?, phone = ?, updated_at = UTC_TIMESTAMP(), updated_by = ?"
+                + " WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, fullName);
+            statement.setString(2, phone);
+            statement.setLong(3, userId);
+            statement.setLong(4, userId);
+            statement.executeUpdate();
+        }
+    }
+
     public void updateProfile(Connection connection, long userId, String fullName, String email, String phone,
                               boolean activate) throws SQLException {
         String sql = "UPDATE users SET full_name = ?, email = ?, phone = ?,"

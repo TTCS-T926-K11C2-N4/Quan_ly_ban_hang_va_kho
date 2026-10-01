@@ -16,8 +16,10 @@ public class AuditLogEntry {
     public static final String USER_UNLOCK = "USER_UNLOCK";
     public static final String PASSWORD_CHANGE = "PASSWORD_CHANGE";
     public static final String PASSWORD_RESET = "PASSWORD_RESET";
+    public static final String PROFILE_UPDATE = "PROFILE_UPDATE";
 
     private static final Map<String, String> LABELS = Map.of(
+            PROFILE_UPDATE, "Tự cập nhật hồ sơ cá nhân",
             USER_REGISTER, "Đăng ký tài khoản",
             USER_CREATE, "Tạo tài khoản",
             USER_UPDATE, "Cập nhật thông tin tài khoản",
