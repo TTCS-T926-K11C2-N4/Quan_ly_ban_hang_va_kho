@@ -88,8 +88,20 @@ class AccessRulesTest {
     void adminCanManageAccounts() {
         Set<String> admin = permissionsOf("ADMIN");
         for (String path : new String[] {"/accounts", "/accounts/view", "/accounts/new", "/accounts/edit",
-                "/accounts/lock", "/accounts/unlock"}) {
+                "/accounts/lock", "/accounts/unlock", "/accounts/import", "/accounts/import/template",
+                "/accounts/import/preview", "/accounts/import/result", "/accounts/import/errors"}) {
             assertTrue(AccessRules.isAllowed(path, admin), path);
+        }
+    }
+
+    // S2-01: nhập người dùng từ Excel tạo tài khoản hàng loạt nên cần quyền quản lý tài khoản
+    @Test
+    void onlyUserManagersCanImportAccounts() {
+        Set<String> salesManager = permissionsOf("SALES_MANAGER");
+        for (String path : new String[] {"/accounts/import", "/accounts/import/template", "/accounts/import/preview",
+                "/accounts/import/result", "/accounts/import/errors"}) {
+            assertFalse(AccessRules.isAllowed(path, salesManager), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
         }
     }
 

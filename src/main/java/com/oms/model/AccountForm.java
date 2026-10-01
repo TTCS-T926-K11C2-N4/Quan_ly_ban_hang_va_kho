@@ -1,9 +1,11 @@
 package com.oms.model;
 
+import java.io.Serializable;
 import java.util.List;
 
-// Dữ liệu người dùng nhập ở form tạo tài khoản (đã trim), dùng để kiểm tra và hiển thị lại khi có lỗi
-public class AccountForm {
+// Dữ liệu người dùng nhập ở form tạo tài khoản (đã trim), dùng để kiểm tra và hiển thị lại khi có lỗi.
+// Serializable vì dòng nhập từ Excel (ImportRow) được giữ trong session giữa bước xem trước và bước nhập.
+public class AccountForm implements Serializable {
 
     private final String fullName;
     private final String username;
