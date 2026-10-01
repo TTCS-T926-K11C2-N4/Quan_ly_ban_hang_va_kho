@@ -79,6 +79,9 @@
                 </div>
 
                 <c:if test="${canManage}">
+                    <a class="account-filters__import" id="import-accounts-link" href="<c:url value='/accounts/import'/>">
+                        Import Excel
+                    </a>
                     <a class="account-filters__create" id="create-account-link" href="<c:url value='/accounts/new'/>">
                         <span aria-hidden="true">+</span> Tạo tài khoản
                     </a>
