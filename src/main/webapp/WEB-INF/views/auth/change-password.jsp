@@ -25,9 +25,6 @@
             <%-- novalidate: kiểm tra bằng change-password.js để hiện lỗi ngay dưới từng ô --%>
             <form class="auth-form" id="change-password-form" action="<c:url value='/change-password'/>" method="post" novalidate>
                 <div class="auth-form__fields">
-                    <c:if test="${not empty success}">
-                        <p class="auth-form__success" id="change-password-success" role="status"><c:out value="${success}"/></p>
-                    </c:if>
                     <c:if test="${not empty error}">
                         <p class="auth-form__error" id="change-password-error" role="alert"><c:out value="${error}"/></p>
                     </c:if>
