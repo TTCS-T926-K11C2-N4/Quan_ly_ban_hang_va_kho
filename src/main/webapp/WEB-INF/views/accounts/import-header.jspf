@@ -1,0 +1,44 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Đầu trang chung của 3 bước nhập Excel (S2-01). Trang include cần đặt importStep (1..3) và importSubtitle --%>
+<header class="page-header import-header">
+    <div>
+        <h1 class="import-header__title">Import hàng loạt từ Excel</h1>
+        <p class="import-header__subtitle"><c:out value="${importSubtitle}"/></p>
+    </div>
+</header>
+
+<%-- Nhập sản phẩm (S2-08) làm sau khi có danh mục sản phẩm (S2-05) --%>
+<div class="import-tabs" role="tablist" aria-label="Loại dữ liệu nhập">
+    <span class="import-tabs__item import-tabs__item--active" role="tab" aria-selected="true">Import người dùng</span>
+    <span class="import-tabs__item" role="tab" aria-selected="false" aria-disabled="true"
+          title="Sẽ có khi hoàn thành chức năng Sản phẩm">Import sản phẩm</span>
+</div>
+
+<ol class="import-steps" aria-label="Các bước nhập">
+    <li class="import-steps__item${importStep > 1 ? ' import-steps__item--done' : importStep == 1 ? ' import-steps__item--current' : ''}"
+        ${importStep == 1 ? 'aria-current="step"' : ''}>
+        <span class="import-steps__number" aria-hidden="true">${importStep > 1 ? '✓' : '1'}</span>
+        <span class="import-steps__text">
+            <strong class="import-steps__label">Tải file</strong>
+            <span class="import-steps__hint">${importStep > 1 ? 'Đã hoàn thành' : 'Chọn file Excel'}</span>
+        </span>
+    </li>
+    <li class="import-steps__line${importStep > 1 ? ' import-steps__line--done' : ''}" aria-hidden="true"></li>
+    <li class="import-steps__item${importStep > 2 ? ' import-steps__item--done' : importStep == 2 ? ' import-steps__item--current' : ''}"
+        ${importStep == 2 ? 'aria-current="step"' : ''}>
+        <span class="import-steps__number" aria-hidden="true">${importStep > 2 ? '✓' : '2'}</span>
+        <span class="import-steps__text">
+            <strong class="import-steps__label">Xem trước dữ liệu</strong>
+            <span class="import-steps__hint">${importStep > 2 ? 'Đã kiểm tra' : 'Kiểm tra dữ liệu'}</span>
+        </span>
+    </li>
+    <li class="import-steps__line${importStep > 2 ? ' import-steps__line--done' : ''}" aria-hidden="true"></li>
+    <li class="import-steps__item${importStep == 3 ? ' import-steps__item--current' : ''}"
+        ${importStep == 3 ? 'aria-current="step"' : ''}>
+        <span class="import-steps__number" aria-hidden="true">3</span>
+        <span class="import-steps__text">
+            <strong class="import-steps__label">Kết quả</strong>
+            <span class="import-steps__hint">Hoàn tất import</span>
+        </span>
+    </li>
+</ol>

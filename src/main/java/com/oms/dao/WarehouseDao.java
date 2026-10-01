@@ -13,7 +13,7 @@ import java.util.List;
 public class WarehouseDao {
 
     private static final String FIND_ACTIVE_SQL =
-            "SELECT id, name FROM warehouses WHERE status = 'ACTIVE' ORDER BY name";
+            "SELECT id, code, name FROM warehouses WHERE status = 'ACTIVE' ORDER BY name";
 
     public List<SelectOption> findActive() throws SQLException {
         List<SelectOption> warehouses = new ArrayList<>();
@@ -21,7 +21,8 @@ public class WarehouseDao {
              PreparedStatement statement = connection.prepareStatement(FIND_ACTIVE_SQL);
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
-                warehouses.add(new SelectOption(resultSet.getLong("id"), resultSet.getString("name")));
+                warehouses.add(new SelectOption(resultSet.getLong("id"), resultSet.getString("code"),
+                        resultSet.getString("name")));
             }
         }
         return warehouses;

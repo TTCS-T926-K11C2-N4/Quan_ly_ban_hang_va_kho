@@ -13,7 +13,7 @@ import java.util.List;
 public class RegionDao {
 
     private static final String FIND_ACTIVE_SQL =
-            "SELECT id, name FROM regions WHERE is_active = true ORDER BY name";
+            "SELECT id, code, name FROM regions WHERE is_active = true ORDER BY name";
 
     public List<SelectOption> findActive() throws SQLException {
         List<SelectOption> regions = new ArrayList<>();
@@ -21,7 +21,8 @@ public class RegionDao {
              PreparedStatement statement = connection.prepareStatement(FIND_ACTIVE_SQL);
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
-                regions.add(new SelectOption(resultSet.getLong("id"), resultSet.getString("name")));
+                regions.add(new SelectOption(resultSet.getLong("id"), resultSet.getString("code"),
+                        resultSet.getString("name")));
             }
         }
         return regions;

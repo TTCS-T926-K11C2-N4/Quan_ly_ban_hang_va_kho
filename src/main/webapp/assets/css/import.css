@@ -1,0 +1,801 @@
+/* Import hàng loạt từ Excel (S2-01, S2-08) — theo Figma "Import Excel" bước 1–3 */
+.import-page {
+    --color-import-navy: #1e3a8a;
+    --color-import-border: #e2e8f0;
+    --color-import-outline: #a5b4fc;
+    --color-import-success: #16a34a;
+    --color-import-warning: #d97706;
+    --color-import-error: #dc2626;
+
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+    padding: 27px 32px 24px;
+    color: var(--color-text);
+}
+
+.import-header__title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--color-text);
+}
+
+.import-header__subtitle {
+    margin-top: 7px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+/* Nút */
+.import-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.import-button--primary {
+    border-color: var(--color-import-navy);
+    background: var(--color-import-navy);
+    color: #ffffff;
+}
+
+.import-button--primary:hover {
+    background: #1e40af;
+}
+
+.import-button--primary:disabled {
+    border-color: #94a3b8;
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.import-button--secondary {
+    border-color: var(--color-import-border);
+    background: var(--color-surface);
+    color: var(--color-text-body);
+}
+
+.import-button--secondary:hover {
+    background: #f8fafc;
+}
+
+.import-button--outline {
+    border-color: var(--color-import-outline);
+    background: var(--color-surface);
+    color: var(--color-import-navy);
+}
+
+.import-button--outline:hover {
+    background: #eef2ff;
+}
+
+.import-button:focus-visible,
+.import-link:focus-visible,
+.import-filters__chip:focus-visible,
+.import-pagination__item:focus-visible,
+.import-file__remove:focus-visible,
+.import-dropzone input:focus-visible + .import-button {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Hai tab loại dữ liệu */
+.import-tabs {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 5px 4px 4px;
+    border-radius: 9px;
+    background: var(--color-import-border);
+}
+
+.import-tabs__item {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+.import-tabs__item--active {
+    background: var(--color-import-navy);
+    color: #ffffff;
+}
+
+.import-tabs__item[aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+/* Thanh các bước */
+.import-steps {
+    display: flex;
+    align-items: center;
+    padding: 17px 28px;
+    border: 1px solid var(--color-import-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    list-style: none;
+}
+
+.import-steps__item {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 190px;
+}
+
+.import-steps__number {
+    display: flex;
+    flex: 0 0 31px;
+    align-items: center;
+    justify-content: center;
+    height: 31px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    background: var(--color-surface);
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--color-text-muted);
+}
+
+.import-steps__item--current .import-steps__number,
+.import-steps__item--done .import-steps__number {
+    border-color: var(--color-import-navy);
+    background: var(--color-import-navy);
+    color: #ffffff;
+}
+
+.import-steps__text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.import-steps__label {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.import-steps__hint {
+    font-size: 11px;
+    color: var(--color-text-subtle);
+}
+
+.import-steps__line {
+    flex: 1 1 0;
+    height: 2px;
+    margin: 0 16px;
+    background: var(--color-import-border);
+}
+
+.import-steps__line--done {
+    background: #93c5fd;
+}
+
+/* Khung trắng */
+.import-card {
+    border: 1px solid var(--color-import-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    box-shadow: 0 7px 11px rgba(15, 23, 42, 0.06);
+}
+
+/* Bước 1: tải file */
+.import-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 21px 24px;
+}
+
+.import-template {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--color-import-border);
+}
+
+.import-template__icon {
+    display: flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    border-radius: 10px;
+    background: #eff6ff;
+    font-size: 21px;
+    color: var(--color-import-navy);
+}
+
+.import-template__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.import-template__title {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.import-template__desc {
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.import-alert {
+    padding: 10px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    font-size: 13px;
+    color: var(--color-import-error);
+}
+
+.import-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 219px;
+    padding: 20px 16px;
+    border: 2px dashed #93c5fd;
+    border-radius: 12px;
+    background: #f8fbff;
+    text-align: center;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.import-dropzone--active {
+    border-color: var(--color-import-navy);
+    background: #eff6ff;
+}
+
+.import-dropzone__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    margin-bottom: 10px;
+    border-radius: 14px;
+    background: #dbeafe;
+    font-size: 25px;
+    color: var(--color-import-navy);
+}
+
+.import-dropzone__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.import-dropzone__desc {
+    padding: 6px 0 12px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.import-dropzone__hint {
+    padding-top: 10px;
+    font-size: 11px;
+    color: var(--color-text-subtle);
+}
+
+/* Dòng file đã chọn (bước 1) và thanh tên file (bước 2) */
+.import-file {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 64px;
+    padding: 0 14px;
+    border: 1px solid var(--color-import-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+}
+
+.import-file[hidden] {
+    display: none;
+}
+
+.import-file__icon {
+    display: flex;
+    flex: 0 0 39px;
+    align-items: center;
+    justify-content: center;
+    height: 39px;
+    border-radius: 8px;
+    background: #dcfce7;
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--color-import-success);
+}
+
+.import-file__text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.import-file__name {
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.import-file__size {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+.import-file__status {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-import-success);
+    white-space: nowrap;
+}
+
+.import-file__remove {
+    margin-left: 6px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 18px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.import-file--bar {
+    min-height: 54px;
+    border-radius: 12px;
+}
+
+.import-file--bar .import-file__icon {
+    flex-basis: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.import-file__summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.import-file__summary strong {
+    font-size: 13px;
+    color: var(--color-text);
+}
+
+.import-link {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-import-navy);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.import-link:hover {
+    text-decoration: underline;
+}
+
+.import-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+.import-actions--split {
+    justify-content: space-between;
+    padding-top: 0;
+}
+
+.import-actions__group {
+    display: flex;
+    gap: 10px;
+}
+
+/* Bước 2: số liệu tổng (ảnh thiết kế bước 2-3 chụp ở tỉ lệ ~0.8, số đo dưới đây đã quy về khung 1440px) */
+.import-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+}
+
+.import-stats__item {
+    padding: 16px 16px 14px;
+    border: 1px solid var(--color-import-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+}
+
+.import-stats__item dt {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.import-stats__item dd {
+    margin: 10px 0 0;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.import-stats__item--valid dd { color: var(--color-import-success); }
+.import-stats__item--update dd { color: var(--color-import-warning); }
+.import-stats__item--error dd { color: var(--color-import-error); }
+
+/* Bước 2: bảng dữ liệu */
+.import-table-card {
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.import-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+}
+
+.import-search__input {
+    width: 250px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--color-import-border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--color-text);
+}
+
+.import-search__input::placeholder {
+    color: var(--color-text-subtle);
+}
+
+.import-search__input:focus {
+    border-color: #93c5fd;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.35);
+}
+
+.import-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.import-filters__chip {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 11px;
+    border: 1px solid var(--color-import-border);
+    border-radius: 15px;
+    background: var(--color-surface);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-text-body);
+    text-decoration: none;
+}
+
+.import-filters__chip:hover {
+    background: #f8fafc;
+}
+
+.import-filters__chip--active,
+.import-filters__chip--active:hover {
+    border-color: #bfdbfe;
+    background: #dbeafe;
+    color: var(--color-import-navy);
+}
+
+.import-table-wrap {
+    overflow-x: auto;
+}
+
+.import-table {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+    font-size: 11px;
+    text-align: left;
+}
+
+.import-table th {
+    height: 38px;
+    padding: 0 10px;
+    border-top: 1px solid var(--color-import-border);
+    border-bottom: 1px solid var(--color-import-border);
+    background: #f8fafc;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.import-table td {
+    height: 40px;
+    padding: 4px 10px;
+    border-bottom: 1px solid var(--color-row-border);
+    color: var(--color-text-body);
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Chỉ cột Chi tiết lỗi được xuống dòng (một dòng có thể có nhiều lỗi) */
+.import-table td:last-child {
+    min-width: 220px;
+    white-space: normal;
+}
+
+.import-table th:first-child,
+.import-table td:first-child {
+    padding-left: 14px;
+}
+
+.import-table__row--error td {
+    background: #fef2f2;
+}
+
+.import-table__error {
+    color: var(--color-import-error);
+}
+
+.import-table__empty {
+    height: 72px;
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+.import-status {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 11px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.import-status--valid { background: #dcfce7; color: #15803d; }
+.import-status--update { background: #fef3c7; color: #b45309; }
+.import-status--error { background: #fee2e2; color: var(--color-import-error); }
+
+.import-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+}
+
+.import-pagination__info {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+.import-pagination__list {
+    display: flex;
+    gap: 6px;
+    padding: 0;
+    list-style: none;
+}
+
+.import-pagination__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border: 1px solid var(--color-import-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    font-size: 12px;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+a.import-pagination__item:hover {
+    background: #f8fafc;
+}
+
+.import-pagination__item--active {
+    border-color: var(--color-import-navy);
+    background: var(--color-import-navy);
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.import-pagination__item--disabled {
+    color: var(--color-text-subtle);
+}
+
+/* Bước 3: kết quả */
+.import-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: center;
+    width: 100%;
+    max-width: 675px;
+    margin-top: 48px;
+    padding: 30px 30px 30px;
+    text-align: center;
+}
+
+.import-result__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: #dcfce7;
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--color-import-success);
+}
+
+.import-result__title {
+    margin-top: 20px;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.import-result__desc {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.import-result__desc strong {
+    color: var(--color-text-body);
+}
+
+.import-result__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+    margin: 20px 0 0;
+}
+
+/* Số ở trên, nhãn ở dưới như thiết kế; trong HTML dt vẫn đứng trước dd */
+.import-result__stat {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 6px;
+    padding: 14px 8px;
+    border: 1px solid var(--color-import-border);
+    border-radius: 10px;
+}
+
+.import-result__stat dt {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+.import-result__stat dd {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.import-result__stat--created dd,
+.import-result__stat--updated dd { color: var(--color-import-success); }
+.import-result__stat--error dd { color: var(--color-import-error); }
+
+.import-result__warning {
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px 16px;
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+    background: #fff7ed;
+    font-size: 11px;
+    color: #9a3412;
+    text-align: left;
+}
+
+.import-result__warning-title {
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.import-result__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+/* Màn hình nhỏ: các bước chỉ hiện số, khung xếp dọc */
+@media (max-width: 1023px) {
+    .import-page {
+        padding: 24px 16px 32px;
+    }
+
+    .import-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .import-steps {
+        padding: 14px 16px;
+    }
+
+    .import-steps__item {
+        min-width: 0;
+    }
+
+    .import-steps__text {
+        display: none;
+    }
+
+    .import-steps__item--current .import-steps__text {
+        display: flex;
+    }
+
+    .import-template {
+        flex-wrap: wrap;
+    }
+
+    .import-template .import-button {
+        width: 100%;
+    }
+
+    .import-upload {
+        padding: 16px;
+    }
+
+    .import-file__status {
+        display: none;
+    }
+
+    .import-actions,
+    .import-actions--split,
+    .import-actions__group {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .import-search,
+    .import-search__input {
+        width: 100%;
+    }
+
+    .import-result__stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .import-result__actions .import-button {
+        flex: 1 1 100%;
+    }
+}
