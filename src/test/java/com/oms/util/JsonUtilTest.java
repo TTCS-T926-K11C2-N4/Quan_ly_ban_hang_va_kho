@@ -20,4 +20,11 @@ class JsonUtilTest {
         assertEquals("{\"name\":\"Bia \\\"lon\\\"\\nmới\",\"parentId\":null,\"level\":2,\"ids\":[1,2]}",
                 JsonUtil.object(values));
     }
+
+    @Test
+    void buildsNestedMapsWithKeysAsStrings() {
+        Map<String, Object> lookups = new LinkedHashMap<>();
+        lookups.put("categoryId", Map.of(20L, "Đồ uống"));
+        assertEquals("{\"categoryId\":{\"20\":\"Đồ uống\"}}", JsonUtil.object(lookups));
+    }
 }

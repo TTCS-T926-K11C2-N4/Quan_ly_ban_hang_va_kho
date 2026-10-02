@@ -114,6 +114,18 @@ class AccessRulesTest {
         }
     }
 
+    // S2-04: chỉ Quản trị hệ thống xem và xuất nhật ký thao tác
+    @Test
+    void onlyAdminCanViewAuditLogs() {
+        for (String path : new String[] {"/audit-logs", "/audit-logs/export"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            for (String role : new String[] {"CUSTOMER", "SALES_REP", "SALES_MANAGER", "WAREHOUSE", "WH_MANAGER",
+                    "ACCOUNTANT"}) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
     // S2-05: mọi vai trò nội bộ xem được danh mục sản phẩm; chỉ Quản lý kinh doanh và Admin thêm/sửa/xoá/ngừng
     @Test
     void onlyProductManagersCanChangeProducts() {
