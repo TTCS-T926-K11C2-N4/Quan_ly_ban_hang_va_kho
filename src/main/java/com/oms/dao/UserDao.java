@@ -552,6 +552,20 @@ public class UserDao {
         }
     }
 
+    // Họ tên của mọi tài khoản (để nhật ký thao tác hiện tên thay cho id, vd người nhận bàn giao)
+    public List<SelectOption> findAllNames() throws SQLException {
+        List<SelectOption> users = new ArrayList<>();
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT id, username, full_name FROM users");
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                users.add(new SelectOption(resultSet.getLong("id"), resultSet.getString("username"),
+                        resultSet.getString("full_name")));
+            }
+        }
+        return users;
+    }
+
     private String buildWhere(AccountFilter filter, List<Object> params) {
         List<String> conditions = new ArrayList<>();
 

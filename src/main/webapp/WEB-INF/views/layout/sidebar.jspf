@@ -19,12 +19,29 @@
                     <span class="app-menu__icon app-menu__icon--dashboard" aria-hidden="true"></span>${currentUser.customer ? 'Trang chủ' : 'Tổng quan'}
                 </a>
             </li>
-            <c:if test="${currentUser.can('USER_VIEW')}">
+            <c:if test="${currentUser.can('USER_VIEW') or currentUser.can('AUDIT_LOG_VIEW')}">
             <li>
-                <a class="app-menu__link${activeMenu == 'accounts' ? ' app-menu__link--active' : ''}" id="menu-accounts"
-                   href="<c:url value='/accounts'/>"${activeMenu == 'accounts' ? ' aria-current="page"' : ''}>
+                <%-- Giống nhóm Sản phẩm; trang đặt activeSubmenu: account-list | audit-logs --%>
+                <details class="app-menu__group"${activeMenu == 'accounts' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'accounts' ? ' app-menu__toggle--current' : ''}" id="menu-accounts">
                     <span class="app-menu__icon app-menu__icon--accounts" aria-hidden="true"></span>Quản lý tài khoản
-                </a>
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <c:if test="${currentUser.can('USER_VIEW')}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'account-list' ? ' app-submenu__link--active' : ''}" id="menu-account-list"
+                           href="<c:url value='/accounts'/>"${activeSubmenu == 'account-list' ? ' aria-current="page"' : ''}>Danh sách tài khoản</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('AUDIT_LOG_VIEW')}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'audit-logs' ? ' app-submenu__link--active' : ''}" id="menu-audit-logs"
+                           href="<c:url value='/audit-logs'/>"${activeSubmenu == 'audit-logs' ? ' aria-current="page"' : ''}>Nhật ký thao tác</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
             </li>
             </c:if>
             <c:if test="${currentUser.can('ORDER_VIEW')}">

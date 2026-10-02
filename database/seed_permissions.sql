@@ -39,7 +39,8 @@ INSERT INTO `permissions` (`code`, `module`, `action`, `description`) VALUES
   ('RETURN_MANAGE', 'Trả hàng & điều chỉnh', 'MANAGE', 'Lập phiếu trả hàng và điều chỉnh'),
   ('REPORT_VIEW', 'Báo cáo & dashboard', 'VIEW', 'Xem báo cáo và dashboard'),
   ('USER_VIEW', 'Người dùng & nhật ký', 'VIEW', 'Xem tài khoản người dùng và nhật ký'),
-  ('USER_MANAGE', 'Người dùng & nhật ký', 'MANAGE', 'Tạo, sửa, khoá tài khoản người dùng')
+  ('USER_MANAGE', 'Người dùng & nhật ký', 'MANAGE', 'Tạo, sửa, khoá tài khoản người dùng'),
+  ('AUDIT_LOG_VIEW', 'Người dùng & nhật ký', 'VIEW', 'Xem nhật ký thao tác trên tồn kho, giá, công nợ, hoá đơn')
 AS new_row
 ON DUPLICATE KEY UPDATE `module` = new_row.`module`, `action` = new_row.`action`,
   `description` = new_row.`description`;

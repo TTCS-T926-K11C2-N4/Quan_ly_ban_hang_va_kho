@@ -6,6 +6,7 @@ import com.oms.dao.UserDao;
 import com.oms.model.AuditLogEntry;
 import com.oms.util.AvatarImages;
 import com.oms.util.DbConnection;
+import com.oms.util.JsonUtil;
 import com.oms.util.FileStorage;
 
 import java.awt.image.BufferedImage;
@@ -14,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.UUID;
 
 // Ảnh đại diện (S2-03): JPG/PNG tối đa 2MB, cắt vuông, lưu bản 256px và bản thu nhỏ 64px
@@ -48,8 +50,8 @@ public class AvatarService {
                 long fileId = fileObjectDao.insert(connection, key, originalName, "image/png", full.length, PURPOSE,
                         userId);
                 userDao.updateAvatar(connection, userId, fileId);
-                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.AVATAR_UPDATE, null, null,
-                        ipAddress);
+                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.AVATAR_UPDATE, null,
+                        JsonUtil.object(Map.of("avatarChanged", true)), null, ipAddress);
                 connection.commit();
                 return fileId;
             } catch (SQLException e) {

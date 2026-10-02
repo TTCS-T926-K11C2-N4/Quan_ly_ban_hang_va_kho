@@ -10,7 +10,7 @@ public final class JsonUtil {
     private JsonUtil() {
     }
 
-    // Giá trị nhận: String, Number, Boolean, null, Collection của các loại đó
+    // Giá trị nhận: String, Number, Boolean, null, Collection và Map (khoá đổi thành chuỗi) của các loại đó
     public static String object(Map<String, ?> fields) {
         return fields.entrySet().stream()
                 .map(entry -> quote(entry.getKey()) + ":" + value(entry.getValue()))
@@ -26,6 +26,11 @@ public final class JsonUtil {
         }
         if (value instanceof Collection<?> items) {
             return items.stream().map(JsonUtil::value).collect(Collectors.joining(",", "[", "]"));
+        }
+        if (value instanceof Map<?, ?> map) {
+            return map.entrySet().stream()
+                    .map(entry -> quote(String.valueOf(entry.getKey())) + ":" + value(entry.getValue()))
+                    .collect(Collectors.joining(",", "{", "}"));
         }
         return quote(value.toString());
     }

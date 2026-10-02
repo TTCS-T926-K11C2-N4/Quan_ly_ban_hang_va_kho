@@ -11,12 +11,14 @@ import com.oms.model.LoginResult;
 import com.oms.model.SessionUser;
 import com.oms.security.UnknownLoginAttempts;
 import com.oms.util.DbConnection;
+import com.oms.util.JsonUtil;
 import com.oms.util.MailSender;
 import com.oms.util.PasswordUtil;
 import com.oms.util.TokenUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 
 // Đăng nhập (S1-01), đổi mật khẩu (S1-04), quên và đặt lại mật khẩu qua email (S1-03)
 public class AuthService {
@@ -25,6 +27,8 @@ public class AuthService {
     private static final int DEFAULT_MAX_FAILED_LOGINS = 5;
     private static final int DEFAULT_LOCK_MINUTES = 15;
     private static final int DEFAULT_RESET_TOKEN_MINUTES = 30;
+    // Nhật ký chỉ ghi là có đổi mật khẩu, không lưu mật khẩu hay mã băm
+    private static final String PASSWORD_CHANGED_JSON = JsonUtil.object(Map.of("passwordChanged", true));
 
     // Tài khoản không tồn tại vẫn chạy bcrypt một lần để thời gian phản hồi không để lộ tài khoản có tồn tại hay không
     private static final String DUMMY_HASH = PasswordUtil.hash("khong-phai-mat-khau-that");
@@ -118,8 +122,8 @@ public class AuthService {
             connection.setAutoCommit(false);
             try {
                 userDao.updatePassword(connection, userId, passwordHash);
-                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.PASSWORD_CHANGE, null, null,
-                        ipAddress);
+                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.PASSWORD_CHANGE, null,
+                        PASSWORD_CHANGED_JSON, null, ipAddress);
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
@@ -179,8 +183,8 @@ public class AuthService {
                     return null;
                 }
                 userDao.updatePassword(connection, userId, passwordHash);
-                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.PASSWORD_RESET, null, null,
-                        ipAddress);
+                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.PASSWORD_RESET, null,
+                        PASSWORD_CHANGED_JSON, null, ipAddress);
                 connection.commit();
                 return userId;
             } catch (SQLException e) {

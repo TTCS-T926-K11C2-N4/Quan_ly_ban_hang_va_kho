@@ -5,6 +5,7 @@ import com.oms.dao.UserDao;
 import com.oms.model.AccountDetail;
 import com.oms.model.AuditLogEntry;
 import com.oms.util.DbConnection;
+import com.oms.util.JsonUtil;
 import com.oms.util.PhoneUtil;
 
 import java.sql.Connection;
@@ -44,11 +45,14 @@ public class ProfileService {
 
     // Gọi validate trước. Số điện thoại lưu dạng 0xxxxxxxxx.
     public void update(long userId, String fullName, String phone, String ipAddress) throws SQLException {
+        AccountDetail old = getProfile(userId);
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
-                userDao.updateOwnProfile(connection, userId, fullName.trim(), PhoneUtil.normalizeVietnamMobile(phone));
-                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.PROFILE_UPDATE, null, null,
+                String newPhone = PhoneUtil.normalizeVietnamMobile(phone);
+                userDao.updateOwnProfile(connection, userId, fullName.trim(), newPhone);
+                auditLogDao.insertUserAction(connection, userId, userId, AuditLogEntry.PROFILE_UPDATE,
+                        profileJson(old.getFullName(), old.getPhone()), profileJson(fullName.trim(), newPhone), null,
                         ipAddress);
                 connection.commit();
             } catch (SQLException e) {
@@ -56,5 +60,12 @@ public class ProfileService {
                 throw e;
             }
         }
+    }
+
+    private static String profileJson(String fullName, String phone) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("fullName", fullName);
+        values.put("phone", phone);
+        return JsonUtil.object(values);
     }
 }
