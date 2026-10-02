@@ -37,11 +37,24 @@
             </c:if>
             <c:if test="${currentUser.can('PRODUCT_VIEW')}">
             <li>
-                <%-- Chưa có trang danh sách sản phẩm (S2-05) nên menu mở trang Nhóm hàng (S2-06) --%>
-                <a class="app-menu__link${activeMenu == 'products' ? ' app-menu__link--active' : ''}" id="menu-products"
-                   href="<c:url value='/categories'/>"${activeMenu == 'products' ? ' aria-current="page"' : ''}>
+                <%-- Menu cha chỉ mở/đóng menu con (details/summary, không cần JS); đang ở trang thuộc Sản phẩm thì mở sẵn.
+                     Trang đặt activeSubmenu: product-list | categories --%>
+                <details class="app-menu__group"${activeMenu == 'products' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'products' ? ' app-menu__toggle--current' : ''}" id="menu-products">
                     <span class="app-menu__icon app-menu__icon--products" aria-hidden="true"></span>Sản phẩm
-                </a>
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'product-list' ? ' app-submenu__link--active' : ''}" id="menu-product-list"
+                           href="<c:url value='/products'/>"${activeSubmenu == 'product-list' ? ' aria-current="page"' : ''}>Danh sách sản phẩm</a>
+                    </li>
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'categories' ? ' app-submenu__link--active' : ''}" id="menu-categories"
+                           href="<c:url value='/categories'/>"${activeSubmenu == 'categories' ? ' aria-current="page"' : ''}>Nhóm hàng</a>
+                    </li>
+                </ul>
+                </details>
             </li>
             </c:if>
             <c:if test="${currentUser.can('INVENTORY_VIEW')}">

@@ -8,6 +8,8 @@ public final class Permission {
     public static final String USER_MANAGE = "USER_MANAGE";
     public static final String PRODUCT_VIEW = "PRODUCT_VIEW";
     public static final String PRODUCT_MANAGE = "PRODUCT_MANAGE";
+    // Chỉ Quản lý kinh doanh có, kể cả Admin cũng không (seed_permissions.sql)
+    public static final String COST_PRICE_VIEW = "COST_PRICE_VIEW";
 
     private Permission() {
     }

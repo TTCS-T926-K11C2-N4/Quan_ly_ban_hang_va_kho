@@ -40,7 +40,13 @@ public final class AccessRules {
             Map.entry("/categories/edit", Permission.PRODUCT_MANAGE),
             Map.entry("/categories/delete", Permission.PRODUCT_MANAGE),
             Map.entry("/categories/status", Permission.PRODUCT_MANAGE),
-            Map.entry("/categories/products/move", Permission.PRODUCT_MANAGE));
+            Map.entry("/categories/products/move", Permission.PRODUCT_MANAGE),
+            Map.entry("/products", Permission.PRODUCT_VIEW),
+            Map.entry("/products/image", Permission.PRODUCT_VIEW),
+            Map.entry("/products/new", Permission.PRODUCT_MANAGE),
+            Map.entry("/products/edit", Permission.PRODUCT_MANAGE),
+            Map.entry("/products/delete", Permission.PRODUCT_MANAGE),
+            Map.entry("/products/status", Permission.PRODUCT_MANAGE));
 
     private AccessRules() {
     }

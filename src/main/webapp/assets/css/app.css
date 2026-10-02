@@ -167,6 +167,101 @@ ol {
     outline-offset: 2px;
 }
 
+/* Nhóm menu có menu con (vd Sản phẩm): bấm menu cha để mở/đóng, mũi tên xoay theo */
+.app-menu__toggle {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+.app-menu__toggle::-webkit-details-marker {
+    display: none;
+}
+
+/* Đang ở trang thuộc nhóm: chữ và icon trắng, nền để dành cho mục con đang chọn */
+.app-menu__toggle--current {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.app-menu__toggle--current .app-menu__icon {
+    background-color: #ffffff;
+}
+
+.app-menu__chevron {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-left: auto;
+    background-color: currentColor;
+    -webkit-mask: url("../img/icons/chevron-down.svg") center / 16px 16px no-repeat;
+    mask: url("../img/icons/chevron-down.svg") center / 16px 16px no-repeat;
+    transition: transform 0.2s ease;
+}
+
+.app-menu__group[open] .app-menu__chevron {
+    transform: rotate(180deg);
+}
+
+.app-menu__toggle:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+/* Menu con: đường dọc mờ thẳng giữa icon menu cha, mục con thụt vào sau đường đó */
+.app-submenu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 6px 0 2px 25px;
+    padding: 2px 0 2px 12px;
+    border-left: 1px solid rgba(191, 219, 254, 0.25);
+    list-style: none;
+}
+
+.app-submenu__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-sidebar-muted);
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-submenu__link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+
+.app-submenu__link--active,
+.app-submenu__link--active:hover {
+    background: rgba(255, 255, 255, 0.16);
+    font-weight: 600;
+    color: #ffffff;
+}
+
+/* Vạch sáng nằm đè lên đường dọc, chỉ mục đang mở */
+.app-submenu__link--active::before {
+    content: "";
+    position: absolute;
+    top: 9px;
+    bottom: 9px;
+    left: -13.5px;
+    width: 3px;
+    border-radius: 2px;
+    background: #ffffff;
+}
+
+.app-submenu__link:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
 /* Icon SVG dùng làm mask để tô được cả màu thường (#bfdbfe) lẫn màu mục đang chọn (trắng) */
 .app-menu__icon {
     flex-shrink: 0;
