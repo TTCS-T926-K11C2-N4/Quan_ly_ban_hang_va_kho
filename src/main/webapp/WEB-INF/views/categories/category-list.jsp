@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="activeMenu" value="products"/>
+<c:set var="activeSubmenu" value="categories"/>
 <c:set var="breadcrumbSection" value="Sản phẩm"/>
 <c:set var="breadcrumbPage" value="Nhóm hàng"/>
 <%-- Người chỉ có quyền xem không thấy nút thêm, sửa, xoá, đổi trạng thái --%>
