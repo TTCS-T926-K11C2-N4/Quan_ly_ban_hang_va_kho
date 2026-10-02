@@ -1,0 +1,272 @@
+/* Nhật ký thao tác (S2-04). Dùng chung bộ lọc, bảng, badge, phân trang của accounts.css và categories.css;
+   file này chỉ thêm phần riêng: ô khoảng thời gian, badge hành động, hộp chi tiết trước/sau. */
+
+/* Figma: tiêu đề chữ hoa màu navy (giống trang Danh sách sản phẩm) */
+.audit-header__title {
+    color: var(--color-navy);
+    text-transform: uppercase;
+}
+
+.audit-filters {
+    flex-wrap: wrap;
+    row-gap: 14px;
+    padding-bottom: 16px;
+}
+
+.audit-filters .account-filters__field:not(.audit-filters__period) {
+    flex: 1 1 170px;
+}
+
+.audit-filters__period {
+    flex: 0 1 340px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.audit-filters__period legend {
+    padding: 0;
+}
+
+.audit-period {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.audit-period__date {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.audit-period__arrow {
+    color: var(--color-account-muted);
+}
+
+.audit-filters__actions {
+    display: flex;
+    flex: 1 1 100%;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.audit-filters__reset {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 45px;
+    padding: 0 18px;
+    border: 1px solid #a5b4fc;
+    border-radius: 8px;
+    background: var(--color-surface);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-navy);
+    text-decoration: none;
+}
+
+.audit-filters__reset:hover {
+    background: #eef2ff;
+}
+
+.audit-filters__reset:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Nút gốc (account-filters__create) rộng cố định 216px và không có padding; nút này co theo chữ */
+.audit-filters .audit-filters__export {
+    flex: 0 0 auto;
+    margin-left: 0;
+    padding: 0 20px;
+    white-space: nowrap;
+}
+
+/* Độ rộng cột riêng (accounts.css đặt độ rộng theo cột của bảng tài khoản) */
+.audit-table th:nth-child(1) { width: 64px; }
+.audit-table th:nth-child(2) { width: 170px; }
+.audit-table th:nth-child(3) { width: 180px; }
+.audit-table th:nth-child(4) { width: 150px; }
+.audit-table th:nth-child(5) { width: 130px; }
+.audit-table th:nth-child(6) { width: auto; min-width: 220px; }
+.audit-table th:nth-child(7) { width: 130px; }
+.audit-table th:nth-child(8) { width: 90px; }
+
+.audit-time,
+.audit-ip {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.audit-summary {
+    color: var(--color-account-muted);
+}
+
+/* Màu theo nhóm hành động (Figma: Thêm mới xanh lá, Sửa vàng, Xoá đỏ) */
+.audit-badge--create { background: #dcfce7; color: #15803d; }
+.audit-badge--update { background: #fef9c3; color: #a16207; }
+.audit-badge--delete { background: #fee2e2; color: #dc2626; }
+.audit-badge--status { background: #dbeafe; color: #1d4ed8; }
+.audit-badge--other { background: #f1f5f9; color: #475569; }
+
+.audit-detail-button {
+    border: 0;
+    background: none;
+    font: inherit;
+    letter-spacing: 1px;
+    cursor: pointer;
+}
+
+/* Hộp chi tiết */
+.audit-dialog {
+    width: 720px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 48px);
+    padding: 0;
+    border: 0;
+    border-radius: 14px;
+    background: var(--color-surface);
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+    color: var(--color-account-text);
+}
+
+.audit-dialog::backdrop {
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.audit-dialog__inner {
+    padding: 24px 28px 26px;
+}
+
+.audit-dialog__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.audit-dialog__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-navy);
+}
+
+.audit-dialog__summary {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--color-account-muted);
+}
+
+.audit-dialog__close {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--color-account-muted);
+    cursor: pointer;
+}
+
+.audit-dialog__close:hover {
+    background: var(--color-account-row-line);
+}
+
+.audit-dialog__close:focus-visible {
+    outline: 2px solid var(--color-primary);
+}
+
+.audit-dialog__meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 24px;
+    margin: 18px 0 0;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--color-account-row-tint);
+}
+
+.audit-dialog__meta dt {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-account-muted);
+}
+
+.audit-dialog__meta dd {
+    margin: 2px 0 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.audit-dialog__changes {
+    margin-top: 18px;
+    overflow-x: auto;
+}
+
+.audit-changes {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.audit-changes th,
+.audit-changes td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--color-account-row-line);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.audit-changes th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-account-muted);
+}
+
+.audit-changes th:first-child {
+    width: 30%;
+}
+
+.audit-changes__field {
+    font-weight: 600;
+}
+
+/* Trường có giá trị đổi được tô nền để nhìn ra ngay */
+.audit-changes__row--changed td {
+    background: #fffbeb;
+}
+
+.audit-changes__row--changed td:last-child {
+    font-weight: 600;
+    color: #15803d;
+}
+
+.audit-changes__empty {
+    margin: 0;
+    padding: 18px;
+    border-radius: 10px;
+    background: var(--color-account-row-tint);
+    font-size: 13px;
+    text-align: center;
+    color: var(--color-account-muted);
+}
+
+@media (max-width: 639px) {
+    .audit-filters__period,
+    .audit-filters .account-filters__field:not(.audit-filters__period) {
+        flex: 1 1 100%;
+    }
+
+    .audit-filters__actions a {
+        flex: 1 1 0;
+        justify-content: center;
+    }
+
+    .audit-dialog__meta {
+        grid-template-columns: 1fr;
+    }
+}

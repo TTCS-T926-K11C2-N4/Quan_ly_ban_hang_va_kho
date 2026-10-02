@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="activeMenu" value="accounts"/>
+<c:set var="activeSubmenu" value="account-list"/>
 <c:set var="breadcrumbSection" value="Tổng quan"/>
 <c:set var="breadcrumbPage" value="Quản lý tài khoản"/>
 <%-- Người chỉ có quyền xem (vd Quản lý kinh doanh) không thấy nút tạo, sửa, khóa --%>

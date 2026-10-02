@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="activeMenu" value="accounts"/>
+<c:set var="activeSubmenu" value="account-list"/>
 <c:set var="breadcrumbSection" value="Quản lý tài khoản"/>
 <c:set var="breadcrumbPage" value="Import Excel"/>
 <c:set var="importStep" value="${1}"/>
