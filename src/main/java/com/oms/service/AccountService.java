@@ -16,6 +16,7 @@ import com.oms.model.RegistrationForm;
 import com.oms.model.Role;
 import com.oms.model.SelectOption;
 import com.oms.util.DbConnection;
+import com.oms.util.JsonUtil;
 import com.oms.util.MailSender;
 import com.oms.util.PasswordUtil;
 import jakarta.mail.MessagingException;
@@ -154,11 +155,11 @@ public class AccountService {
                 long userId = account.getId();
                 userDao.updateProfile(connection, userId, form.getFullName(), form.getEmail(), form.getPhone(),
                         activating);
-                auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_UPDATE, null, null,
-                        ipAddress);
+                auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_UPDATE,
+                        JsonUtil.object(toValues(account.getForm())), JsonUtil.object(toValues(form)), null, ipAddress);
                 if (activating) {
-                    auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_ACTIVATE, null, null,
-                            ipAddress);
+                    auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_ACTIVATE,
+                            statusJson("PENDING"), statusJson("ACTIVE"), null, ipAddress);
                 }
                 userDao.deleteRolesExcept(connection, userId, CUSTOMER_ROLE);
                 userDao.insertRoles(connection, userId, form.getRoleCodes());
@@ -198,8 +199,11 @@ public class AccountService {
                 if (form.getRegionId() != null) {
                     userDao.insertRegion(connection, userId, form.getRegionId());
                 }
-                auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_CREATE, null, null,
-                        ipAddress);
+                Map<String, Object> created = new LinkedHashMap<>();
+                created.put("username", form.getUsername());
+                created.putAll(toValues(form));
+                auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_CREATE, null,
+                        JsonUtil.object(created), null, ipAddress);
                 MailSender.send(form.getEmail(), "Tài khoản đăng nhập hệ thống",
                         newAccountMail(form, temporaryPassword, loginUrl));
                 connection.commit();
@@ -252,7 +256,13 @@ public class AccountService {
             try {
                 long userId = userDao.insert(connection, form.getUsername(), form.getEmail(), null,
                         form.getFullName(), passwordHash, "PENDING", false);
-                auditLogDao.insertUserAction(connection, null, userId, AuditLogEntry.USER_REGISTER, null, null, ipAddress);
+                Map<String, Object> registered = new LinkedHashMap<>();
+                registered.put("username", form.getUsername());
+                registered.put("fullName", form.getFullName());
+                registered.put("email", form.getEmail());
+                registered.put("status", "PENDING");
+                auditLogDao.insertUserAction(connection, null, userId, AuditLogEntry.USER_REGISTER, null,
+                        JsonUtil.object(registered), null, ipAddress);
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
@@ -308,15 +318,17 @@ public class AccountService {
                     connection.rollback();
                     return false;
                 }
-                String newValues = null;
+                // lastLockHadHandover đọc khoá handoverToUserId trong new_values
+                Map<String, Object> newValues = new LinkedHashMap<>();
+                newValues.put("status", "LOCKED");
                 if (account.isHandoverRequired()) {
                     userDao.transferRegions(connection, userId, handoverUserId);
                     userDao.transferCustomers(connection, userId, handoverUserId, reason);
-                    newValues = "{\"handoverToUserId\":" + handoverUserId + "}";
+                    newValues.put("handoverToUserId", handoverUserId);
                 }
                 userDao.revokeRefreshTokens(connection, userId);
-                auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_LOCK, newValues, reason,
-                        ipAddress);
+                auditLogDao.insertUserAction(connection, actorUserId, userId, AuditLogEntry.USER_LOCK,
+                        statusJson(account.getStatus().name()), JsonUtil.object(newValues), reason, ipAddress);
                 connection.commit();
                 return true;
             } catch (SQLException e) {
@@ -335,8 +347,8 @@ public class AccountService {
                     connection.rollback();
                     return false;
                 }
-                auditLogDao.insertUserAction(connection, actorUserId, account.getId(), AuditLogEntry.USER_UNLOCK, null, null,
-                        ipAddress);
+                auditLogDao.insertUserAction(connection, actorUserId, account.getId(), AuditLogEntry.USER_UNLOCK,
+                        statusJson(account.getStatus().name()), statusJson("ACTIVE"), null, ipAddress);
                 connection.commit();
                 return true;
             } catch (SQLException e) {
@@ -348,6 +360,22 @@ public class AccountService {
 
     public boolean lastLockHadHandover(long userId) throws SQLException {
         return auditLogDao.lastLockHadHandover(userId);
+    }
+
+    // Giá trị trước/sau ghi vào nhật ký (S2-04); không có mật khẩu. Tên đăng nhập không sửa được nên không có ở đây.
+    private static Map<String, Object> toValues(AccountForm form) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("fullName", form.getFullName());
+        values.put("email", form.getEmail());
+        values.put("phone", form.getPhone());
+        values.put("roleCodes", form.getRoleCodes());
+        values.put("warehouseId", form.getWarehouseId());
+        values.put("regionId", form.getRegionId());
+        return values;
+    }
+
+    private static String statusJson(String status) {
+        return JsonUtil.object(Map.of("status", status));
     }
 
     private static void validateFullName(String fullName, Map<String, String> errors) {

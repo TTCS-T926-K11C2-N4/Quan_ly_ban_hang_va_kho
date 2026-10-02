@@ -290,7 +290,8 @@ public class ProductService {
                 }
                 auditLogDao.insert(connection, actorUserId,
                         Product.DISCONTINUED.equals(status) ? "PRODUCT_DISCONTINUE" : "PRODUCT_ACTIVATE", ENTITY,
-                        product.getId(), null, null, null, ipAddress);
+                        product.getId(), JsonUtil.object(Map.of("status", product.getStatus())),
+                        JsonUtil.object(Map.of("status", status)), null, ipAddress);
                 connection.commit();
                 return true;
             } catch (SQLException e) {

@@ -17,8 +17,9 @@ public class AuditLogDao {
 
     // actorUserId: người thực hiện; null khi chưa đăng nhập (vd tự đăng ký tài khoản)
     public void insertUserAction(Connection connection, Long actorUserId, long userId, String action,
-                                 String newValuesJson, String reason, String ipAddress) throws SQLException {
-        insert(connection, actorUserId, action, USER_ENTITY, userId, null, newValuesJson, reason, ipAddress);
+                                 String oldValuesJson, String newValuesJson, String reason, String ipAddress)
+            throws SQLException {
+        insert(connection, actorUserId, action, USER_ENTITY, userId, oldValuesJson, newValuesJson, reason, ipAddress);
     }
 
     // Ghi một thao tác trên đối tượng bất kỳ (nhóm hàng, giá...); old/new là JSON giá trị trước và sau (S2-04)
