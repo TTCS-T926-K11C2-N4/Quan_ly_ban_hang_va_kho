@@ -114,6 +114,31 @@ class AccessRulesTest {
         }
     }
 
+    // S2-05: mọi vai trò nội bộ xem được danh mục sản phẩm; chỉ Quản lý kinh doanh và Admin thêm/sửa/xoá/ngừng
+    @Test
+    void onlyProductManagersCanChangeProducts() {
+        String[] managePaths = {"/products/new", "/products/edit", "/products/delete", "/products/status"};
+        for (String role : new String[] {"SALES_MANAGER", "ADMIN"}) {
+            for (String path : managePaths) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+        for (String role : new String[] {"SALES_REP", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT"}) {
+            assertTrue(AccessRules.isAllowed("/products", permissionsOf(role)), role);
+            assertTrue(AccessRules.isAllowed("/products/image", permissionsOf(role)), role);
+            for (String path : managePaths) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
+    // S2-05: giá vốn chỉ Quản lý kinh doanh xem và sửa được, Admin cũng không
+    @Test
+    void onlySalesManagerCanSeeCostPriceOfProducts() {
+        assertTrue(permissionsOf("SALES_MANAGER").contains("COST_PRICE_VIEW"));
+        assertFalse(permissionsOf("ADMIN").contains("COST_PRICE_VIEW"));
+    }
+
     // S2-06: mọi vai trò nội bộ xem được nhóm hàng; chỉ Quản lý kinh doanh và Admin được thêm/sửa/xoá/chuyển
     @Test
     void onlyProductManagersCanChangeCategories() {

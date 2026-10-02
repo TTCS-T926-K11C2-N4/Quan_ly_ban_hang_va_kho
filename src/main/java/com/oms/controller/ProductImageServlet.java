@@ -1,6 +1,6 @@
 package com.oms.controller;
 
-import com.oms.service.AvatarService;
+import com.oms.service.ProductService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,24 +11,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 
-// S2-03: ảnh đại diện của một người dùng, ?user=id&size=thumb|full. Ai đã đăng nhập cũng xem được
-// (để nhận ra ai tạo đơn); chưa có ảnh thì chuyển sang ảnh mặc định.
-@WebServlet("/avatar")
-public class AvatarServlet extends HttpServlet {
+// S2-05: ảnh sản phẩm, ?id=&size=thumb|full; chưa có ảnh thì chuyển sang ảnh mặc định
+@WebServlet("/products/image")
+public class ProductImageServlet extends HttpServlet {
 
-    private final AvatarService avatarService = new AvatarService();
+    private final ProductService productService = new ProductService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Long userId = AccountFormParser.parseId(request.getParameter("user"));
-        if (userId == null) {
+        Long id = AccountFormParser.parseId(request.getParameter("id"));
+        if (id == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
         try {
-            Path path = avatarService.findAvatarPath(userId, !"full".equals(request.getParameter("size")));
+            Path path = productService.findImagePath(id, !"full".equals(request.getParameter("size")));
             if (path == null) {
-                response.sendRedirect(request.getContextPath() + "/assets/img/avatar-placeholder.svg");
+                response.sendRedirect(request.getContextPath() + "/assets/img/product-placeholder.svg");
                 return;
             }
             // EncodingFilter đặt UTF-8 cho mọi response; ảnh không có charset nên bỏ đi
@@ -39,7 +38,7 @@ public class AvatarServlet extends HttpServlet {
             response.setHeader("Cache-Control", "private, max-age=86400");
             Files.copy(path, response.getOutputStream());
         } catch (SQLException e) {
-            log("Không đọc được ảnh đại diện", e);
+            log("Không đọc được ảnh sản phẩm", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
