@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // Đọc form bảng giá: các dòng giá gửi lên dạng mảng productId[], price[], floorPrice[] cùng thứ tự.
-// Dòng để trống cả ba ô thì bỏ qua (dòng thêm thừa chưa nhập gì).
+// Giữ cả dòng trống để báo lỗi: người dùng phải nhập đủ hoặc bấm × xoá dòng.
 final class PriceListFormParser {
 
     private PriceListFormParser() {
@@ -23,9 +23,6 @@ final class PriceListFormParser {
             String productId = at(productIds, i);
             String price = at(prices, i);
             String floor = at(floors, i);
-            if (productId == null && price == null && floor == null) {
-                continue;
-            }
             lines.add(new PriceListForm.Line(AccountFormParser.parseId(productId), price, floor));
         }
         return new PriceListForm(AccountFormParser.parseId(request.getParameter("customerGroupId")),
