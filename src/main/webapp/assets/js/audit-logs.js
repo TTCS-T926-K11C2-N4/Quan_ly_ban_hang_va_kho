@@ -59,8 +59,7 @@
             return value ? "Có" : "Không";
         }
         if (Array.isArray(value)) {
-            return value.length === 0 ? "—" : value.map(function (item) { return format(field, item); }).join(field === "items" ? "
-" : ", ");
+            return value.length === 0 ? "—" : value.map(function (item) { return format(field, item); }).join(field === "items" ? "\n" : ", ");
         }
         var names = lookups[LOOKUP_ALIAS[field] || field];
         if (names && names[String(value)] !== undefined) {
