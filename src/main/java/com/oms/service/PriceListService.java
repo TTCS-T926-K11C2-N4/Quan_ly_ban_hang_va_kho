@@ -153,6 +153,10 @@ public class PriceListService {
         for (int i = 0; i < lines.size(); i++) {
             PriceListForm.Line line = lines.get(i);
             String key = "lines." + i;
+            if (line.getProductId() == null && line.getPrice() == null && line.getFloorPrice() == null) {
+                errors.put(key, "Chọn sản phẩm và nhập giá, hoặc bấm × để xoá dòng.");
+                continue;
+            }
             if (line.getProductId() == null) {
                 errors.put(key, "Chọn sản phẩm.");
                 continue;
@@ -167,7 +171,11 @@ public class PriceListService {
             }
             BigDecimal price = parseMoney(line.getPrice());
             BigDecimal floor = parseMoney(line.getFloorPrice());
-            if (price == null) {
+            if (line.getPrice() == null) {
+                errors.put(key, "Vui lòng nhập giá bán.");
+            } else if (line.getFloorPrice() == null) {
+                errors.put(key, "Vui lòng nhập giá sàn.");
+            } else if (price == null) {
                 errors.put(key, "Giá bán là số tiền nguyên, không âm.");
             } else if (floor == null) {
                 errors.put(key, "Giá sàn là số tiền nguyên, không âm.");
