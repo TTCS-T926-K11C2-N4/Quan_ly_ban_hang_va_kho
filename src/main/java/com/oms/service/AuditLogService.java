@@ -1,6 +1,7 @@
 package com.oms.service;
 
 import com.oms.dao.AuditLogDao;
+import com.oms.dao.PriceListDao;
 import com.oms.dao.ProductCategoryDao;
 import com.oms.dao.RegionDao;
 import com.oms.dao.RoleDao;
@@ -50,6 +51,7 @@ public class AuditLogService {
     private final RegionDao regionDao = new RegionDao();
     private final ProductCategoryDao categoryDao = new ProductCategoryDao();
     private final UnitDao unitDao = new UnitDao();
+    private final PriceListDao priceListDao = new PriceListDao();
 
     // from/to là ngày theo giờ Việt Nam, tính cả ngày to; null = không giới hạn phía đó
     public static AuditLogFilter filter(LocalDate from, LocalDate to, Long actorUserId, String entityType,
@@ -94,6 +96,7 @@ public class AuditLogService {
             roles.put(role.getCode(), role.getName());
         }
         lookups.put("roleCodes", roles);
+        lookups.put("customerGroupId", names(priceListDao.findActiveGroups()));
         return JsonUtil.object(lookups);
     }
 

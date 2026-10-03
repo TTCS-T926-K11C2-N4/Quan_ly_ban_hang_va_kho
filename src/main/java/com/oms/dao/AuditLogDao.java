@@ -52,6 +52,7 @@ public class AuditLogDao {
             "CASE a.entity_type WHEN 'USER' THEN COALESCE(tu.username, " + jsonField("username") + ")"
             + " WHEN 'PRODUCT' THEN COALESCE(p.sku, " + jsonField("sku") + ")"
             + " WHEN 'PRODUCT_CATEGORY' THEN COALESCE(c.code, " + jsonField("code") + ")"
+            + " WHEN 'PRICE' THEN COALESCE(pl.code, " + jsonField("code") + ")"
             + " END";
 
     private static String jsonField(String field) {
@@ -81,6 +82,7 @@ public class AuditLogDao {
                 + " LEFT JOIN users tu ON a.entity_type = 'USER' AND tu.id = a.entity_id"
                 + " LEFT JOIN products p ON a.entity_type = 'PRODUCT' AND p.id = a.entity_id"
                 + " LEFT JOIN product_categories c ON a.entity_type = 'PRODUCT_CATEGORY' AND c.id = a.entity_id"
+                + " LEFT JOIN price_lists pl ON a.entity_type = 'PRICE' AND pl.id = a.entity_id"
                 + where(filter, params) + " ORDER BY a.occurred_at DESC, a.id DESC LIMIT ? OFFSET ?";
         params.add(limit);
         params.add(offset);

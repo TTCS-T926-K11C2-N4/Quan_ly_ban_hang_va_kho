@@ -22,7 +22,9 @@
         packagingSpec: "Quy cách đóng gói", description: "Mô tả", sortOrder: "Thứ tự hiển thị",
         status: "Trạng thái", active: "Đang hoạt động", productIds: "Sản phẩm (mã id)",
         handoverToUserId: "Bàn giao cho", costPriceChanged: "Đổi giá vốn", imageChanged: "Đổi ảnh",
-        passwordChanged: "Đổi mật khẩu", avatarChanged: "Đổi ảnh đại diện"
+        passwordChanged: "Đổi mật khẩu", avatarChanged: "Đổi ảnh đại diện",
+        customerGroupId: "Nhóm khách hàng", validFrom: "Ngày bắt đầu", validTo: "Ngày kết thúc",
+        items: "Dòng giá (SKU: giá bán / giá sàn)", previousCode: "Từ bảng giá", nextCode: "Phiên bản mới"
     };
     // Trường dùng chung bảng tra tên với trường khác
     var LOOKUP_ALIAS = { parentId: "categoryId" };
@@ -57,7 +59,8 @@
             return value ? "Có" : "Không";
         }
         if (Array.isArray(value)) {
-            return value.length === 0 ? "—" : value.map(function (item) { return format(field, item); }).join(", ");
+            return value.length === 0 ? "—" : value.map(function (item) { return format(field, item); }).join(field === "items" ? "
+" : ", ");
         }
         var names = lookups[LOOKUP_ALIAS[field] || field];
         if (names && names[String(value)] !== undefined) {
