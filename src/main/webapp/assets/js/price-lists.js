@@ -24,13 +24,24 @@
         }
     }
 
-    function validateRow(row, chosen) {
+    // strict = true khi bấm Lưu: dòng còn trống cũng báo lỗi (lúc đang nhập thì chưa báo để khỏi rối)
+    function validateRow(row, chosen, strict) {
         var select = row.querySelector(".price-line__product");
         var inputs = row.querySelectorAll(".price-line__money");
         var price = toNumber(inputs[0].value);
         var floor = toNumber(inputs[1].value);
         var message = "";
-        if (select.value && chosen[select.value] > 1) {
+        var hasPrice = Boolean(inputs[0].value.trim());
+        var hasFloor = Boolean(inputs[1].value.trim());
+        if (strict && !select.value && !hasPrice && !hasFloor) {
+            message = "Chọn sản phẩm và nhập giá, hoặc bấm × để xoá dòng.";
+        } else if (strict && !select.value) {
+            message = "Chọn sản phẩm.";
+        } else if (strict && !hasPrice) {
+            message = "Vui lòng nhập giá bán.";
+        } else if (strict && !hasFloor) {
+            message = "Vui lòng nhập giá sàn.";
+        } else if (select.value && chosen[select.value] > 1) {
             message = "Sản phẩm này đã có ở dòng khác.";
         } else if (price !== null && floor !== null && floor > price) {
             message = "Giá sàn không được cao hơn giá bán.";
@@ -44,10 +55,13 @@
         error.textContent = message;
         error.hidden = !message;
         row.classList.toggle("price-line--invalid", Boolean(message));
+        return Boolean(message);
     }
 
-    function refreshAll() {
+    // Trả về dòng lỗi đầu tiên (null nếu không có)
+    function refreshAll(strict) {
         var rows = Array.prototype.slice.call(body.rows);
+        var invalid = null;
         var chosen = {};
         rows.forEach(function (row, index) {
             row.querySelector(".price-line__index").textContent = index + 1;
@@ -57,10 +71,21 @@
             }
         });
         rows.forEach(function (row) {
-            validateRow(row, chosen);
+            if (validateRow(row, chosen, strict === true) && !invalid) {
+                invalid = row;
+            }
         });
         empty.hidden = rows.length > 0;
+        return invalid;
     }
+
+    table.closest("form").addEventListener("submit", function (event) {
+        var invalid = refreshAll(true);
+        if (invalid) {
+            event.preventDefault();
+            invalid.querySelector(".price-line__product").focus();
+        }
+    });
 
     Array.prototype.forEach.call(body.rows, refreshRow);
     refreshAll();
