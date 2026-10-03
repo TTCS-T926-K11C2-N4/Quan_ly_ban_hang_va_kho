@@ -70,6 +70,13 @@
                         <a class="app-submenu__link${activeSubmenu == 'categories' ? ' app-submenu__link--active' : ''}" id="menu-categories"
                            href="<c:url value='/categories'/>"${activeSubmenu == 'categories' ? ' aria-current="page"' : ''}>Nhóm hàng</a>
                     </li>
+                    <%-- Đại lý có PRODUCT_VIEW nhưng không xem bảng giá các nhóm (PriceListListServlet) --%>
+                    <c:if test="${not currentUser.customer}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'price-lists' ? ' app-submenu__link--active' : ''}" id="menu-price-lists"
+                           href="<c:url value='/price-lists'/>"${activeSubmenu == 'price-lists' ? ' aria-current="page"' : ''}>Bảng giá</a>
+                    </li>
+                    </c:if>
                 </ul>
                 </details>
             </li>

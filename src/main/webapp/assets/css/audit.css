@@ -231,6 +231,12 @@
     width: 30%;
 }
 
+/* Dòng giá bảng giá xuống dòng mỗi SKU (audit-logs.js nối bằng 
+) */
+.audit-changes td {
+    white-space: pre-line;
+}
+
 .audit-changes__field {
     font-weight: 600;
 }
