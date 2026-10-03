@@ -12,6 +12,7 @@ import com.oms.model.ProductCategory;
 import com.oms.model.ProductFilter;
 import com.oms.model.ProductForm;
 import com.oms.model.ProductListItem;
+import com.oms.model.ProductUnitConversion;
 import com.oms.model.SelectOption;
 import com.oms.model.StockStatus;
 import com.oms.util.AvatarImages;
@@ -26,11 +27,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -48,6 +52,7 @@ public class ProductService {
     private static final int DESCRIPTION_MAX_LENGTH = 2000;
     // decimal(18,2): tối đa 16 chữ số phần nguyên
     private static final int COST_MAX_DIGITS = 16;
+    private static final int MAX_CONVERSIONS = 20;
     private static final int IMAGE_SIZE = 512;
     private static final int IMAGE_THUMB_SIZE = 96;
     private static final String ENTITY = "PRODUCT";
@@ -122,6 +127,10 @@ public class ProductService {
         return productDao.hasTransactions(productId);
     }
 
+    public List<ProductUnitConversion> getConversions(long productId) throws SQLException {
+        return productDao.findConversions(productId);
+    }
+
     // Lỗi theo tên ô; rỗng nghĩa là hợp lệ. editing = null khi thêm mới. canEditCost = false thì bỏ qua ô giá vốn.
     public Map<String, String> validate(ProductForm form, Product editing, boolean canEditCost) throws SQLException {
         Map<String, String> errors = new LinkedHashMap<>();
@@ -177,7 +186,40 @@ public class ProductService {
         if (form.getDescription() != null && form.getDescription().length() > DESCRIPTION_MAX_LENGTH) {
             errors.put("description", "Mô tả tối đa " + DESCRIPTION_MAX_LENGTH + " ký tự.");
         }
+
+        validateConversions(form, errors);
         return errors;
+    }
+
+    // Lỗi theo dòng: conversions (cả bảng), conversions.N (dòng N)
+    private void validateConversions(ProductForm form, Map<String, String> errors) throws SQLException {
+        List<ProductForm.Conversion> conversions = form.getConversions();
+        if (conversions.size() > MAX_CONVERSIONS) {
+            errors.put("conversions", "Một sản phẩm tối đa " + MAX_CONVERSIONS + " đơn vị quy đổi.");
+            return;
+        }
+        Set<Long> units = new HashSet<>();
+        for (SelectOption unit : unitDao.findAll()) {
+            units.add(unit.getId());
+        }
+        Set<Long> used = new HashSet<>();
+        for (int i = 0; i < conversions.size(); i++) {
+            ProductForm.Conversion conversion = conversions.get(i);
+            String key = "conversions." + i;
+            if (conversion.getUnitId() == null && conversion.getFactor() == null) {
+                errors.put(key, "Chọn đơn vị và nhập hệ số, hoặc bấm × để xoá dòng.");
+            } else if (conversion.getUnitId() == null || !units.contains(conversion.getUnitId())) {
+                errors.put(key, "Chọn đơn vị.");
+            } else if (conversion.getUnitId().equals(form.getBaseUnitId())) {
+                errors.put(key, "Trùng đơn vị tính cơ sở.");
+            } else if (!used.add(conversion.getUnitId())) {
+                errors.put(key, "Đơn vị này đã có ở dòng khác.");
+            } else if (conversion.getFactor() == null) {
+                errors.put(key, "Vui lòng nhập hệ số quy đổi.");
+            } else if (UnitConversionService.parseFactor(conversion.getFactor()) == null) {
+                errors.put(key, "Hệ số là số dương khác 1, tối đa 4 chữ số thập phân (vd 24 hoặc 0,5).");
+            }
+        }
     }
 
     // Kiểm tra và thu nhỏ ảnh trước khi ghi CSDL; content rỗng = không đổi ảnh (trả về null)
@@ -204,11 +246,14 @@ public class ProductService {
             try {
                 long id = productDao.insert(connection, form, costPrice, actorUserId);
                 productDao.replaceBaseUnit(connection, id, form.getBaseUnitId(), actorUserId);
+                productDao.replaceConversions(connection, id, factors(form), actorUserId);
                 if (image != null) {
                     imageKey = saveImage(connection, id, image, actorUserId);
                 }
+                Map<String, Object> values = toValues(form, costPrice != null && costPrice.signum() != 0);
+                values.put("conversions", conversionTexts(form));
                 auditLogDao.insert(connection, actorUserId, "PRODUCT_CREATE", ENTITY, id, null,
-                        toJson(form, costPrice != null && costPrice.signum() != 0), null, ipAddress);
+                        JsonUtil.object(values), null, ipAddress);
                 connection.commit();
                 return id;
             } catch (SQLException | IOException e) {
@@ -225,6 +270,8 @@ public class ProductService {
         BigDecimal costPrice = canEditCost ? parseCostPrice(form.getCostPrice()) : null;
         boolean costChanged = costPrice != null && editing.getCostPrice() != null
                 && costPrice.compareTo(editing.getCostPrice()) != 0;
+        Map<String, Object> oldValues = toValues(editing);
+        oldValues.put("conversions", conversionTexts(productDao.findConversions(editing.getId())));
         String imageKey = null;
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
@@ -233,16 +280,21 @@ public class ProductService {
                     connection.rollback();
                     return false;
                 }
+                // Xoá dòng quy đổi cũ trước khi đổi đơn vị cơ sở: đơn vị cơ sở mới có thể là đơn vị quy đổi cũ
+                // (UNIQUE product_id + unit_id)
+                productDao.replaceConversions(connection, editing.getId(), Map.of(), actorUserId);
                 if (editing.getBaseUnitId() != form.getBaseUnitId()) {
                     productDao.replaceBaseUnit(connection, editing.getId(), form.getBaseUnitId(), actorUserId);
                 }
+                productDao.replaceConversions(connection, editing.getId(), factors(form), actorUserId);
                 if (image != null) {
                     imageKey = saveImage(connection, editing.getId(), image, actorUserId);
                 }
                 Map<String, Object> newValues = toValues(form, costChanged);
+                newValues.put("conversions", conversionTexts(form));
                 newValues.put("imageChanged", image != null);
                 auditLogDao.insert(connection, actorUserId, "PRODUCT_UPDATE", ENTITY, editing.getId(),
-                        JsonUtil.object(toValues(editing)), JsonUtil.object(newValues), null, ipAddress);
+                        JsonUtil.object(oldValues), JsonUtil.object(newValues), null, ipAddress);
                 connection.commit();
                 return true;
             } catch (SQLException | IOException e) {
@@ -355,11 +407,30 @@ public class ProductService {
         return new BigDecimal(digits);
     }
 
-    // Giá vốn không ghi vào nhật ký (Admin xem nhật ký nhưng không được xem giá vốn), chỉ ghi là có đổi hay không
-    private static String toJson(ProductForm form, boolean costChanged) {
-        return JsonUtil.object(toValues(form, costChanged));
+    // Gọi sau validate: mọi dòng đã có đơn vị và hệ số hợp lệ
+    private static Map<Long, BigDecimal> factors(ProductForm form) {
+        Map<Long, BigDecimal> factors = new LinkedHashMap<>();
+        for (ProductForm.Conversion conversion : form.getConversions()) {
+            factors.put(conversion.getUnitId(), UnitConversionService.parseFactor(conversion.getFactor()));
+        }
+        return factors;
     }
 
+    // Nhật ký ghi quy đổi theo id đơn vị (trang nhật ký đổi id ra tên): "3=24" nghĩa là 1 đơn vị id 3 = 24 đơn vị cơ sở.
+    // Xếp theo id đơn vị để giá trị trước/sau so được với nhau dù thứ tự dòng trên form khác thứ tự đọc từ CSDL.
+    private static List<String> conversionTexts(ProductForm form) {
+        Map<Long, String> texts = new TreeMap<>();
+        factors(form).forEach((unitId, factor) -> texts.put(unitId, unitId + "=" + factor.stripTrailingZeros().toPlainString()));
+        return new ArrayList<>(texts.values());
+    }
+
+    private static List<String> conversionTexts(List<ProductUnitConversion> conversions) {
+        Map<Long, String> texts = new TreeMap<>();
+        conversions.forEach(c -> texts.put(c.getUnitId(), c.getUnitId() + "=" + c.getFactorText()));
+        return new ArrayList<>(texts.values());
+    }
+
+    // Giá vốn không ghi vào nhật ký (Admin xem nhật ký nhưng không được xem giá vốn), chỉ ghi là có đổi hay không
     private static Map<String, Object> toValues(ProductForm form, boolean costChanged) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("sku", form.getSku());

@@ -120,23 +120,26 @@
                         </c:if>
 
                         <div class="form-group${not empty errors.status ? ' form-group--invalid' : ''}">
-                            <label class="form-group__label" for="product-status">Trạng thái *</label>
-                            <div class="select">
-                                <select class="form-group__control select__control" id="product-status" name="status"
-                                        aria-describedby="product-status-error" aria-invalid="${not empty errors.status}">
-                                    <option value="ACTIVE"${form.status == 'ACTIVE' ? ' selected' : ''}>Đang kinh doanh</option>
-                                    <option value="DISCONTINUED"${form.status == 'DISCONTINUED' ? ' selected' : ''}>Ngừng kinh doanh</option>
-                                </select>
-                            </div>
+                            <span class="form-group__label" id="product-status-label">Trạng thái *</span>
+                            <%-- Bỏ chọn công tắc thì trình duyệt không gửi ô checkbox: ô ẩn phía sau gửi DISCONTINUED.
+                                 Khi bật, ACTIVE đứng trước nên getParameter("status") lấy ACTIVE. --%>
+                            <label class="switch" for="product-status">
+                                <input class="switch__input" type="checkbox" id="product-status" name="status" value="ACTIVE"
+                                       ${form.status != 'DISCONTINUED' ? 'checked' : ''} aria-labelledby="product-status-label product-status-text">
+                                <span class="switch__track" aria-hidden="true"></span>
+                                <span class="switch__text" id="product-status-text" data-on="Đang kinh doanh" data-off="Ngừng kinh doanh">${form.status == 'DISCONTINUED' ? 'Ngừng kinh doanh' : 'Đang kinh doanh'}</span>
+                            </label>
+                            <input type="hidden" name="status" value="DISCONTINUED">
                             <p class="form-group__error" id="product-status-error"${empty errors.status ? ' hidden' : ''}><c:out value="${errors.status}"/></p>
                         </div>
 
                         <div class="form-group form-group--full${not empty errors.image ? ' form-group--invalid' : ''}">
                             <span class="form-group__label" id="product-image-label">Ảnh sản phẩm</span>
-                            <div class="product-image-field">
+                            <div class="product-image-field" id="product-image-drop">
                                 <img class="product-image-field__preview" id="product-image-preview" alt="" width="96" height="96"
                                      src="<c:url value='${editing ? "/products/image" : "/assets/img/product-placeholder.svg"}'><c:if test="${editing}"><c:param name='id' value='${product.id}'/><c:param name='v' value='${product.imageFileId}'/></c:if></c:url>">
                                 <div>
+                                    <p class="product-image-field__drop-text">Kéo thả ảnh vào đây hoặc chọn từ máy tính</p>
                                     <label class="button button--primary product-image-field__button" for="product-image">
                                         <img src="<c:url value='/assets/img/icons/upload.svg'/>" alt="" width="16" height="16">
                                         ${editing and not empty product.imageFileId ? 'Đổi ảnh' : 'Chọn ảnh'}
@@ -160,11 +163,83 @@
                     </div>
                 </section>
 
+                <section class="account-form__section account-form__section--divided" aria-labelledby="product-conversion-title">
+                    <h2 class="account-form__section-title" id="product-conversion-title">Quy đổi đơn vị</h2>
+                    <p class="account-form__section-desc">
+                        Khai báo các đơn vị quy đổi từ đơn vị cơ sở (lon/lốc/thùng). Đơn hàng và phiếu kho nhập theo đơn vị nào cũng được quy về đơn vị cơ sở khi ghi sổ.
+                        <c:if test="${editing and hasTransactions}"> Sản phẩm đã có giao dịch: đổi hệ số chỉ áp dụng cho giao dịch mới, giao dịch đã ghi giữ hệ số lúc ghi.</c:if>
+                    </p>
+                    <c:if test="${not empty errors.conversions}">
+                        <p class="form-group__error" role="alert"><c:out value="${errors.conversions}"/></p>
+                    </c:if>
+                    <div class="account-table-scroll">
+                        <table class="account-table conversion-table" id="conversion-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Đơn vị</th>
+                                    <th scope="col">Hệ số quy đổi</th>
+                                    <th scope="col">Mã đơn vị</th>
+                                    <th scope="col">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="conversion" items="${form.conversions}" varStatus="loop">
+                                    <c:set var="conversionKey">conversions.${loop.index}</c:set>
+                                    <tr class="conversion-row${not empty errors[conversionKey] ? ' conversion-row--invalid' : ''}">
+                                        <td>
+                                            <div class="select">
+                                                <select class="form-group__control select__control conversion-row__unit" name="conversionUnitId" aria-label="Đơn vị quy đổi dòng ${loop.index + 1}">
+                                                    <option value="">— Chọn đơn vị —</option>
+                                                    <c:forEach var="unit" items="${units}">
+                                                        <option value="${unit.id}" data-code="<c:out value='${unit.code}'/>"${conversion.unitId == unit.id ? ' selected' : ''}><c:out value="${unit.name}"/></option>
+                                                    </c:forEach>
+                                                </select>
+                                            </div>
+                                            <c:if test="${not empty errors[conversionKey]}"><p class="form-group__error"><c:out value="${errors[conversionKey]}"/></p></c:if>
+                                        </td>
+                                        <td>
+                                            <input class="form-group__control conversion-row__factor" type="text" name="conversionFactor" inputmode="decimal" maxlength="20"
+                                                   value="<c:out value='${conversion.factor}'/>" placeholder="Ví dụ: 24" aria-label="Hệ số quy đổi dòng ${loop.index + 1}">
+                                            <p class="form-group__hint conversion-row__hint"></p>
+                                        </td>
+                                        <td class="conversion-row__code">—</td>
+                                        <td><button class="conversion-row__remove" type="button" aria-label="Xoá dòng ${loop.index + 1}" title="Xoá dòng">×</button></td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="conversion-empty" id="conversion-empty"${empty form.conversions ? '' : ' hidden'}>Chưa có đơn vị quy đổi. Sản phẩm chỉ xuất nhập theo đơn vị cơ sở.</p>
+                    <button class="conversion-add" type="button" id="add-conversion">+ Thêm đơn vị quy đổi</button>
+                </section>
+
                 <footer class="account-form__footer">
                     <a class="button button--secondary" id="cancel-product-form" href="<c:url value='/products'/>">Hủy</a>
                     <button class="button button--primary" type="submit" id="save-product-submit">${editing ? 'Lưu thay đổi' : 'Thêm sản phẩm'}</button>
                 </footer>
             </form>
+
+            <%-- Mẫu dòng quy đổi trống, products.js chép khi bấm "+ Thêm đơn vị quy đổi" --%>
+            <template id="conversion-template">
+                <tr class="conversion-row">
+                    <td>
+                        <div class="select">
+                            <select class="form-group__control select__control conversion-row__unit" name="conversionUnitId" aria-label="Đơn vị quy đổi">
+                                <option value="">— Chọn đơn vị —</option>
+                                <c:forEach var="unit" items="${units}">
+                                    <option value="${unit.id}" data-code="<c:out value='${unit.code}'/>"><c:out value="${unit.name}"/></option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </td>
+                    <td>
+                        <input class="form-group__control conversion-row__factor" type="text" name="conversionFactor" inputmode="decimal" maxlength="20" placeholder="Ví dụ: 24" aria-label="Hệ số quy đổi">
+                        <p class="form-group__hint conversion-row__hint"></p>
+                    </td>
+                    <td class="conversion-row__code">—</td>
+                    <td><button class="conversion-row__remove" type="button" aria-label="Xoá dòng" title="Xoá dòng">×</button></td>
+                </tr>
+            </template>
         </main>
     </div>
 

@@ -8,6 +8,8 @@ import jakarta.servlet.http.Part;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 // Đọc form thêm/sửa sản phẩm (multipart vì có ảnh); ô trống thành null, SKU đổi sang chữ hoa
@@ -28,7 +30,23 @@ final class ProductFormParser {
                 canEditCost ? normalize(request.getParameter("costPrice")) : null,
                 normalize(request.getParameter("status")),
                 normalize(request.getParameter("description")),
-                AccountFormParser.parseId(request.getParameter("version")));
+                AccountFormParser.parseId(request.getParameter("version")),
+                readConversions(request));
+    }
+
+    // Dòng quy đổi gửi lên dạng mảng conversionUnitId[], conversionFactor[] cùng thứ tự; giữ cả dòng trống
+    // để báo lỗi (người dùng phải nhập đủ hoặc xoá dòng)
+    private static List<ProductForm.Conversion> readConversions(HttpServletRequest request) {
+        String[] units = request.getParameterValues("conversionUnitId");
+        String[] factors = request.getParameterValues("conversionFactor");
+        int count = Math.max(units == null ? 0 : units.length, factors == null ? 0 : factors.length);
+        List<ProductForm.Conversion> conversions = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            String unit = units != null && i < units.length ? normalize(units[i]) : null;
+            String factor = factors != null && i < factors.length ? normalize(factors[i]) : null;
+            conversions.add(new ProductForm.Conversion(AccountFormParser.parseId(unit), factor));
+        }
+        return conversions;
     }
 
     // Nội dung ô ảnh "image"; mảng rỗng nếu không chọn ảnh

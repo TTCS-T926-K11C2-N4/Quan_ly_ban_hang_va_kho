@@ -9,7 +9,7 @@
 <c:set var="breadcrumbPage" value="Danh sách sản phẩm"/>
 <%-- Người chỉ có quyền xem không thấy nút thêm, sửa, xoá, đổi trạng thái; cột giá vốn chỉ hiện khi có COST_PRICE_VIEW --%>
 <c:set var="canManage" value="${currentUser.can('PRODUCT_MANAGE')}"/>
-<c:set var="columnCount" value="${canViewCost ? 9 : 8}"/>
+<c:set var="columnCount" value="${canViewCost ? 10 : 9}"/>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -111,6 +111,7 @@
                                 <th scope="col">Tên sản phẩm</th>
                                 <th scope="col">Danh mục</th>
                                 <th scope="col">Mã SKU</th>
+                                <th scope="col">Quy đổi</th>
                                 <c:if test="${canViewCost}">
                                     <th scope="col" aria-sort="${sort == 'cost_asc' ? 'ascending' : sort == 'cost_desc' ? 'descending' : 'none'}">
                                         <a class="sort-link" href="<c:url value='/products'>
@@ -142,6 +143,14 @@
                                     <td class="account-table__name"><c:out value="${product.name}"/></td>
                                     <td><c:out value="${product.categoryName}"/></td>
                                     <td class="product-sku"><c:out value="${product.sku}"/></td>
+                                    <td class="product-conversions">
+                                        <c:choose>
+                                            <c:when test="${empty product.conversions}">—</c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="conversion" items="${product.conversions}"><span class="product-conversion"><c:out value="${conversion}"/></span></c:forEach>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
                                     <c:if test="${canViewCost}">
                                         <td class="product-number"><fmt:formatNumber value="${product.costPrice}" maxFractionDigits="0"/></td>
                                     </c:if>

@@ -28,6 +28,7 @@ public final class AuditCatalog {
         ENTITIES.put("INVOICE", "Hoá đơn");
         ENTITIES.put("PRODUCT", "Sản phẩm");
         ENTITIES.put("PRODUCT_CATEGORY", "Nhóm hàng");
+        ENTITIES.put("UNIT", "Đơn vị tính");
         ENTITIES.put("USER", "Tài khoản");
 
         GROUPS.put(GROUP_CREATE, "Thêm mới");
@@ -57,6 +58,9 @@ public final class AuditCatalog {
         action("PRODUCT_DELETE", "Xoá", GROUP_DELETE);
         action("PRODUCT_DISCONTINUE", "Ngừng kinh doanh", GROUP_STATUS);
         action("PRODUCT_ACTIVATE", "Kinh doanh lại", GROUP_STATUS);
+        action("UNIT_CREATE", "Thêm mới", GROUP_CREATE);
+        action("UNIT_UPDATE", "Sửa", GROUP_UPDATE);
+        action("UNIT_DELETE", "Xoá", GROUP_DELETE);
         action("PRICE_LIST_CREATE", "Thêm mới", GROUP_CREATE);
         action("PRICE_LIST_UPDATE", "Sửa", GROUP_UPDATE);
         action("PRICE_LIST_DELETE", "Xoá", GROUP_DELETE);

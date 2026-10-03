@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 // S2-05: thêm sản phẩm. Ô giá vốn chỉ hiện và chỉ được lưu khi người dùng có quyền COST_PRICE_VIEW.
@@ -33,7 +34,7 @@ public class ProductCreateServlet extends HttpServlet {
             throws ServletException, IOException {
         ProductForm form = new ProductForm(null, null,
                 AccountFormParser.parseId(request.getParameter("categoryId")), null, null, null, Product.ACTIVE,
-                null, null);
+                null, null, List.of());
         try {
             showForm(request, response, form, Map.of());
         } catch (SQLException e) {
