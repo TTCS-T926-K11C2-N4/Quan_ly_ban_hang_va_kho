@@ -22,6 +22,11 @@ public final class DateTimeUtil {
         return utc == null ? null : toDisplayZone(utc).format(DATE);
     }
 
+    // Ngày không có giờ (cột DATE như ngày hiệu lực bảng giá), không đổi múi giờ
+    public static String formatDay(LocalDate date) {
+        return date == null ? null : date.format(DATE);
+    }
+
     public static String formatDateTime(LocalDateTime utc) {
         return utc == null ? null : toDisplayZone(utc).format(DATE_TIME);
     }

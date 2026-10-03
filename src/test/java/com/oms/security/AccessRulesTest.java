@@ -126,6 +126,19 @@ class AccessRulesTest {
         }
     }
 
+    // S2-10: vai trò nội bộ xem được bảng giá; chỉ Quản lý kinh doanh và Admin tạo/sửa/xoá/tạo phiên bản
+    @Test
+    void onlyProductManagersCanChangePriceLists() {
+        String[] managePaths = {"/price-lists/new", "/price-lists/edit", "/price-lists/version", "/price-lists/delete"};
+        for (String path : managePaths) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("SALES_REP")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+        }
+        assertTrue(AccessRules.isAllowed("/price-lists", permissionsOf("SALES_REP")));
+    }
+
     // S2-05: mọi vai trò nội bộ xem được danh mục sản phẩm; chỉ Quản lý kinh doanh và Admin thêm/sửa/xoá/ngừng
     @Test
     void onlyProductManagersCanChangeProducts() {
