@@ -41,7 +41,9 @@ public class ProductEditServlet extends HttpServlet {
             ProductForm form = new ProductForm(product.getSku(), product.getName(), product.getCategoryId(),
                     product.getBaseUnitId(), product.getPackagingSpec(),
                     product.getCostPrice() == null ? null : product.getCostPrice().toBigInteger().toString(),
-                    product.getStatus(), product.getDescription(), product.getVersion());
+                    product.getStatus(), product.getDescription(), product.getVersion(),
+                    productService.getConversions(product.getId()).stream()
+                            .map(c -> new ProductForm.Conversion(c.getUnitId(), c.getFactorText())).toList());
             Flash.moveToRequest(request, FLASH_CONFLICT, "formError");
             showForm(request, response, product, form, Map.of());
         } catch (SQLException e) {

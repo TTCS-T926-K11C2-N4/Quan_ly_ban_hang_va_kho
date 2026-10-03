@@ -126,6 +126,17 @@ class AccessRulesTest {
         }
     }
 
+    // S2-07: vai trò nội bộ xem được đơn vị tính; chỉ Quản lý kinh doanh và Admin thêm/sửa/xoá
+    @Test
+    void onlyProductManagersCanChangeUnits() {
+        for (String path : new String[] {"/units/new", "/units/edit", "/units/delete"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+        }
+        assertTrue(AccessRules.isAllowed("/units", permissionsOf("WAREHOUSE")));
+    }
+
     // S2-10: vai trò nội bộ xem được bảng giá; chỉ Quản lý kinh doanh và Admin tạo/sửa/xoá/tạo phiên bản
     @Test
     void onlyProductManagersCanChangePriceLists() {

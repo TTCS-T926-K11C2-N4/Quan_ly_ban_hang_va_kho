@@ -5,6 +5,7 @@ import com.oms.model.ProductFilter;
 import com.oms.model.ProductForm;
 import com.oms.model.ProductListItem;
 import com.oms.model.ProductSummary;
+import com.oms.model.ProductUnitConversion;
 import com.oms.model.StockStatus;
 import com.oms.util.DbConnection;
 
@@ -42,6 +43,14 @@ public class ProductDao {
             + " WHEN COALESCE(s.qty, 0) <= COALESCE(s.min_qty, 0) THEN 'LOW_STOCK'"
             + " ELSE 'IN_STOCK' END";
 
+    // Đơn vị quy đổi của SKU gói vào một chuỗi (hệ số lớn trước) để danh sách không phải truy vấn từng dòng (S2-07).
+    // Ký tự phân cách là ký tự điều khiển, không gõ được vào tên đơn vị.
+    private static final char LIST_SEPARATOR = (char) 30;
+    private static final char FIELD_SEPARATOR = (char) 31;
+    private static final String CONVERSIONS_SQL = "(SELECT GROUP_CONCAT(CONCAT(cu.name, CHAR(31), pu.factor_to_base)"
+            + " ORDER BY pu.factor_to_base DESC SEPARATOR 0x1E) FROM product_units pu JOIN units cu ON cu.id = pu.unit_id"
+            + " WHERE pu.product_id = p.id AND NOT pu.is_base)";
+
     public List<ProductSummary> findByCategory(long categoryId) throws SQLException {
         List<ProductSummary> products = new ArrayList<>();
         String sql = "SELECT id, sku, name, status FROM products WHERE category_id = ? ORDER BY name";
@@ -77,7 +86,8 @@ public class ProductDao {
         List<Object> params = new ArrayList<>();
         String sql = "SELECT p.id, p.sku, p.name, c.name AS category_name, u.name AS unit_name,"
                 + (includeCost ? " p.cost_price," : " NULL AS cost_price,")
-                + " p.image_file_id, COALESCE(s.qty, 0) AS stock, " + STOCK_STATUS_SQL + " AS stock_status"
+                + " p.image_file_id, COALESCE(s.qty, 0) AS stock, " + STOCK_STATUS_SQL + " AS stock_status,"
+                + CONVERSIONS_SQL + " AS conversions"
                 + fromWhere(filter, params)
                 + " ORDER BY " + ORDER_BY.getOrDefault(filter.getSort(), ORDER_BY.get("name")) + " LIMIT ? OFFSET ?";
         params.add(limit);
@@ -93,11 +103,26 @@ public class ProductDao {
                             resultSet.getString("name"), resultSet.getString("category_name"),
                             resultSet.getString("unit_name"), resultSet.getBigDecimal("cost_price"),
                             resultSet.getObject("image_file_id", Long.class), resultSet.getBigDecimal("stock"),
-                            StockStatus.fromCode(resultSet.getString("stock_status"))));
+                            StockStatus.fromCode(resultSet.getString("stock_status")),
+                            conversionTexts(resultSet.getString("conversions"), resultSet.getString("unit_name"))));
                 }
             }
         }
         return products;
+    }
+
+    // "1 Lốc = 6 Lon", "1 Thùng = 24 Lon"; hệ số bỏ số 0 thừa của decimal(18,4)
+    static List<String> conversionTexts(String packed, String baseUnitName) {
+        List<String> texts = new ArrayList<>();
+        if (packed == null) {
+            return texts;
+        }
+        for (String item : packed.split(String.valueOf(LIST_SEPARATOR))) {
+            String[] parts = item.split(String.valueOf(FIELD_SEPARATOR), 2);
+            texts.add("1 " + parts[0] + " = " + new BigDecimal(parts[1]).stripTrailingZeros().toPlainString() + " "
+                    + baseUnitName);
+        }
+        return texts;
     }
 
     public Product findById(long id, boolean includeCost) throws SQLException {
@@ -218,6 +243,64 @@ public class ProductDao {
             insert.setLong(3, actorUserId);
             insert.setLong(4, actorUserId);
             insert.executeUpdate();
+        }
+    }
+
+    // Đơn vị quy đổi (không gồm đơn vị cơ sở), hệ số lớn trước: thùng, lốc...
+    public List<ProductUnitConversion> findConversions(long productId) throws SQLException {
+        String sql = "SELECT pu.unit_id, u.code, u.name, pu.factor_to_base FROM product_units pu"
+                + " JOIN units u ON u.id = pu.unit_id WHERE pu.product_id = ? AND NOT pu.is_base"
+                + " ORDER BY pu.factor_to_base DESC, u.name";
+        List<ProductUnitConversion> conversions = new ArrayList<>();
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, productId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    conversions.add(new ProductUnitConversion(resultSet.getLong("unit_id"), resultSet.getString("code"),
+                            resultSet.getString("name"), resultSet.getBigDecimal("factor_to_base")));
+                }
+            }
+        }
+        return conversions;
+    }
+
+    // Thay toàn bộ đơn vị quy đổi (giữ dòng đơn vị cơ sở). Giao dịch đã ghi chụp lại hệ số lúc ghi (unit_factor)
+    // nên đổi ở đây không làm sai số đã ghi (S2-07).
+    public void replaceConversions(Connection connection, long productId, Map<Long, BigDecimal> factors,
+                                   long actorUserId) throws SQLException {
+        try (PreparedStatement delete = connection.prepareStatement(
+                "DELETE FROM product_units WHERE product_id = ? AND NOT is_base")) {
+            delete.setLong(1, productId);
+            delete.executeUpdate();
+        }
+        String sql = "INSERT INTO product_units (product_id, unit_id, factor_to_base, is_base, created_at, created_by,"
+                + " updated_at, updated_by) VALUES (?, ?, ?, false, UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
+        try (PreparedStatement insert = connection.prepareStatement(sql)) {
+            for (Map.Entry<Long, BigDecimal> entry : factors.entrySet()) {
+                insert.setLong(1, productId);
+                insert.setLong(2, entry.getKey());
+                insert.setBigDecimal(3, entry.getValue());
+                insert.setLong(4, actorUserId);
+                insert.setLong(5, actorUserId);
+                insert.addBatch();
+            }
+            insert.executeBatch();
+        }
+    }
+
+    // Hệ số của một đơn vị với SKU (đơn vị cơ sở = 1); null nếu SKU không dùng đơn vị này
+    public BigDecimal findFactor(long productId, long unitId) throws SQLException {
+        String sql = "SELECT CASE WHEN p.base_unit_id = ? THEN 1 ELSE pu.factor_to_base END FROM products p"
+                + " LEFT JOIN product_units pu ON pu.product_id = p.id AND pu.unit_id = ? WHERE p.id = ?";
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, unitId);
+            statement.setLong(2, unitId);
+            statement.setLong(3, productId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getBigDecimal(1) : null;
+            }
         }
     }
 
