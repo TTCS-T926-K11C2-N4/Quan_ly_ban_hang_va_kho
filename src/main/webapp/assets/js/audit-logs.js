@@ -24,7 +24,7 @@
         handoverToUserId: "Bàn giao cho", costPriceChanged: "Đổi giá vốn", imageChanged: "Đổi ảnh",
         passwordChanged: "Đổi mật khẩu", avatarChanged: "Đổi ảnh đại diện",
         customerGroupId: "Nhóm khách hàng", validFrom: "Ngày bắt đầu", validTo: "Ngày kết thúc",
-        items: "Dòng giá (SKU: giá bán / giá sàn)", previousCode: "Từ bảng giá", nextCode: "Phiên bản mới"
+        items: "Dòng giá (SKU: giá bán / giá sàn)", conversions: "Đơn vị quy đổi", previousCode: "Từ bảng giá", nextCode: "Phiên bản mới"
     };
     // Trường dùng chung bảng tra tên với trường khác
     var LOOKUP_ALIAS = { parentId: "categoryId" };
@@ -59,8 +59,13 @@
             return value ? "Có" : "Không";
         }
         if (Array.isArray(value)) {
-            return value.length === 0 ? "—" : value.map(function (item) { return format(field, item); }).join(field === "items" ? "
-" : ", ");
+            return value.length === 0 ? "—" : value.map(function (item) { return format(field, item); }).join(field === "items" ? "\n" : ", ");
+        }
+        // Quy đổi ghi dạng "idĐơnVị=hệSố" (ProductService), hiện "Thùng = 24"
+        if (field === "conversions" && /^\d+=/.test(String(value))) {
+            var parts = String(value).split("=");
+            var units = lookups.baseUnitId || {};
+            return (units[parts[0]] || "#" + parts[0]) + " = " + parts[1];
         }
         var names = lookups[LOOKUP_ALIAS[field] || field];
         if (names && names[String(value)] !== undefined) {
