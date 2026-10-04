@@ -20,13 +20,15 @@ public class SupplierService {
 
     public static final int PAGE_SIZE = 10;
 
-    // Ô chọn trên form (theo thiết kế); lưu nguyên nhãn vào payment_terms
+    // Ô chọn trên form; lưu nguyên nhãn vào payment_terms. Ghi đầy đủ thay cho "TT 7 ngày" của thiết kế cho dễ hiểu.
     public static final List<String> PAYMENT_TERMS = List.of(
-            "Thanh toán ngay", "TT 7 ngày", "TT 15 ngày", "TT 30 ngày", "TT 45 ngày", "TT 60 ngày", "TT 90 ngày");
+            "Thanh toán ngay", "Thanh toán trong 7 ngày", "Thanh toán trong 15 ngày", "Thanh toán trong 30 ngày",
+            "Thanh toán trong 45 ngày", "Thanh toán trong 60 ngày", "Thanh toán trong 90 ngày");
 
     private static final Pattern CODE_PATTERN = Pattern.compile("[A-Z0-9_-]{2,30}");
-    // 10 chữ số, hoặc 10 chữ số + mã chi nhánh 3 chữ số (0101234567-001)
-    private static final Pattern TAX_CODE_PATTERN = Pattern.compile("\\d{10}(-\\d{3})?");
+    // Doanh nghiệp 10 chữ số, chi nhánh thêm mã 3 chữ số (0101234567-001); hộ kinh doanh, cá nhân dùng số định danh
+    // 12 chữ số làm mã số thuế từ 01/07/2025
+    private static final Pattern TAX_CODE_PATTERN = Pattern.compile("\\d{10}(-\\d{3})?|\\d{12}");
     private static final int NAME_MAX_LENGTH = 200;
     private static final int CONTACT_MAX_LENGTH = 150;
     private static final String ENTITY = "SUPPLIER";
@@ -70,7 +72,8 @@ public class SupplierService {
         if (form.getTaxCode() == null) {
             errors.put("taxCode", "Vui lòng nhập mã số thuế.");
         } else if (!TAX_CODE_PATTERN.matcher(form.getTaxCode()).matches()) {
-            errors.put("taxCode", "Mã số thuế gồm 10 chữ số, hoặc thêm mã chi nhánh 3 chữ số (vd 0101234567-001).");
+            errors.put("taxCode", "Mã số thuế gồm 10 chữ số (doanh nghiệp), 12 chữ số (hộ kinh doanh, cá nhân)"
+                    + " hoặc 10 chữ số kèm mã chi nhánh (vd 0101234567-001).");
         } else {
             String usedBy = supplierDao.findNameUsing("tax_code", form.getTaxCode(), editingId);
             if (usedBy != null) {

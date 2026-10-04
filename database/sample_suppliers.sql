@@ -9,8 +9,8 @@ SET NAMES utf8mb4;
 INSERT IGNORE INTO `suppliers` (`code`, `name`, `tax_code`, `contact_name`, `payment_terms`, `status`,
                                 `created_at`, `updated_at`)
 VALUES
-  ('NCC001', 'Công ty TNHH Thương mại An Phát', '0101234567', 'Nguyễn Văn A', 'TT 30 ngày', 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP()),
-  ('NCC002', 'Công ty CP Vật tư Hoàng Gia', '0109876543', 'Trần Thị B', 'TT 15 ngày', 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP()),
-  ('NCC003', 'Công ty TNHH Kim Long', '0312345678', 'Lê Văn C', 'TT 45 ngày', 'INACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP()),
-  ('NCC004', 'Công ty CP Thực phẩm Việt', '0405678901', 'Phạm Thị D', 'TT 30 ngày', 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP()),
-  ('NCC005', 'Công ty TNHH Điện máy Minh Tâm', '0108765432', 'Hoàng Văn E', 'TT 60 ngày', 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP());
+  ('NCC001', 'Công ty TNHH Thương mại An Phát', '0101234567', 'Nguyễn Văn A', 'Thanh toán trong 30 ngày', 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP()),
+  ('NCC002', 'Công ty CP Vật tư Hoàng Gia', '0109876543', 'Trần Thị B', 'Thanh toán trong 15 ngày', 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP()),
+  ('NCC003', 'Công ty TNHH Kim Long', '0312345678', 'Lê Văn C', 'Thanh toán trong 45 ngày', 'INACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP()),
+  ('NCC004', 'Công ty CP Thực phẩm Việt', '0405678901', 'Phạm Thị D', 'Thanh toán trong 30 ngày', 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP()),
+  ('NCC005', 'Công ty TNHH Điện máy Minh Tâm', '0108765432', 'Hoàng Văn E', 'Thanh toán trong 60 ngày', 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP());
