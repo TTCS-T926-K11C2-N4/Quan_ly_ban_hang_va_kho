@@ -137,6 +137,21 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/units", permissionsOf("WAREHOUSE")));
     }
 
+    // S2-09: ai xem kho thì xem được nhà cung cấp; chỉ nhân viên kho, quản lý kho, Admin thêm/sửa/xoá/ngừng giao dịch
+    @Test
+    void onlyWarehouseStaffCanManageSuppliers() {
+        for (String path : new String[] {"/suppliers/new", "/suppliers/edit", "/suppliers/status", "/suppliers/delete"}) {
+            for (String role : new String[] {"WAREHOUSE", "WH_MANAGER", "ADMIN"}) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+            for (String role : new String[] {"SALES_REP", "SALES_MANAGER", "ACCOUNTANT", "CUSTOMER"}) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+        assertTrue(AccessRules.isAllowed("/suppliers", permissionsOf("ACCOUNTANT")));
+        assertFalse(AccessRules.isAllowed("/suppliers", permissionsOf("CUSTOMER")));
+    }
+
     // S2-08: nhập sản phẩm từ Excel thêm và sửa sản phẩm nên chỉ ai quản lý sản phẩm mới vào được
     @Test
     void onlyProductManagersCanImportProducts() {
