@@ -24,13 +24,14 @@
         handoverToUserId: "Bàn giao cho", costPriceChanged: "Đổi giá vốn", imageChanged: "Đổi ảnh",
         passwordChanged: "Đổi mật khẩu", avatarChanged: "Đổi ảnh đại diện",
         customerGroupId: "Nhóm khách hàng", validFrom: "Ngày bắt đầu", validTo: "Ngày kết thúc",
-        items: "Dòng giá (SKU: giá bán / giá sàn)", conversions: "Đơn vị quy đổi", previousCode: "Từ bảng giá", nextCode: "Phiên bản mới"
+        items: "Dòng giá (SKU: giá bán / giá sàn)", conversions: "Đơn vị quy đổi", previousCode: "Từ bảng giá", nextCode: "Phiên bản mới",
+        taxCode: "Mã số thuế", contactName: "Người liên hệ", paymentTerms: "Điều khoản thanh toán"
     };
     // Trường dùng chung bảng tra tên với trường khác
     var LOOKUP_ALIAS = { parentId: "categoryId" };
     var STATUS_LABELS = {
         ACTIVE: "Hoạt động", LOCKED: "Bị khoá", TEMP_LOCKED: "Khoá tạm", PENDING: "Chờ duyệt",
-        DISCONTINUED: "Ngừng kinh doanh"
+        DISCONTINUED: "Ngừng kinh doanh", INACTIVE: "Tạm ngưng"
     };
 
     var lookups = {};

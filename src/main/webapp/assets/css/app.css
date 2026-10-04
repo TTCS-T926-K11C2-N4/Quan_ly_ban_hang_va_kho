@@ -281,6 +281,7 @@ ol {
 .app-menu__icon--sales { --menu-icon: url("../img/icons/menu/sales.svg"); }
 .app-menu__icon--products { --menu-icon: url("../img/icons/menu/products.svg"); }
 .app-menu__icon--warehouse { --menu-icon: url("../img/icons/menu/warehouse.svg"); }
+.app-menu__icon--suppliers { --menu-icon: url("../img/icons/menu/suppliers.svg"); }
 .app-menu__icon--reports { --menu-icon: url("../img/icons/menu/reports.svg"); }
 
 .app-user {

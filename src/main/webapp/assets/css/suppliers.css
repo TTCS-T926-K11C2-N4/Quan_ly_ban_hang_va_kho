@@ -1,0 +1,59 @@
+/* Nhà cung cấp (S2-09): danh sách + form thêm/sửa ngay bên dưới, theo thiết kế */
+
+.supplier-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.supplier-table {
+    min-width: 900px;
+}
+
+.supplier-row--editing td {
+    background: #eff6ff;
+}
+
+.supplier-status {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.supplier-status--active {
+    color: #16a34a;
+}
+
+.supplier-status--inactive {
+    color: #d97706;
+}
+
+.supplier-form {
+    margin-top: 24px;
+    scroll-margin-top: 16px;
+}
+
+.supplier-form__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px 32px;
+}
+
+@media (max-width: 1023px) {
+    .supplier-form__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .supplier-header .account-filters__create {
+        width: 100%;
+    }
+
+    .supplier-form__grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+}
