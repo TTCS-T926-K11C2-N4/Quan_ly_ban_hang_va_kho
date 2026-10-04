@@ -38,6 +38,9 @@
                 </div>
                 <c:if test="${canManage}">
                     <div class="product-header__actions">
+                        <a class="account-filters__import" id="import-products-link" href="<c:url value='/products/import'/>">
+                            Nhập Excel
+                        </a>
                         <a class="account-filters__create" id="create-product-link" href="<c:url value='/products/new'/>">
                             <span aria-hidden="true">+</span> Thêm sản phẩm
                         </a>

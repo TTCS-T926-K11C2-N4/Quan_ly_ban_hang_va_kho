@@ -137,6 +137,19 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/units", permissionsOf("WAREHOUSE")));
     }
 
+    // S2-08: nhập sản phẩm từ Excel thêm và sửa sản phẩm nên chỉ ai quản lý sản phẩm mới vào được
+    @Test
+    void onlyProductManagersCanImportProducts() {
+        for (String path : new String[] {"/products/import", "/products/import/template", "/products/import/preview",
+                "/products/import/result", "/products/import/errors"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            for (String role : new String[] {"CUSTOMER", "SALES_REP", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT"}) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
     // S2-10: vai trò nội bộ xem được bảng giá; chỉ Quản lý kinh doanh và Admin tạo/sửa/xoá/tạo phiên bản
     @Test
     void onlyProductManagersCanChangePriceLists() {

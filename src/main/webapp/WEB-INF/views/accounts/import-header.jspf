@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Đầu trang chung của 3 bước nhập Excel (S2-01). Trang include cần đặt importStep (1..3) và importSubtitle --%>
+<%-- Đầu trang chung của 3 bước nhập Excel: người dùng (S2-01) và sản phẩm (S2-08). Trang include cần đặt
+     importStep (1..3), importSubtitle; trang nhập sản phẩm đặt thêm importType = products. --%>
 <header class="page-header import-header">
     <div>
         <h1 class="import-header__title">Import hàng loạt từ Excel</h1>
@@ -7,11 +8,17 @@
     </div>
 </header>
 
-<%-- Nhập sản phẩm (S2-08) làm sau khi có danh mục sản phẩm (S2-05) --%>
+<%-- Chỉ hiện tab của loại dữ liệu người dùng được phép nhập; quyền còn được kiểm lại ở AuthFilter --%>
+<c:set var="importProducts" value="${importType == 'products'}"/>
 <div class="import-tabs" role="tablist" aria-label="Loại dữ liệu nhập">
-    <span class="import-tabs__item import-tabs__item--active" role="tab" aria-selected="true">Import người dùng</span>
-    <span class="import-tabs__item" role="tab" aria-selected="false" aria-disabled="true"
-          title="Sẽ có khi hoàn thành chức năng Sản phẩm">Import sản phẩm</span>
+    <c:if test="${currentUser.can('USER_MANAGE')}">
+        <a class="import-tabs__item${importProducts ? '' : ' import-tabs__item--active'}" role="tab" id="import-tab-users"
+           aria-selected="${not importProducts}" href="<c:url value='/accounts/import'/>">Import người dùng</a>
+    </c:if>
+    <c:if test="${currentUser.can('PRODUCT_MANAGE')}">
+        <a class="import-tabs__item${importProducts ? ' import-tabs__item--active' : ''}" role="tab" id="import-tab-products"
+           aria-selected="${importProducts}" href="<c:url value='/products/import'/>">Import sản phẩm</a>
+    </c:if>
 </div>
 
 <ol class="import-steps" aria-label="Các bước nhập">

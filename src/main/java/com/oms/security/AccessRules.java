@@ -57,6 +57,11 @@ public final class AccessRules {
             Map.entry("/products/new", Permission.PRODUCT_MANAGE),
             Map.entry("/products/edit", Permission.PRODUCT_MANAGE),
             Map.entry("/products/delete", Permission.PRODUCT_MANAGE),
+            Map.entry("/products/import", Permission.PRODUCT_MANAGE),
+            Map.entry("/products/import/template", Permission.PRODUCT_MANAGE),
+            Map.entry("/products/import/preview", Permission.PRODUCT_MANAGE),
+            Map.entry("/products/import/result", Permission.PRODUCT_MANAGE),
+            Map.entry("/products/import/errors", Permission.PRODUCT_MANAGE),
             Map.entry("/products/status", Permission.PRODUCT_MANAGE));
 
     private AccessRules() {

@@ -1,13 +1,15 @@
 package com.oms.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 // Dữ liệu form Thêm/Sửa sản phẩm, giữ nguyên chuỗi người dùng nhập để hiện lại khi có lỗi.
 // costPrice = null khi người dùng không có quyền sửa giá vốn (ô không hiện trên form).
-public class ProductForm {
+// Serializable vì nhập Excel (S2-08) giữ các dòng trong session từ bước xem trước tới bước nhập.
+public class ProductForm implements Serializable {
 
     // Một dòng quy đổi trong form (S2-07); unitId = null nếu chưa chọn đơn vị
-    public static class Conversion {
+    public static class Conversion implements Serializable {
         private final Long unitId;
         private final String factor;
 
