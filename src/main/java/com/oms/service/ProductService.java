@@ -47,12 +47,13 @@ public class ProductService {
     public static final Set<String> SORTS = Set.of("name", "cost_asc", "cost_desc", "stock_asc", "stock_desc");
 
     private static final Pattern SKU_PATTERN = Pattern.compile("[A-Z0-9._-]{2,50}");
-    private static final int NAME_MAX_LENGTH = 250;
-    private static final int PACKAGING_MAX_LENGTH = 100;
-    private static final int DESCRIPTION_MAX_LENGTH = 2000;
+    // Các giới hạn dưới đây dùng chung với nhập sản phẩm từ Excel (ProductImportService, S2-08)
+    static final int NAME_MAX_LENGTH = 250;
+    static final int PACKAGING_MAX_LENGTH = 100;
+    static final int DESCRIPTION_MAX_LENGTH = 2000;
     // decimal(18,2): tối đa 16 chữ số phần nguyên
-    private static final int COST_MAX_DIGITS = 16;
-    private static final int MAX_CONVERSIONS = 20;
+    static final int COST_MAX_DIGITS = 16;
+    static final int MAX_CONVERSIONS = 20;
     private static final int IMAGE_SIZE = 512;
     private static final int IMAGE_THUMB_SIZE = 96;
     private static final String ENTITY = "PRODUCT";
@@ -431,7 +432,7 @@ public class ProductService {
     }
 
     // Giá vốn không ghi vào nhật ký (Admin xem nhật ký nhưng không được xem giá vốn), chỉ ghi là có đổi hay không
-    private static Map<String, Object> toValues(ProductForm form, boolean costChanged) {
+    static Map<String, Object> toValues(ProductForm form, boolean costChanged) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("sku", form.getSku());
         values.put("name", form.getName());
@@ -444,7 +445,7 @@ public class ProductService {
         return values;
     }
 
-    private static Map<String, Object> toValues(Product product) {
+    static Map<String, Object> toValues(Product product) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("sku", product.getSku());
         values.put("name", product.getName());

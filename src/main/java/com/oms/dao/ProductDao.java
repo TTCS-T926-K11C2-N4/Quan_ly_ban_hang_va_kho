@@ -16,8 +16,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -45,6 +48,9 @@ public class ProductDao {
 
     // Đơn vị quy đổi của SKU gói vào một chuỗi (hệ số lớn trước) để danh sách không phải truy vấn từng dòng (S2-07).
     // Ký tự phân cách là ký tự điều khiển, không gõ được vào tên đơn vị.
+    // Số mã hỏi trong một câu IN (...) khi nhập Excel (S2-08); chia nhỏ để câu lệnh không quá dài
+    private static final int LOOKUP_CHUNK = 500;
+
     private static final char LIST_SEPARATOR = (char) 30;
     private static final char FIELD_SEPARATOR = (char) 31;
     private static final String CONVERSIONS_SQL = "(SELECT GROUP_CONCAT(CONCAT(cu.name, CHAR(31), pu.factor_to_base)"
@@ -265,6 +271,61 @@ public class ProductDao {
         return conversions;
     }
 
+    // Nhập Excel (S2-08): tra nhiều SKU một lần thay vì từng dòng. Khoá là SKU viết hoa; collation của bảng
+    // không phân biệt hoa thường nên "sp001" cũng tìm ra "SP001".
+    public Map<String, Product> findBySkus(Collection<String> skus, boolean includeCost) throws SQLException {
+        Map<String, Product> products = new HashMap<>();
+        List<String> list = new ArrayList<>(skus);
+        try (Connection connection = DbConnection.getConnection()) {
+            for (int from = 0; from < list.size(); from += LOOKUP_CHUNK) {
+                List<String> chunk = list.subList(from, Math.min(from + LOOKUP_CHUNK, list.size()));
+                String sql = "SELECT id, sku, name, category_id, base_unit_id, packaging_spec, cost_price, image_file_id,"
+                        + " status, description, version FROM products WHERE sku IN (" + placeholders(chunk.size()) + ")";
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    bind(statement, chunk);
+                    try (ResultSet resultSet = statement.executeQuery()) {
+                        while (resultSet.next()) {
+                            Product product = new Product(resultSet.getLong("id"), resultSet.getString("sku"),
+                                    resultSet.getString("name"), resultSet.getLong("category_id"),
+                                    resultSet.getLong("base_unit_id"), resultSet.getString("packaging_spec"),
+                                    includeCost ? resultSet.getBigDecimal("cost_price") : null,
+                                    resultSet.getObject("image_file_id", Long.class), resultSet.getString("status"),
+                                    resultSet.getString("description"), resultSet.getLong("version"));
+                            products.put(product.getSku().toUpperCase(Locale.ROOT), product);
+                        }
+                    }
+                }
+            }
+        }
+        return products;
+    }
+
+    // Đơn vị quy đổi của nhiều sản phẩm một lần (nhập Excel); sản phẩm không có quy đổi thì không có khoá
+    public Map<Long, List<ProductUnitConversion>> findConversions(Collection<Long> productIds) throws SQLException {
+        Map<Long, List<ProductUnitConversion>> conversions = new HashMap<>();
+        List<Long> list = new ArrayList<>(productIds);
+        try (Connection connection = DbConnection.getConnection()) {
+            for (int from = 0; from < list.size(); from += LOOKUP_CHUNK) {
+                List<Long> chunk = list.subList(from, Math.min(from + LOOKUP_CHUNK, list.size()));
+                String sql = "SELECT pu.product_id, pu.unit_id, u.code, u.name, pu.factor_to_base FROM product_units pu"
+                        + " JOIN units u ON u.id = pu.unit_id WHERE NOT pu.is_base AND pu.product_id IN ("
+                        + placeholders(chunk.size()) + ") ORDER BY pu.factor_to_base DESC, u.name";
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    bind(statement, chunk);
+                    try (ResultSet resultSet = statement.executeQuery()) {
+                        while (resultSet.next()) {
+                            conversions.computeIfAbsent(resultSet.getLong("product_id"), id -> new ArrayList<>())
+                                    .add(new ProductUnitConversion(resultSet.getLong("unit_id"),
+                                            resultSet.getString("code"), resultSet.getString("name"),
+                                            resultSet.getBigDecimal("factor_to_base")));
+                        }
+                    }
+                }
+            }
+        }
+        return conversions;
+    }
+
     // Thay toàn bộ đơn vị quy đổi (giữ dòng đơn vị cơ sở). Giao dịch đã ghi chụp lại hệ số lúc ghi (unit_factor)
     // nên đổi ở đây không làm sai số đã ghi (S2-07).
     public void replaceConversions(Connection connection, long productId, Map<Long, BigDecimal> factors,
@@ -410,6 +471,10 @@ public class ProductDao {
     }
 
     // Người dùng gõ % hoặc _ thì tìm đúng ký tự đó, không để thành ký tự đại diện của LIKE
+    private static String placeholders(int count) {
+        return String.join(",", Collections.nCopies(count, "?"));
+    }
+
     private static String escapeLike(String value) {
         return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
