@@ -31,6 +31,8 @@ public class AvatarServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/assets/img/avatar-placeholder.svg");
                 return;
             }
+            // EncodingFilter đặt UTF-8 cho mọi response; ảnh không có charset nên bỏ đi
+            response.setCharacterEncoding((String) null);
             response.setContentType("image/png");
             response.setContentLengthLong(Files.size(path));
             // Đường dẫn ảnh kèm v=<id ảnh> nên ảnh mới có đường dẫn mới, được lưu đệm lâu

@@ -1,4 +1,4 @@
-// Import Excel (S2-01): chọn/kéo thả file ở bước 1, chặn bấm Import hai lần ở bước 2
+// Import Excel người dùng (S2-01) và sản phẩm (S2-08): chọn/kéo thả file ở bước 1, chặn bấm Import hai lần ở bước 2
 (function () {
     var uploadForm = document.getElementById('import-upload-form');
     if (uploadForm) {
@@ -9,7 +9,7 @@
     if (confirmForm) {
         confirmForm.addEventListener('submit', function () {
             var button = document.getElementById('import-confirm');
-            // Gửi email cho từng tài khoản nên có thể mất vài phút; khoá nút để không gửi lại
+            // Một lần nhập có thể mất vài phút (gửi email từng tài khoản, hoặc file vài nghìn sản phẩm); khoá nút để không nhập lại
             button.disabled = true;
             button.textContent = button.dataset.busyText;
         });

@@ -1,5 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Trang include cần đặt activeMenu: dashboard | accounts | sales | products | warehouse | reports | profile.
+<%-- Trang include cần đặt activeMenu: dashboard | accounts | sales | products | suppliers | warehouse | reports | profile.
      S1-06: mục menu chỉ hiện khi có quyền xem module đó; quyền còn được kiểm lại ở AuthFilter. --%>
 <aside class="app-sidebar" id="app-sidebar">
     <div class="app-sidebar__brand">
@@ -19,12 +19,29 @@
                     <span class="app-menu__icon app-menu__icon--dashboard" aria-hidden="true"></span>${currentUser.customer ? 'Trang chủ' : 'Tổng quan'}
                 </a>
             </li>
-            <c:if test="${currentUser.can('USER_VIEW')}">
+            <c:if test="${currentUser.can('USER_VIEW') or currentUser.can('AUDIT_LOG_VIEW')}">
             <li>
-                <a class="app-menu__link${activeMenu == 'accounts' ? ' app-menu__link--active' : ''}" id="menu-accounts"
-                   href="<c:url value='/accounts'/>"${activeMenu == 'accounts' ? ' aria-current="page"' : ''}>
+                <%-- Giống nhóm Sản phẩm; trang đặt activeSubmenu: account-list | audit-logs --%>
+                <details class="app-menu__group"${activeMenu == 'accounts' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'accounts' ? ' app-menu__toggle--current' : ''}" id="menu-accounts">
                     <span class="app-menu__icon app-menu__icon--accounts" aria-hidden="true"></span>Quản lý tài khoản
-                </a>
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <c:if test="${currentUser.can('USER_VIEW')}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'account-list' ? ' app-submenu__link--active' : ''}" id="menu-account-list"
+                           href="<c:url value='/accounts'/>"${activeSubmenu == 'account-list' ? ' aria-current="page"' : ''}>Danh sách tài khoản</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('AUDIT_LOG_VIEW')}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'audit-logs' ? ' app-submenu__link--active' : ''}" id="menu-audit-logs"
+                           href="<c:url value='/audit-logs'/>"${activeSubmenu == 'audit-logs' ? ' aria-current="page"' : ''}>Nhật ký thao tác</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
             </li>
             </c:if>
             <c:if test="${currentUser.can('ORDER_VIEW')}">
@@ -37,14 +54,46 @@
             </c:if>
             <c:if test="${currentUser.can('PRODUCT_VIEW')}">
             <li>
-                <%-- Chưa có trang danh sách sản phẩm (S2-05) nên menu mở trang Nhóm hàng (S2-06) --%>
-                <a class="app-menu__link${activeMenu == 'products' ? ' app-menu__link--active' : ''}" id="menu-products"
-                   href="<c:url value='/categories'/>"${activeMenu == 'products' ? ' aria-current="page"' : ''}>
+                <%-- Menu cha chỉ mở/đóng menu con (details/summary, không cần JS); đang ở trang thuộc Sản phẩm thì mở sẵn.
+                     Trang đặt activeSubmenu: product-list | categories --%>
+                <details class="app-menu__group"${activeMenu == 'products' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'products' ? ' app-menu__toggle--current' : ''}" id="menu-products">
                     <span class="app-menu__icon app-menu__icon--products" aria-hidden="true"></span>Sản phẩm
-                </a>
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'product-list' ? ' app-submenu__link--active' : ''}" id="menu-product-list"
+                           href="<c:url value='/products'/>"${activeSubmenu == 'product-list' ? ' aria-current="page"' : ''}>Danh sách sản phẩm</a>
+                    </li>
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'categories' ? ' app-submenu__link--active' : ''}" id="menu-categories"
+                           href="<c:url value='/categories'/>"${activeSubmenu == 'categories' ? ' aria-current="page"' : ''}>Nhóm hàng</a>
+                    </li>
+                    <c:if test="${not currentUser.customer}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'units' ? ' app-submenu__link--active' : ''}" id="menu-units"
+                           href="<c:url value='/units'/>"${activeSubmenu == 'units' ? ' aria-current="page"' : ''}>Đơn vị tính</a>
+                    </li>
+                    </c:if>
+                    <%-- Đại lý có PRODUCT_VIEW nhưng không xem bảng giá các nhóm (PriceListListServlet) --%>
+                    <c:if test="${not currentUser.customer}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'price-lists' ? ' app-submenu__link--active' : ''}" id="menu-price-lists"
+                           href="<c:url value='/price-lists'/>"${activeSubmenu == 'price-lists' ? ' aria-current="page"' : ''}>Bảng giá</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
             </li>
             </c:if>
             <c:if test="${currentUser.can('INVENTORY_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'suppliers' ? ' app-menu__link--active' : ''}" id="menu-suppliers"
+                   href="<c:url value='/suppliers'/>"${activeMenu == 'suppliers' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--suppliers" aria-hidden="true"></span>Nhà cung cấp
+                </a>
+            </li>
             <li>
                 <a class="app-menu__link${activeMenu == 'warehouse' ? ' app-menu__link--active' : ''}" id="menu-warehouse"
                    href="<c:url value='/warehouse'/>"${activeMenu == 'warehouse' ? ' aria-current="page"' : ''}>

@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="activeMenu" value="accounts"/>
+<c:set var="activeSubmenu" value="account-list"/>
 <c:set var="breadcrumbSection" value="Tổng quan"/>
 <c:set var="breadcrumbPage" value="Quản lý tài khoản"/>
 <c:url var="viewUrl" value="/accounts/view"><c:param name="id" value="${account.id}"/></c:url>

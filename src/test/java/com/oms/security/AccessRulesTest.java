@@ -114,6 +114,95 @@ class AccessRulesTest {
         }
     }
 
+    // S2-04: chỉ Quản trị hệ thống xem và xuất nhật ký thao tác
+    @Test
+    void onlyAdminCanViewAuditLogs() {
+        for (String path : new String[] {"/audit-logs", "/audit-logs/export"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            for (String role : new String[] {"CUSTOMER", "SALES_REP", "SALES_MANAGER", "WAREHOUSE", "WH_MANAGER",
+                    "ACCOUNTANT"}) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
+    // S2-07: vai trò nội bộ xem được đơn vị tính; chỉ Quản lý kinh doanh và Admin thêm/sửa/xoá
+    @Test
+    void onlyProductManagersCanChangeUnits() {
+        for (String path : new String[] {"/units/new", "/units/edit", "/units/delete"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+        }
+        assertTrue(AccessRules.isAllowed("/units", permissionsOf("WAREHOUSE")));
+    }
+
+    // S2-09: ai xem kho thì xem được nhà cung cấp; chỉ nhân viên kho, quản lý kho, Admin thêm/sửa/xoá/ngừng giao dịch
+    @Test
+    void onlyWarehouseStaffCanManageSuppliers() {
+        for (String path : new String[] {"/suppliers/new", "/suppliers/edit", "/suppliers/status", "/suppliers/delete"}) {
+            for (String role : new String[] {"WAREHOUSE", "WH_MANAGER", "ADMIN"}) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+            for (String role : new String[] {"SALES_REP", "SALES_MANAGER", "ACCOUNTANT", "CUSTOMER"}) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+        assertTrue(AccessRules.isAllowed("/suppliers", permissionsOf("ACCOUNTANT")));
+        assertFalse(AccessRules.isAllowed("/suppliers", permissionsOf("CUSTOMER")));
+    }
+
+    // S2-08: nhập sản phẩm từ Excel thêm và sửa sản phẩm nên chỉ ai quản lý sản phẩm mới vào được
+    @Test
+    void onlyProductManagersCanImportProducts() {
+        for (String path : new String[] {"/products/import", "/products/import/template", "/products/import/preview",
+                "/products/import/result", "/products/import/errors"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            for (String role : new String[] {"CUSTOMER", "SALES_REP", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT"}) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
+    // S2-10: vai trò nội bộ xem được bảng giá; chỉ Quản lý kinh doanh và Admin tạo/sửa/xoá/tạo phiên bản
+    @Test
+    void onlyProductManagersCanChangePriceLists() {
+        String[] managePaths = {"/price-lists/new", "/price-lists/edit", "/price-lists/version", "/price-lists/delete"};
+        for (String path : managePaths) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("SALES_REP")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+        }
+        assertTrue(AccessRules.isAllowed("/price-lists", permissionsOf("SALES_REP")));
+    }
+
+    // S2-05: mọi vai trò nội bộ xem được danh mục sản phẩm; chỉ Quản lý kinh doanh và Admin thêm/sửa/xoá/ngừng
+    @Test
+    void onlyProductManagersCanChangeProducts() {
+        String[] managePaths = {"/products/new", "/products/edit", "/products/delete", "/products/status"};
+        for (String role : new String[] {"SALES_MANAGER", "ADMIN"}) {
+            for (String path : managePaths) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+        for (String role : new String[] {"SALES_REP", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT"}) {
+            assertTrue(AccessRules.isAllowed("/products", permissionsOf(role)), role);
+            assertTrue(AccessRules.isAllowed("/products/image", permissionsOf(role)), role);
+            for (String path : managePaths) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
+    // S2-05: giá vốn chỉ Quản lý kinh doanh xem và sửa được, Admin cũng không
+    @Test
+    void onlySalesManagerCanSeeCostPriceOfProducts() {
+        assertTrue(permissionsOf("SALES_MANAGER").contains("COST_PRICE_VIEW"));
+        assertFalse(permissionsOf("ADMIN").contains("COST_PRICE_VIEW"));
+    }
+
     // S2-06: mọi vai trò nội bộ xem được nhóm hàng; chỉ Quản lý kinh doanh và Admin được thêm/sửa/xoá/chuyển
     @Test
     void onlyProductManagersCanChangeCategories() {

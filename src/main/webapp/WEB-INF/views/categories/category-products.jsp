@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="activeMenu" value="products"/>
+<c:set var="activeSubmenu" value="categories"/>
 <c:set var="breadcrumbSection" value="Nhóm hàng"/>
 <c:set var="breadcrumbPage" value="Sản phẩm của nhóm"/>
 <c:set var="canManage" value="${currentUser.can('PRODUCT_MANAGE')}"/>

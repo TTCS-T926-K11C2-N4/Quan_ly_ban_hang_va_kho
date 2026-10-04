@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <c:set var="activeMenu" value="accounts"/>
+<c:set var="activeSubmenu" value="account-list"/>
 <c:set var="breadcrumbSection" value="Tổng quan"/>
 <c:set var="breadcrumbPage" value="Quản lý tài khoản"/>
 <%-- Dùng chung cho S1-09A Tạo và S1-09B Sửa; Servlet sửa gán editing = true và account (EditableAccount) --%>

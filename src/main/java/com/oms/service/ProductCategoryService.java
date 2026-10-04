@@ -264,7 +264,8 @@ public class ProductCategoryService {
             try {
                 categoryDao.deactivateBranch(connection, category.getPath(), actorUserId);
                 auditLogDao.insert(connection, actorUserId, "CATEGORY_DEACTIVATE", ENTITY, category.getId(),
-                        null, null, null, ipAddress);
+                        JsonUtil.object(Map.of("active", true)), JsonUtil.object(Map.of("active", false)), null,
+                        ipAddress);
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
@@ -289,7 +290,8 @@ public class ProductCategoryService {
             try {
                 categoryDao.activate(connection, category.getId(), actorUserId);
                 auditLogDao.insert(connection, actorUserId, "CATEGORY_ACTIVATE", ENTITY, category.getId(),
-                        null, null, null, ipAddress);
+                        JsonUtil.object(Map.of("active", false)), JsonUtil.object(Map.of("active", true)), null,
+                        ipAddress);
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
@@ -329,11 +331,10 @@ public class ProductCategoryService {
                 int moved = productDao.moveToCategory(connection, productIds, from.getId(), targetCategoryId,
                         actorUserId);
                 Map<String, Object> change = new LinkedHashMap<>();
+                change.put("categoryId", targetCategoryId);
                 change.put("productIds", productIds);
-                change.put("fromCategoryId", from.getId());
-                change.put("toCategoryId", targetCategoryId);
                 auditLogDao.insert(connection, actorUserId, "PRODUCT_MOVE_CATEGORY", ENTITY, from.getId(),
-                        null, JsonUtil.object(change), null, ipAddress);
+                        JsonUtil.object(Map.of("categoryId", from.getId())), JsonUtil.object(change), null, ipAddress);
                 connection.commit();
                 return moved;
             } catch (SQLException e) {

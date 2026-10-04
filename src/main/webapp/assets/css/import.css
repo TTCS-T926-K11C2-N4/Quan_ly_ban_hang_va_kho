@@ -107,6 +107,7 @@
     font-size: 13px;
     font-weight: 700;
     color: var(--color-text-muted);
+    text-decoration: none;
 }
 
 .import-tabs__item--active {
@@ -114,8 +115,8 @@
     color: #ffffff;
 }
 
-.import-tabs__item[aria-disabled="true"] {
-    cursor: not-allowed;
+.import-tabs__item:not(.import-tabs__item--active):hover {
+    color: var(--color-import-navy);
 }
 
 /* Thanh các bước */
