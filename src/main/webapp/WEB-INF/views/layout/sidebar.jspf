@@ -1,5 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Trang include cần đặt activeMenu: dashboard | accounts | sales | products | warehouse | reports | profile.
+<%-- Trang include cần đặt activeMenu: dashboard | accounts | sales | products | suppliers | warehouse | reports | profile.
      S1-06: mục menu chỉ hiện khi có quyền xem module đó; quyền còn được kiểm lại ở AuthFilter. --%>
 <aside class="app-sidebar" id="app-sidebar">
     <div class="app-sidebar__brand">
@@ -88,6 +88,12 @@
             </li>
             </c:if>
             <c:if test="${currentUser.can('INVENTORY_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'suppliers' ? ' app-menu__link--active' : ''}" id="menu-suppliers"
+                   href="<c:url value='/suppliers'/>"${activeMenu == 'suppliers' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--suppliers" aria-hidden="true"></span>Nhà cung cấp
+                </a>
+            </li>
             <li>
                 <a class="app-menu__link${activeMenu == 'warehouse' ? ' app-menu__link--active' : ''}" id="menu-warehouse"
                    href="<c:url value='/warehouse'/>"${activeMenu == 'warehouse' ? ' aria-current="page"' : ''}>

@@ -12,6 +12,9 @@ public final class Permission {
     public static final String PRODUCT_MANAGE = "PRODUCT_MANAGE";
     // Chỉ Quản lý kinh doanh có, kể cả Admin cũng không (seed_permissions.sql)
     public static final String COST_PRICE_VIEW = "COST_PRICE_VIEW";
+    // Nhà cung cấp (S2-09) dùng chung quyền kho: nhân viên kho, quản lý kho, Admin quản lý
+    public static final String INVENTORY_VIEW = "INVENTORY_VIEW";
+    public static final String INVENTORY_MANAGE = "INVENTORY_MANAGE";
 
     private Permission() {
     }
