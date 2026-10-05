@@ -69,6 +69,8 @@ public class ProductImportService {
     private static final int CONVERSIONS = 8;
 
     private static final String DATA_SHEET = "Sản phẩm";
+    // Dòng mẫu trong tệp mẫu có SKU bắt đầu bằng "VD-": khi nhập thì bỏ qua để quên xoá cũng không tạo sản phẩm mẫu
+    static final String SAMPLE_PREFIX = "VD-";
     private static final String ACTIVE_LABEL = "Đang kinh doanh";
     private static final String DISCONTINUED_LABEL = "Ngừng kinh doanh";
     private static final String ENTITY = "PRODUCT";
@@ -110,6 +112,7 @@ public class ProductImportService {
                 data.setColumnWidth(i, (i == NAME || i == DESCRIPTION || i == CONVERSIONS ? 34 : 20) * 256);
             }
             data.createFreezePane(0, 1);
+            writeSampleRows(workbook, data, canEditCost);
 
             Sheet guide = workbook.createSheet("Hướng dẫn");
             guide.setColumnWidth(0, 24 * 256);
@@ -133,7 +136,10 @@ public class ProductImportService {
                             + "Có giá trị thì thay toàn bộ quy đổi đang có của SKU."},
                     {"Ô để trống", "Với SKU đã có: ô trống nghĩa là giữ nguyên giá trị đang lưu, không xoá đi. "
                             + "Muốn bỏ quy đổi hoặc xoá mô tả thì sửa trên màn hình sản phẩm."},
-                    {"Giới hạn", "Tối đa " + MAX_ROWS + " dòng mỗi file. Dòng lỗi bị bỏ qua, dòng hợp lệ vẫn được nhập."}};
+                    {"Giới hạn", "Tối đa " + MAX_ROWS + " dòng mỗi file. Dòng lỗi bị bỏ qua, dòng hợp lệ vẫn được nhập."},
+                    {"Dòng mẫu", "Các dòng chữ nghiêng nền xám (mã SKU bắt đầu bằng \"" + SAMPLE_PREFIX
+                            + "\") chỉ để xem cách điền: hệ thống tự bỏ qua khi nhập. Điền dữ liệu thật vào các dòng bên dưới "
+                            + "hoặc ghi đè lên dòng mẫu."}};
             for (String[] note : notes) {
                 r = writeGuideRow(guide, r, note[0], note[1]);
             }
@@ -165,7 +171,7 @@ public class ProductImportService {
 
             for (int r = sheet.getFirstRowNum() + 1; r <= sheet.getLastRowNum(); r++) {
                 List<String> cells = readCells(sheet.getRow(r), formatter, evaluator);
-                if (cells.stream().allMatch(String::isEmpty)) {
+                if (cells.stream().allMatch(String::isEmpty) || isSampleRow(cells)) {
                     continue;
                 }
                 if (values.size() == MAX_ROWS) {
@@ -480,6 +486,62 @@ public class ProductImportService {
             result.errors.add("Một sản phẩm tối đa " + ProductService.MAX_CONVERSIONS + " đơn vị quy đổi.");
         }
         return result;
+    }
+
+    static boolean isSampleRow(List<String> cells) {
+        return cells.get(SKU).toUpperCase(Locale.ROOT).startsWith(SAMPLE_PREFIX);
+    }
+
+    // Ba dòng minh hoạ: có quy đổi lốc/thùng, chỉ quy đổi thùng, trạng thái ngừng kinh doanh. Nhóm hàng và đơn vị lấy
+    // từ danh mục hiện có để dòng mẫu luôn đúng với hệ thống đang chạy; không có đơn vị Lốc/Thùng thì bỏ trống quy đổi.
+    private void writeSampleRows(Workbook workbook, Sheet data, boolean canEditCost) throws SQLException {
+        // Ưu tiên nhóm cấp cuối (vd Bia lon) vì sản phẩm thường gắn vào nhóm con, không gắn vào nhóm gốc
+        String category = "";
+        for (ProductCategory c : categoryService.getTree()) {
+            if (c.isActive() && (category.isEmpty() || c.getChildCount() == 0)) {
+                category = c.getCode();
+                if (c.getChildCount() == 0) {
+                    break;
+                }
+            }
+        }
+        Map<String, String> unitNames = new HashMap<>();
+        List<SelectOption> units = unitDao.findAll();
+        for (SelectOption unit : units) {
+            unitNames.put(key(unit.getName()), unit.getName());
+        }
+        String base = unitNames.getOrDefault(key("Lon"), units.isEmpty() ? "" : units.get(0).getName());
+        String lot = unitNames.get(key("Lốc"));
+        String carton = unitNames.get(key("Thùng"));
+        String both = lot != null && carton != null ? lot + "=6; " + carton + "=24" : carton != null ? carton + "=24" : "";
+        String cartonOnly = carton != null ? carton + "=24" : "";
+        String[][] samples = {
+                {SAMPLE_PREFIX + "001", "Bia lon 330ml (dòng mẫu)", category, base, "Thùng 24 lon x 330ml",
+                        canEditCost ? "11.500" : "", "", "Mô tả ngắn về sản phẩm", both},
+                {SAMPLE_PREFIX + "002", "Bia lon 500ml (dòng mẫu)", category, base, "Thùng 24 lon x 500ml",
+                        canEditCost ? "15000" : "", ACTIVE_LABEL, "", cartonOnly},
+                {SAMPLE_PREFIX + "003", "Sản phẩm ngừng bán (dòng mẫu)", category, base, "", "",
+                        DISCONTINUED_LABEL, "", ""}};
+        CellStyle style = sampleStyle(workbook);
+        for (int r = 0; r < samples.length; r++) {
+            Row row = data.createRow(r + 1);
+            for (int i = 0; i < samples[r].length; i++) {
+                setCell(row, i, samples[r][i], style);
+            }
+        }
+    }
+
+    // Chữ nghiêng màu xám, nền xám nhạt; giữ định dạng chữ (@) như các ô nhập
+    private static CellStyle sampleStyle(Workbook workbook) {
+        Font font = workbook.createFont();
+        font.setItalic(true);
+        font.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setDataFormat(workbook.createDataFormat().getFormat("@"));
+        return style;
     }
 
     // null nếu không nhận ra trạng thái
