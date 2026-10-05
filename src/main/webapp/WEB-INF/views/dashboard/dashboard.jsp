@@ -37,7 +37,12 @@
                             <p class="summary-card__label">Doanh thu hôm nay</p>
                             <p class="summary-card__value"><fmt:formatNumber value="${summary.todayRevenue}" maxFractionDigits="0"/> ₫</p>
                         </div>
-                        <span class="badge tone--blue"><fmt:formatNumber value="${summary.revenueChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</span>
+                        <c:choose>
+                            <c:when test="${summary.hasSalesData}">
+                                <span class="badge tone--blue"><fmt:formatNumber value="${summary.revenueChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</span>
+                            </c:when>
+                            <c:otherwise><span class="summary-card__note">Chưa có dữ liệu bán hàng</span></c:otherwise>
+                        </c:choose>
                     </div>
                 </article>
 
@@ -48,7 +53,12 @@
                             <p class="summary-card__label">Đơn hàng</p>
                             <p class="summary-card__value"><fmt:formatNumber value="${summary.todayOrderCount}"/></p>
                         </div>
-                        <span class="badge tone--teal"><fmt:formatNumber value="${summary.orderChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</span>
+                        <c:choose>
+                            <c:when test="${summary.hasSalesData}">
+                                <span class="badge tone--teal"><fmt:formatNumber value="${summary.orderChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</span>
+                            </c:when>
+                            <c:otherwise><span class="summary-card__note">Chưa có đơn hàng</span></c:otherwise>
+                        </c:choose>
                     </div>
                 </article>
 
@@ -56,7 +66,7 @@
                     <span class="summary-card__icon tone--amber" aria-hidden="true">!</span>
                     <div class="summary-card__body">
                         <div>
-                            <p class="summary-card__label">Sản phẩm sắp hết</p>
+                            <p class="summary-card__label">Sản phẩm sắp hết / hết hàng</p>
                             <p class="summary-card__value"><fmt:formatNumber value="${summary.lowStockProductCount}"/></p>
                         </div>
                         <c:if test="${summary.lowStockProductCount > 0}">
@@ -91,6 +101,11 @@
                                         <td><fmt:formatNumber value="${order.totalAmount}" maxFractionDigits="0"/> ₫</td>
                                     </tr>
                                 </c:forEach>
+                                <c:if test="${empty recentOrders}">
+                                    <tr>
+                                        <td class="data-table__empty" colspan="4">Chưa có đơn hàng nào. Đơn hàng sẽ hiện ở đây khi có chức năng tạo đơn.</td>
+                                    </tr>
+                                </c:if>
                             </tbody>
                         </table>
                     </div>
