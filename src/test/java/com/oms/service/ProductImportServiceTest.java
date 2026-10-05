@@ -5,9 +5,11 @@ import com.oms.model.SelectOption;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,6 +38,15 @@ class ProductImportServiceTest {
         assertTrue(parsed.errors.get(2).contains("Hệ số của \"Thùng\""));
         assertTrue(parsed.errors.get(3).contains("sai dạng"));
         assertEquals(Map.of(7L, new BigDecimal("6")), parsed.factors);
+    }
+
+    // Dòng mẫu của tệp mẫu (SKU "VD-...") bị bỏ qua khi nhập, kể cả viết thường
+    @Test
+    void sampleRowsAreRecognisedBySkuPrefix() {
+        assertTrue(ProductImportService.isSampleRow(List.of("VD-001", "", "", "", "", "", "", "", "")));
+        assertTrue(ProductImportService.isSampleRow(List.of("vd-002", "", "", "", "", "", "", "", "")));
+        assertFalse(ProductImportService.isSampleRow(List.of("SP001", "", "", "", "", "", "", "", "")));
+        assertFalse(ProductImportService.isSampleRow(List.of("VDX01", "", "", "", "", "", "", "", "")));
     }
 
     @Test
