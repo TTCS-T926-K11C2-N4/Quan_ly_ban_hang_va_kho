@@ -48,6 +48,9 @@ public class AccountImportService {
     private static final String[] COLUMNS = {
             "Họ và tên *", "Tên đăng nhập *", "Email *", "Số điện thoại *", "Vai trò *", "Mã kho", "Mã địa bàn"};
     private static final String DATA_SHEET = "Người dùng";
+    // Dòng mẫu trong tệp mẫu có tên đăng nhập bắt đầu bằng "vd.": khi nhập thì bỏ qua để quên xoá cũng không tạo
+    // tài khoản mẫu (và không gửi email tới địa chỉ mẫu)
+    static final String SAMPLE_PREFIX = "vd.";
     private static final Pattern ROLE_SEPARATOR = Pattern.compile("[,;\\n]");
     private static final Pattern PHONE_SEPARATOR = Pattern.compile("[\\s.\\-]");
     private static final Locale VIETNAMESE = Locale.forLanguageTag("vi");
@@ -78,6 +81,7 @@ public class AccountImportService {
                 data.setColumnWidth(i, (i == 2 || i == 4 ? 32 : 22) * 256);
             }
             data.createFreezePane(0, 1);
+            writeSampleRows(workbook, data);
 
             Sheet guide = workbook.createSheet("Hướng dẫn");
             guide.setColumnWidth(0, 22 * 256);
@@ -92,7 +96,10 @@ public class AccountImportService {
                     {"Vai trò *", "Mã hoặc tên vai trò ở bảng dưới; nhiều vai trò cách nhau bằng dấu phẩy."},
                     {"Mã kho", "Bắt buộc khi có vai trò Quản lý kho hoặc Nhân viên kho. Ghi mã hoặc tên kho."},
                     {"Mã địa bàn", "Bắt buộc khi có vai trò Nhân viên kinh doanh. Ghi mã hoặc tên địa bàn."},
-                    {"Giới hạn", "Tối đa " + MAX_ROWS + " dòng mỗi file. Dòng lỗi bị bỏ qua, dòng hợp lệ vẫn được nhập."}};
+                    {"Giới hạn", "Tối đa " + MAX_ROWS + " dòng mỗi file. Dòng lỗi bị bỏ qua, dòng hợp lệ vẫn được nhập."},
+                    {"Dòng mẫu", "Các dòng chữ nghiêng nền xám (tên đăng nhập bắt đầu bằng \"" + SAMPLE_PREFIX
+                            + "\") chỉ để xem cách điền: hệ thống tự bỏ qua khi nhập. Điền dữ liệu thật vào các dòng bên dưới "
+                            + "hoặc ghi đè lên dòng mẫu."}};
             for (String[] note : notes) {
                 r = writeGuideRow(guide, r, note[0], note[1]);
             }
@@ -125,7 +132,7 @@ public class AccountImportService {
 
             for (int r = sheet.getFirstRowNum() + 1; r <= sheet.getLastRowNum(); r++) {
                 List<String> cells = readCells(sheet.getRow(r), formatter, evaluator);
-                if (cells.stream().allMatch(String::isEmpty)) {
+                if (cells.stream().allMatch(String::isEmpty) || isSampleRow(cells)) {
                     continue;
                 }
                 if (values.size() == MAX_ROWS) {
@@ -270,6 +277,46 @@ public class AccountImportService {
         formErrors.values().forEach(row::addError);
         rowErrors.forEach(row::addError);
         return row;
+    }
+
+    static boolean isSampleRow(List<String> cells) {
+        return cells.get(1).toLowerCase(Locale.ROOT).startsWith(SAMPLE_PREFIX);
+    }
+
+    // Ba dòng minh hoạ đủ các trường hợp: vai trò cần địa bàn, vai trò cần kho, nhiều vai trò. Mã kho/địa bàn lấy từ
+    // danh mục hiện có để dòng mẫu luôn đúng với hệ thống đang chạy.
+    private void writeSampleRows(Workbook workbook, Sheet data) throws SQLException {
+        List<SelectOption> warehouses = accountService.getWarehouses();
+        List<SelectOption> regions = accountService.getRegions();
+        String warehouse = warehouses.isEmpty() ? "" : warehouses.get(0).getCode();
+        String region = regions.isEmpty() ? "" : regions.get(0).getCode();
+        String[][] samples = {
+                {"Nguyễn Văn A (dòng mẫu)", SAMPLE_PREFIX + "nguyenvana", "vd.nguyenvana@example.com", "0987123456",
+                        "Nhân viên kinh doanh", "", region},
+                {"Trần Thị B (dòng mẫu)", SAMPLE_PREFIX + "tranthib", "vd.tranthib@example.com", "0912345678",
+                        "WAREHOUSE", warehouse, ""},
+                {"Lê Văn C (dòng mẫu)", SAMPLE_PREFIX + "levanc", "vd.levanc@example.com", "0909876543",
+                        "Kế toán công nợ, Quản lý kinh doanh", "", ""}};
+        CellStyle style = sampleStyle(workbook);
+        for (int r = 0; r < samples.length; r++) {
+            Row row = data.createRow(r + 1);
+            for (int i = 0; i < samples[r].length; i++) {
+                setCell(row, i, samples[r][i], style);
+            }
+        }
+    }
+
+    // Chữ nghiêng màu xám, nền xám nhạt; giữ định dạng chữ (@) để số điện thoại không mất số 0 đầu
+    private static CellStyle sampleStyle(Workbook workbook) {
+        Font font = workbook.createFont();
+        font.setItalic(true);
+        font.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setDataFormat(workbook.createDataFormat().getFormat("@"));
+        return style;
     }
 
     // Báo theo số dòng Excel (khớp cột "Dòng trong file gốc" của báo cáo lỗi) để người dùng tìm được dòng kia
