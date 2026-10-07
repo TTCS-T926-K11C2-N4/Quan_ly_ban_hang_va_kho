@@ -13,7 +13,7 @@ public final class AccessRules {
     private static final String AUTHENTICATED = "";
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
-            "/login", "/logout", "/register", "/forgot-password", "/forgot-password/sent", "/reset-password",
+            "/login", "/logout", "/forgot-password", "/forgot-password/sent", "/reset-password",
             "/session-expired", "/error");
 
     private static final Map<String, String> REQUIRED_PERMISSIONS = Map.ofEntries(

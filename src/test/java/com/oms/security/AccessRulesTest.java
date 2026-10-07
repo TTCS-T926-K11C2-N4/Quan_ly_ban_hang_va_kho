@@ -248,7 +248,7 @@ class AccessRulesTest {
 
     @Test
     void authPagesAndAssetsArePublic() {
-        for (String path : new String[] {"/login", "/logout", "/register", "/forgot-password",
+        for (String path : new String[] {"/login", "/logout", "/forgot-password",
                 "/forgot-password/sent", "/reset-password", "/session-expired", "/error", "/assets/css/app.css"}) {
             assertTrue(AccessRules.isPublic(path), path);
         }

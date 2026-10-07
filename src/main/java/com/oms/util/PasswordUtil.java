@@ -19,7 +19,7 @@ public final class PasswordUtil {
     private PasswordUtil() {
     }
 
-    // Quy tắc chung (khớp change-password.js, register.js): 8–64 ký tự, có chữ (kể cả chữ có dấu) và số.
+    // Quy tắc chung (khớp change-password.js): 8–64 ký tự, có chữ (kể cả chữ có dấu) và số.
     // Giới hạn 64 vì bcrypt chỉ dùng 72 byte đầu của mật khẩu.
     public static boolean meetsPolicy(String password) {
         return password != null
