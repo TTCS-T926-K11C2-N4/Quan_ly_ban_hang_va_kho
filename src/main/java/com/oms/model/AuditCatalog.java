@@ -72,6 +72,7 @@ public final class AuditCatalog {
         action("PRICE_LIST_DELETE", "Xoá", GROUP_DELETE);
         action("PRICE_LIST_VERSION", "Tạo phiên bản", GROUP_CREATE);
         action("PRICE_LIST_SHORTEN", "Rút ngắn hiệu lực", GROUP_UPDATE);
+        action("CREDIT_LIMIT_UPDATE", "Sửa", GROUP_UPDATE);
     }
 
     private AuditCatalog() {

@@ -15,6 +15,11 @@ public final class Permission {
     // Nhà cung cấp (S2-09) dùng chung quyền kho: nhân viên kho, quản lý kho, Admin quản lý
     public static final String INVENTORY_VIEW = "INVENTORY_VIEW";
     public static final String INVENTORY_MANAGE = "INVENTORY_MANAGE";
+    // Đại lý: Nhân viên kinh doanh chỉ thấy đại lý mình phụ trách (data_scope ASSIGNED)
+    public static final String CUSTOMER_VIEW = "CUSTOMER_VIEW";
+    // Sửa hạn mức công nợ (S3-05), khoá/mở giao dịch đại lý (S3-07): chỉ Kế toán công nợ và Quản lý kinh doanh,
+    // Admin cũng không có
+    public static final String CREDIT_MANAGE = "CREDIT_MANAGE";
 
     private Permission() {
     }
