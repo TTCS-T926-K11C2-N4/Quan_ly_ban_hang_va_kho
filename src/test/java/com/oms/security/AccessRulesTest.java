@@ -241,6 +241,17 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/change-password", Set.of()));
     }
 
+    // S3-09: Nhân viên, Quản lý kinh doanh tạo đơn; kho và kế toán không tạo đơn
+    @Test
+    void salesRolesCanCreateOrders() {
+        for (String path : new String[] {"/orders/new", "/orders/customer-data", "/orders/quote"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_REP")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+        }
+    }
+
     @Test
     void undeclaredPathIsDeniedEvenForAdmin() {
         assertFalse(AccessRules.isAllowed("/chuc-nang-moi", permissionsOf("ADMIN")));
