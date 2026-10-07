@@ -19,9 +19,10 @@
                     <span class="app-menu__icon app-menu__icon--dashboard" aria-hidden="true"></span>${currentUser.customer ? 'Trang chủ' : 'Tổng quan'}
                 </a>
             </li>
-            <c:if test="${currentUser.can('USER_VIEW') or currentUser.can('AUDIT_LOG_VIEW')}">
+            <c:if test="${currentUser.can('USER_VIEW') or currentUser.can('AUDIT_LOG_VIEW') or (currentUser.can('CUSTOMER_VIEW') and not currentUser.customer)}">
             <li>
-                <%-- Giống nhóm Sản phẩm; trang đặt activeSubmenu: account-list | audit-logs --%>
+                <%-- Giống nhóm Sản phẩm; trang đặt activeSubmenu: account-list | audit-logs | customers.
+                     Đại lý nằm trong nhóm này theo thiết kế S3-05/S3-07 (Quản lý tài khoản / Đại lý) --%>
                 <details class="app-menu__group"${activeMenu == 'accounts' ? ' open' : ''}>
                 <summary class="app-menu__link app-menu__toggle${activeMenu == 'accounts' ? ' app-menu__toggle--current' : ''}" id="menu-accounts">
                     <span class="app-menu__icon app-menu__icon--accounts" aria-hidden="true"></span>Quản lý tài khoản
@@ -32,6 +33,12 @@
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'account-list' ? ' app-submenu__link--active' : ''}" id="menu-account-list"
                            href="<c:url value='/accounts'/>"${activeSubmenu == 'account-list' ? ' aria-current="page"' : ''}>Danh sách tài khoản</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('CUSTOMER_VIEW') and not currentUser.customer}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'customers' ? ' app-submenu__link--active' : ''}" id="menu-customers"
+                           href="<c:url value='/customers/credit-limit'/>"${activeSubmenu == 'customers' ? ' aria-current="page"' : ''}>Đại lý</a>
                     </li>
                     </c:if>
                     <c:if test="${currentUser.can('AUDIT_LOG_VIEW')}">

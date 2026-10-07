@@ -245,6 +245,16 @@ class AccessRulesTest {
                 assertEquals("SALES_MANAGER".equals(role), permissions.contains("COST_PRICE_VIEW"), role));
     }
 
+    // S3-05: chỉ Kế toán công nợ và Quản lý kinh doanh sửa hạn mức; Nhân viên kinh doanh xem được đại lý của mình
+    @Test
+    void onlyAccountantAndSalesManagerCanEditCreditLimit() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "ACCOUNTANT".equals(role) || "SALES_MANAGER".equals(role),
+                AccessRules.isAllowed("/customers/credit-limit/edit", permissions), role));
+        assertTrue(AccessRules.isAllowed("/customers/credit-limit", permissionsOf("SALES_REP")));
+        assertFalse(AccessRules.isAllowed("/customers/credit-limit", permissionsOf("WAREHOUSE")));
+    }
+
     @Test
     void everyLoggedInUserCanOpenDashboardAndChangePassword() {
         assertTrue(AccessRules.isAllowed("/dashboard", Set.of()));
