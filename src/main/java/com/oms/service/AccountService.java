@@ -12,7 +12,6 @@ import com.oms.model.AccountListItem;
 import com.oms.model.AuditLogEntry;
 import com.oms.model.EditableAccount;
 import com.oms.model.PageResult;
-import com.oms.model.RegistrationForm;
 import com.oms.model.Role;
 import com.oms.model.SelectOption;
 import com.oms.util.DbConnection;
@@ -222,53 +221,6 @@ public class AccountService {
                 + "Đăng nhập tại: " + loginUrl + "\n\n"
                 + "Bạn sẽ được yêu cầu đổi mật khẩu ngay ở lần đăng nhập đầu tiên. "
                 + "Không chia sẻ email này cho người khác.\n";
-    }
-
-    public Map<String, String> validateRegistration(RegistrationForm form) throws SQLException {
-        Map<String, String> errors = new LinkedHashMap<>();
-        validateFullName(form.getFullName(), errors);
-        validateEmail(form.getEmail(), null, errors);
-        validateUsername(form.getUsername(), errors);
-
-        if (form.getPassword() == null || form.getPassword().isEmpty()) {
-            errors.put("password", "Vui lòng nhập mật khẩu.");
-        } else if (!PasswordUtil.meetsPolicy(form.getPassword())) {
-            errors.put("password", "Mật khẩu phải có 8–64 ký tự, gồm cả chữ và số.");
-        }
-
-        if (form.getConfirmPassword() == null || form.getConfirmPassword().isEmpty()) {
-            errors.put("confirmPassword", "Vui lòng nhập lại mật khẩu.");
-        } else if (!form.getConfirmPassword().equals(form.getPassword())) {
-            errors.put("confirmPassword", "Mật khẩu xác nhận không khớp.");
-        }
-
-        if (!form.isTermsAccepted()) {
-            errors.put("acceptTerms", "Bạn cần đồng ý với Điều khoản sử dụng và Chính sách bảo mật.");
-        }
-        return errors;
-    }
-
-    // Tài khoản tự đăng ký chờ quản trị viên gán vai trò và kích hoạt nên không gán vai trò nào
-    public void register(RegistrationForm form, String ipAddress) throws SQLException {
-        String passwordHash = PasswordUtil.hash(form.getPassword());
-        try (Connection connection = DbConnection.getConnection()) {
-            connection.setAutoCommit(false);
-            try {
-                long userId = userDao.insert(connection, form.getUsername(), form.getEmail(), null,
-                        form.getFullName(), passwordHash, "PENDING", false);
-                Map<String, Object> registered = new LinkedHashMap<>();
-                registered.put("username", form.getUsername());
-                registered.put("fullName", form.getFullName());
-                registered.put("email", form.getEmail());
-                registered.put("status", "PENDING");
-                auditLogDao.insertUserAction(connection, null, userId, AuditLogEntry.USER_REGISTER, null,
-                        JsonUtil.object(registered), null, ipAddress);
-                connection.commit();
-            } catch (SQLException e) {
-                connection.rollback();
-                throw e;
-            }
-        }
     }
 
     public AccountDetail getDetail(long userId) throws SQLException {

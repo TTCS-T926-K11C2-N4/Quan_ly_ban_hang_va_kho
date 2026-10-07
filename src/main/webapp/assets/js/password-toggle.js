@@ -1,5 +1,5 @@
 // Nút mắt: hiện/ẩn ô mật khẩu mà nó trỏ tới (data-password-toggle = id của ô).
-// Dùng chung cho trang Đăng ký, Đổi mật khẩu, Đặt lại mật khẩu.
+// Dùng chung cho trang Đổi mật khẩu, Đặt lại mật khẩu.
 (function () {
     document.querySelectorAll("[data-password-toggle]").forEach(function (button) {
         var input = document.getElementById(button.getAttribute("data-password-toggle"));
