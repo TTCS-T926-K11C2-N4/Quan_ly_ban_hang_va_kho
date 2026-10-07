@@ -9,6 +9,8 @@
 --   có dấu * -> data_scope OWN (Đại lý) hoặc ASSIGNED (Nhân viên kinh doanh), còn lại ALL
 --   Khác biệt W và F (ghi được trường nào, thao tác nào) kiểm ở từng chức năng khi làm module đó.
 -- Giá vốn và biên lợi nhuận: quyền riêng COST_PRICE_VIEW, chỉ Quản lý kinh doanh có (kể cả Admin cũng không).
+-- Hạn mức công nợ, khoá/mở giao dịch đại lý: quyền riêng CREDIT_MANAGE, chỉ Kế toán công nợ và Quản lý kinh doanh
+-- (AC của S3-05; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự nâng hạn mức cho đại lý của mình).
 -- ADMIN có mọi quyền còn lại (xem câu lệnh cuối file).
 --
 -- src/test/java/com/oms/security/AccessRulesTest.java đọc trực tiếp file này:
@@ -25,6 +27,7 @@ INSERT INTO `permissions` (`code`, `module`, `action`, `description`) VALUES
   ('COST_PRICE_VIEW', 'Sản phẩm & bảng giá', 'VIEW', 'Xem giá vốn và biên lợi nhuận'),
   ('CUSTOMER_VIEW', 'Đại lý & hạn mức công nợ', 'VIEW', 'Xem đại lý và hạn mức công nợ'),
   ('CUSTOMER_MANAGE', 'Đại lý & hạn mức công nợ', 'MANAGE', 'Thêm, sửa đại lý và hạn mức công nợ'),
+  ('CREDIT_MANAGE', 'Đại lý & hạn mức công nợ', 'MANAGE', 'Sửa hạn mức công nợ, khoá và mở giao dịch đại lý'),
   ('ORDER_VIEW', 'Đơn hàng', 'VIEW', 'Xem đơn hàng'),
   ('ORDER_MANAGE', 'Đơn hàng', 'MANAGE', 'Tạo, sửa, huỷ đơn hàng'),
   ('ORDER_APPROVAL_VIEW', 'Duyệt đơn & giá đặc biệt', 'VIEW', 'Xem đơn chờ duyệt'),
@@ -94,6 +97,7 @@ FROM (VALUES
   ROW('ACCOUNTANT', 'PRODUCT_VIEW', 'ALL'),
   ROW('ACCOUNTANT', 'CUSTOMER_VIEW', 'ALL'),
   ROW('ACCOUNTANT', 'CUSTOMER_MANAGE', 'ALL'),
+  ROW('ACCOUNTANT', 'CREDIT_MANAGE', 'ALL'),
   ROW('ACCOUNTANT', 'ORDER_VIEW', 'ALL'),
   ROW('ACCOUNTANT', 'ORDER_APPROVAL_VIEW', 'ALL'),
   ROW('ACCOUNTANT', 'INVENTORY_VIEW', 'ALL'),
@@ -109,6 +113,7 @@ FROM (VALUES
   ROW('SALES_MANAGER', 'COST_PRICE_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'CUSTOMER_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'CUSTOMER_MANAGE', 'ALL'),
+  ROW('SALES_MANAGER', 'CREDIT_MANAGE', 'ALL'),
   ROW('SALES_MANAGER', 'ORDER_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'ORDER_MANAGE', 'ALL'),
   ROW('SALES_MANAGER', 'ORDER_APPROVAL_VIEW', 'ALL'),
@@ -127,7 +132,7 @@ JOIN `permissions` p ON p.`code` = m.permission_code;
 INSERT INTO `role_permissions` (`role_id`, `permission_id`, `data_scope`)
 SELECT r.`id`, p.`id`, 'ALL'
 FROM `roles` r
-JOIN `permissions` p ON p.`code` <> 'COST_PRICE_VIEW'
+JOIN `permissions` p ON p.`code` NOT IN ('COST_PRICE_VIEW', 'CREDIT_MANAGE')
 WHERE r.`code` = 'ADMIN';
 
 COMMIT;
