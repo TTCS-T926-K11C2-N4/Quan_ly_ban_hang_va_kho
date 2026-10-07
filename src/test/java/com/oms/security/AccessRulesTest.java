@@ -36,13 +36,14 @@ class AccessRulesTest {
             rolePermissions.computeIfAbsent(row.group(1), role -> new HashSet<>()).add(row.group(2));
         }
 
-        // ADMIN: mọi quyền trừ COST_PRICE_VIEW (câu INSERT cuối file seed)
+        // ADMIN: mọi quyền trừ COST_PRICE_VIEW và CREDIT_MANAGE (câu INSERT cuối file seed)
         Set<String> allPermissions = new HashSet<>();
         Matcher permission = Pattern.compile("(?m)^\\s*\\('([A-Z_]+)', '").matcher(sql);
         while (permission.find()) {
             allPermissions.add(permission.group(1));
         }
         allPermissions.remove("COST_PRICE_VIEW");
+        allPermissions.remove("CREDIT_MANAGE");
         rolePermissions.put("ADMIN", allPermissions);
     }
 
@@ -221,6 +222,15 @@ class AccessRulesTest {
                 assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
             }
         }
+    }
+
+    // S3-07: chỉ Kế toán công nợ và Quản lý kinh doanh khoá/mở giao dịch đại lý
+    @Test
+    void onlyAccountantAndSalesManagerCanBlockCustomers() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "ACCOUNTANT".equals(role) || "SALES_MANAGER".equals(role),
+                AccessRules.isAllowed("/customers/block/save", permissions), role));
+        assertTrue(AccessRules.isAllowed("/customers/block", permissionsOf("SALES_REP")));
     }
 
     @Test

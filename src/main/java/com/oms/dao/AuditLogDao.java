@@ -53,6 +53,8 @@ public class AuditLogDao {
             + " WHEN 'PRODUCT' THEN COALESCE(p.sku, " + jsonField("sku") + ")"
             + " WHEN 'PRODUCT_CATEGORY' THEN COALESCE(c.code, " + jsonField("code") + ")"
             + " WHEN 'PRICE' THEN COALESCE(pl.code, " + jsonField("code") + ")"
+            // Khoá/mở giao dịch gắn với đại lý: mã đại lý ghi sẵn trong giá trị trước/sau
+            + " WHEN 'CUSTOMER' THEN COALESCE(" + jsonField("code") + ")"
             + " WHEN 'UNIT' THEN COALESCE(un.code, " + jsonField("code") + ")"
             + " WHEN 'SUPPLIER' THEN COALESCE(sp.code, " + jsonField("code") + ")"
             + " END";
