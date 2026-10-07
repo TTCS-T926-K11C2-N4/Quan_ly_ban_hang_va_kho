@@ -54,6 +54,38 @@
     color: #92400e;
 }
 
+/* Chuyển giữa Hạn mức công nợ và Khoá/mở giao dịch của cùng đại lý */
+.customer-tabs {
+    display: flex;
+    gap: 4px;
+    margin-top: 16px;
+    border-bottom: 1px solid var(--color-sales-border);
+}
+
+.customer-tabs__link {
+    margin-bottom: -1px;
+    padding: 10px 14px;
+    border-bottom: 2px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-muted);
+    text-decoration: none;
+}
+
+.customer-tabs__link:hover {
+    color: var(--color-navy);
+}
+
+.customer-tabs__link--active {
+    border-bottom-color: var(--color-navy);
+    color: var(--color-navy);
+}
+
+.customer-tabs__link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
 /* Thẻ nội dung chính */
 .sales-card {
     display: flex;
@@ -479,6 +511,48 @@
     border-radius: 10px;
     background: var(--color-surface);
     box-shadow: 0 4px 7px rgba(15, 23, 42, 0.06);
+}
+
+.sales-panel--lock {
+    gap: 7px;
+    padding-top: 30px;
+    border-color: var(--color-sales-border);
+    box-shadow: 0 3px 6px rgba(15, 23, 42, 0.05);
+}
+
+.sales-panel--lock .sales-panel__title {
+    margin-bottom: 10px;
+}
+
+.sales-panel--lock .sales-actions {
+    margin-top: 10px;
+}
+
+/* Lý do khoá hiện tại khi đại lý đang bị khoá */
+.block-current {
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #7f1d1d;
+}
+
+.block-current__title {
+    font-weight: 700;
+    color: #b91c1c;
+}
+
+.block-current__reason {
+    margin-top: 2px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.block-current__meta {
+    margin-top: 4px;
+    color: #991b1b;
 }
 
 .sales-panel__title {
