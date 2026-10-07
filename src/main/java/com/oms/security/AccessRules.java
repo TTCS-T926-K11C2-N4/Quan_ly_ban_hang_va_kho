@@ -36,6 +36,8 @@ public final class AccessRules {
             Map.entry("/accounts/import/errors", Permission.USER_MANAGE),
             Map.entry("/audit-logs", Permission.AUDIT_LOG_VIEW),
             Map.entry("/audit-logs/export", Permission.AUDIT_LOG_VIEW),
+            Map.entry("/customers/credit-limit", Permission.CUSTOMER_VIEW),
+            Map.entry("/customers/credit-limit/edit", Permission.CREDIT_MANAGE),
             Map.entry("/categories", Permission.PRODUCT_VIEW),
             Map.entry("/categories/products", Permission.PRODUCT_VIEW),
             Map.entry("/categories/new", Permission.PRODUCT_MANAGE),

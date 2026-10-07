@@ -36,13 +36,14 @@ class AccessRulesTest {
             rolePermissions.computeIfAbsent(row.group(1), role -> new HashSet<>()).add(row.group(2));
         }
 
-        // ADMIN: mọi quyền trừ COST_PRICE_VIEW (câu INSERT cuối file seed)
+        // ADMIN: mọi quyền trừ COST_PRICE_VIEW và CREDIT_MANAGE (câu INSERT cuối file seed)
         Set<String> allPermissions = new HashSet<>();
         Matcher permission = Pattern.compile("(?m)^\\s*\\('([A-Z_]+)', '").matcher(sql);
         while (permission.find()) {
             allPermissions.add(permission.group(1));
         }
         allPermissions.remove("COST_PRICE_VIEW");
+        allPermissions.remove("CREDIT_MANAGE");
         rolePermissions.put("ADMIN", allPermissions);
     }
 
@@ -233,6 +234,16 @@ class AccessRulesTest {
     void onlySalesManagerSeesCostPrice() {
         rolePermissions.forEach((role, permissions) ->
                 assertEquals("SALES_MANAGER".equals(role), permissions.contains("COST_PRICE_VIEW"), role));
+    }
+
+    // S3-05: chỉ Kế toán công nợ và Quản lý kinh doanh sửa hạn mức; Nhân viên kinh doanh xem được đại lý của mình
+    @Test
+    void onlyAccountantAndSalesManagerCanEditCreditLimit() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "ACCOUNTANT".equals(role) || "SALES_MANAGER".equals(role),
+                AccessRules.isAllowed("/customers/credit-limit/edit", permissions), role));
+        assertTrue(AccessRules.isAllowed("/customers/credit-limit", permissionsOf("SALES_REP")));
+        assertFalse(AccessRules.isAllowed("/customers/credit-limit", permissionsOf("WAREHOUSE")));
     }
 
     @Test
