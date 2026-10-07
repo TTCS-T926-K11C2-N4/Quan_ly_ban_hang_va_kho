@@ -69,10 +69,6 @@
 
                 <div class="auth-form__actions">
                     <button class="auth-form__submit" type="submit" id="login-submit"${locked ? ' disabled' : ''}>Đăng nhập</button>
-                    <p class="auth-form__footer">
-                        <span>Chưa có tài khoản cá nhân ?</span>
-                        <a class="auth-form__footer-link" id="register-link" href="<c:url value='/register'/>">Đăng ký tài khoản</a>
-                    </p>
                 </div>
             </form>
         </section>
