@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="100" viewBox="0 0 120 100">
+<ellipse cx="62" cy="90" rx="50" ry="8" fill="#ffedd5"/>
+<circle cx="64" cy="52" r="38" fill="#fff7ed"/>
+<path d="M60 30 92 40 60 52 28 40z" fill="#fed7aa"/>
+<path d="M28 40v32l32 14V52z" fill="#fdba74"/>
+<path d="M92 40v32L60 86V52z" fill="#fb923c"/>
+<path d="M44 35l32 11v12l-8 3V49L36 38z" fill="#fde68a"/>
+<path d="M28 40l-7 10 32 14 7-12zM92 40l7 10-32 14-7-12z" fill="#fdba74" opacity="0.9"/>
+<circle cx="92" cy="76" r="14" fill="#ef4444" stroke="#ffffff" stroke-width="3"/>
+<rect x="90.5" y="67" width="3" height="11" rx="1.5" fill="#ffffff"/>
+<circle cx="92" cy="83" r="2" fill="#ffffff"/>
+</svg>

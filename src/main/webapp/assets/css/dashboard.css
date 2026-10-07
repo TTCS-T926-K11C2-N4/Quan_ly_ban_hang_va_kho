@@ -1,65 +1,191 @@
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 330px));
-    gap: 26px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
     margin-top: 29px;
 }
 
+/* Mỗi thẻ một màu: icon, nhãn "Hôm nay" và nền nhạt cùng lấy từ --card-accent / --card-soft */
 .summary-card {
-    min-height: 142px;
-    padding: 20px;
-    border-radius: 14px;
-    background: var(--color-surface);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 196px;
+    padding: 20px 22px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--color-surface) 45%, var(--card-tint));
     box-shadow: var(--shadow-card);
+}
+
+.summary-card--blue {
+    --card-accent: #2563eb;
+    --card-accent-end: #3b82f6;
+    --card-soft: #dbeafe;
+    --card-tint: #eff6ff;
+    --card-border: #e0ecff;
+    --card-ink: #1d4ed8;
+}
+
+.summary-card--green {
+    --card-accent: #059669;
+    --card-accent-end: #10b981;
+    --card-soft: #d1fae5;
+    --card-tint: #ecfdf5;
+    --card-border: #d7f5e6;
+    --card-ink: #047857;
+}
+
+.summary-card--orange {
+    --card-accent: #ea580c;
+    --card-accent-end: #f97316;
+    --card-soft: #ffedd5;
+    --card-tint: #fff7ed;
+    --card-border: #fde7d3;
+    --card-ink: #c2410c;
+}
+
+.summary-card__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 
 .summary-card__icon {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    font-size: 18px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--card-accent), var(--card-accent-end));
+    color: #ffffff;
+}
+
+/* Icon nét mảnh dạng mask (giống icon menu) nên lấy đúng màu chữ */
+.summary-card__icon::before,
+.summary-card__tag::before,
+.summary-card__trend::before {
+    content: "";
+    background-color: currentColor;
+    -webkit-mask: var(--mask-icon) center / contain no-repeat;
+    mask: var(--mask-icon) center / contain no-repeat;
+}
+
+.summary-card__icon::before {
+    width: 26px;
+    height: 26px;
+}
+
+.summary-card__icon--revenue { --mask-icon: url("../img/icons/dashboard/revenue.svg"); }
+.summary-card__icon--orders { --mask-icon: url("../img/icons/dashboard/orders.svg"); }
+.summary-card__icon--low-stock { --mask-icon: url("../img/icons/dashboard/low-stock.svg"); }
+
+.summary-card__label {
+    font-size: 14px;
     font-weight: 700;
+    color: var(--color-text);
 }
 
-.summary-card__body {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 18px;
+.summary-card__tag {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    margin-left: auto;
+    padding: 4px 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-.summary-card__body .badge {
-    margin-bottom: 6px;
+.summary-card__tag::before {
+    width: 12px;
+    height: 12px;
+}
+
+.summary-card__tag--today {
+    --mask-icon: url("../img/icons/dashboard/calendar.svg");
+    background: var(--card-soft);
+    color: var(--card-ink);
+}
+
+.summary-card__tag--alert {
+    --mask-icon: url("../img/icons/dashboard/alert.svg");
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.summary-card__value {
+    margin-top: 16px;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-text);
 }
 
 .summary-card__note {
-    margin-bottom: 6px;
+    margin-top: 4px;
     font-size: 12px;
     color: var(--color-text-muted);
-    text-align: right;
+}
+
+.summary-card__compare {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 18px;
+}
+
+.summary-card__trend {
+    --mask-icon: url("../img/icons/dashboard/trend.svg");
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--card-soft);
+    color: var(--card-ink);
+}
+
+.summary-card__trend::before {
+    width: 18px;
+    height: 18px;
+}
+
+.summary-card__compare-label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.summary-card__compare-value {
+    margin-top: 2px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-body);
+}
+
+/* Hình minh hoạ chỉ để trang trí, nằm dưới chữ ở góc phải */
+.summary-card__art {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    width: 120px;
+    height: auto;
+    pointer-events: none;
 }
 
 .data-table td.data-table__empty {
     padding: 28px 16px;
     text-align: center;
     color: var(--color-text-muted);
-}
-
-.summary-card__label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--color-text-muted);
-}
-
-.summary-card__value {
-    margin-top: 6px;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--color-text);
 }
 
 .dashboard-grid {
@@ -162,7 +288,11 @@
 
 @media (max-width: 1279px) {
     .summary-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .summary-card__art {
+        width: 92px;
     }
 
     .dashboard-grid {
@@ -171,15 +301,22 @@
 }
 
 @media (max-width: 1023px) {
+    .summary-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .summary-card__art {
+        width: 120px;
+    }
+
     .dashboard-grid {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 
 @media (max-width: 767px) {
-    .summary-grid {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 16px;
+    .summary-card__art {
+        width: 96px;
     }
 
     .dashboard-grid {

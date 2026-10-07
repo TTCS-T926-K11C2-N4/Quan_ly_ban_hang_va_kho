@@ -30,49 +30,71 @@
             </header>
 
             <section class="summary-grid" aria-label="Chỉ số hôm nay">
-                <article class="summary-card">
-                    <span class="summary-card__icon tone--blue" aria-hidden="true">₫</span>
-                    <div class="summary-card__body">
-                        <div>
-                            <p class="summary-card__label">Doanh thu hôm nay</p>
-                            <p class="summary-card__value"><fmt:formatNumber value="${summary.todayRevenue}" maxFractionDigits="0"/> ₫</p>
-                        </div>
-                        <c:choose>
-                            <c:when test="${summary.hasSalesData}">
-                                <span class="badge tone--blue"><fmt:formatNumber value="${summary.revenueChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</span>
-                            </c:when>
-                            <c:otherwise><span class="summary-card__note">Chưa có dữ liệu bán hàng</span></c:otherwise>
-                        </c:choose>
+                <%-- Chưa lưu số liệu theo ngày nên chưa so được với hôm qua: hiện "—" thay vì số tự đặt --%>
+                <article class="summary-card summary-card--blue">
+                    <div class="summary-card__head">
+                        <span class="summary-card__icon summary-card__icon--orders" aria-hidden="true"></span>
+                        <p class="summary-card__label">Đơn hàng</p>
+                        <span class="summary-card__tag summary-card__tag--today">Hôm nay</span>
                     </div>
+                    <p class="summary-card__value"><fmt:formatNumber value="${summary.todayOrderCount}"/></p>
+                    <c:if test="${not summary.hasSalesData}"><p class="summary-card__note">Chưa có đơn hàng</p></c:if>
+                    <div class="summary-card__compare">
+                        <span class="summary-card__trend" aria-hidden="true"></span>
+                        <div>
+                            <p class="summary-card__compare-label">So với hôm qua</p>
+                            <p class="summary-card__compare-value">
+                                <c:choose>
+                                    <c:when test="${summary.hasSalesData}"><fmt:formatNumber value="${summary.orderChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</c:when>
+                                    <c:otherwise>—</c:otherwise>
+                                </c:choose>
+                            </p>
+                        </div>
+                    </div>
+                    <img class="summary-card__art" src="<c:url value='/assets/img/illustrations/dashboard/orders.svg'/>" alt="" width="120" height="100">
                 </article>
 
-                <article class="summary-card">
-                    <span class="summary-card__icon tone--teal" aria-hidden="true">#</span>
-                    <div class="summary-card__body">
-                        <div>
-                            <p class="summary-card__label">Đơn hàng</p>
-                            <p class="summary-card__value"><fmt:formatNumber value="${summary.todayOrderCount}"/></p>
-                        </div>
-                        <c:choose>
-                            <c:when test="${summary.hasSalesData}">
-                                <span class="badge tone--teal"><fmt:formatNumber value="${summary.orderChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</span>
-                            </c:when>
-                            <c:otherwise><span class="summary-card__note">Chưa có đơn hàng</span></c:otherwise>
-                        </c:choose>
+                <article class="summary-card summary-card--green">
+                    <div class="summary-card__head">
+                        <span class="summary-card__icon summary-card__icon--revenue" aria-hidden="true"></span>
+                        <p class="summary-card__label">Doanh thu hôm nay</p>
+                        <span class="summary-card__tag summary-card__tag--today">Hôm nay</span>
                     </div>
+                    <p class="summary-card__value"><fmt:formatNumber value="${summary.todayRevenue}" maxFractionDigits="0"/> ₫</p>
+                    <c:if test="${not summary.hasSalesData}"><p class="summary-card__note">Chưa có dữ liệu bán hàng</p></c:if>
+                    <div class="summary-card__compare">
+                        <span class="summary-card__trend" aria-hidden="true"></span>
+                        <div>
+                            <p class="summary-card__compare-label">So với hôm qua</p>
+                            <p class="summary-card__compare-value">
+                                <c:choose>
+                                    <c:when test="${summary.hasSalesData}"><fmt:formatNumber value="${summary.revenueChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</c:when>
+                                    <c:otherwise>—</c:otherwise>
+                                </c:choose>
+                            </p>
+                        </div>
+                    </div>
+                    <img class="summary-card__art" src="<c:url value='/assets/img/illustrations/dashboard/revenue.svg'/>" alt="" width="120" height="100">
                 </article>
 
-                <article class="summary-card">
-                    <span class="summary-card__icon tone--amber" aria-hidden="true">!</span>
-                    <div class="summary-card__body">
-                        <div>
-                            <p class="summary-card__label">Sản phẩm sắp hết / hết hàng</p>
-                            <p class="summary-card__value"><fmt:formatNumber value="${summary.lowStockProductCount}"/></p>
-                        </div>
+                <article class="summary-card summary-card--orange">
+                    <div class="summary-card__head">
+                        <span class="summary-card__icon summary-card__icon--low-stock" aria-hidden="true"></span>
+                        <p class="summary-card__label">Sản phẩm sắp hết / hết hàng</p>
                         <c:if test="${summary.lowStockProductCount > 0}">
-                            <span class="badge tone--amber">Cần xử lý</span>
+                            <span class="summary-card__tag summary-card__tag--alert">Cần xử lý</span>
                         </c:if>
                     </div>
+                    <p class="summary-card__value"><fmt:formatNumber value="${summary.lowStockProductCount}"/></p>
+                    <p class="summary-card__note">${summary.lowStockProductCount > 0 ? 'Sản phẩm cần xử lý' : 'Không có sản phẩm cần xử lý'}</p>
+                    <div class="summary-card__compare">
+                        <span class="summary-card__trend" aria-hidden="true"></span>
+                        <div>
+                            <p class="summary-card__compare-label">So với hôm qua</p>
+                            <p class="summary-card__compare-value">—</p>
+                        </div>
+                    </div>
+                    <img class="summary-card__art" src="<c:url value='/assets/img/illustrations/dashboard/low-stock.svg'/>" alt="" width="120" height="100">
                 </article>
             </section>
 
