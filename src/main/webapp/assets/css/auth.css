@@ -101,68 +101,10 @@ body {
     gap: 10px;
 }
 
-.auth-card--wide {
-    max-width: 600px;
-}
-
-/* Nút mắt ở trang Đăng ký, Đổi/Đặt lại mật khẩu chỉ có icon 20px (trang Đăng nhập có chữ "Hiện" + icon 18px) */
+/* Nút mắt ở trang Đổi/Đặt lại mật khẩu chỉ có icon 20px (trang Đăng nhập có chữ "Hiện" + icon 18px) */
 .form-field__toggle[data-password-toggle] img {
     width: 20px;
     height: 20px;
-}
-
-/* Form đăng ký nhiều ô: khoảng cách giữa các ô theo Figma (82px mỗi hàng) */
-.auth-form__fields.auth-form__fields--compact {
-    gap: 10px;
-}
-
-.form-check {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.form-check__input {
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-    margin: 0;
-    border: 1px solid #cbd5e1;
-    border-radius: 5px;
-    background: var(--color-surface) center / 20px 20px no-repeat;
-    appearance: none;
-    cursor: pointer;
-}
-
-.form-check__input:checked {
-    background-image: url("../img/icons/checkbox-check.svg");
-}
-
-.form-check__input:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-}
-
-.form-check--invalid .form-check__input {
-    border: 1.5px solid var(--color-error-field);
-}
-
-.form-check__label {
-    font-size: 13px;
-    line-height: 18px;
-    color: var(--color-text);
-    cursor: pointer;
-}
-
-.form-check__highlight {
-    color: var(--color-navy);
-}
-
-.auth-form__footer--divided {
-    margin-top: 16px;
-    padding-top: 24px;
-    border-top: 1px solid #cbd5e1;
 }
 
 .auth-card--centered {
@@ -292,17 +234,6 @@ body {
 
 .form-field__icon--lock {
     background-image: url("../img/icons/lock-keyhole.svg");
-}
-
-/* Trang Đăng nhập không có icon email nên chưa có bản đỏ riêng: dùng SVG làm mask để tô màu */
-.form-field__icon--email {
-    background-color: var(--color-placeholder);
-    -webkit-mask: url("../img/icons/email.svg") center / 20px 20px no-repeat;
-    mask: url("../img/icons/email.svg") center / 20px 20px no-repeat;
-}
-
-.form-field__control--invalid .form-field__icon--email {
-    background-color: var(--color-error-field);
 }
 
 .form-field__control--invalid .form-field__icon--user {
