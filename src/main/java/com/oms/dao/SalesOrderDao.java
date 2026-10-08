@@ -19,9 +19,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 // Đơn bán hàng (sales_orders, sales_order_items) cho màn tạo đơn S3-09, cùng dữ liệu để tính tiền:
 // sản phẩm kèm đơn vị quy đổi, bảng giá đang hiệu lực, chính sách chiết khấu.
@@ -66,7 +68,10 @@ public class SalesOrderDao {
                 + " t.discount_value FROM discount_policies d JOIN discount_tiers t ON t.policy_id = d.id"
                 + " WHERE d.is_active AND d.valid_from <= ? AND (d.valid_to IS NULL OR d.valid_to >= ?)"
                 + " AND (d.customer_group_id IS NULL OR d.customer_group_id = ?) ORDER BY d.id, t.min_qty_base";
+        // Chính sách theo nhóm hàng áp cho cả nhóm con: path của nhóm con bắt đầu bằng path của nhóm cha (/20/ -> /20/25/)
+        String categorySql = "SELECT id, path FROM product_categories";
         Map<String, PricingRules.PriceItem> prices = new HashMap<>();
+        Map<Long, String> categoryPaths = new HashMap<>();
         Map<Long, Object[]> policyHeads = new LinkedHashMap<>();
         Map<Long, List<PricingRules.Tier>> tiers = new HashMap<>();
         try (Connection connection = DbConnection.getConnection()) {
@@ -82,6 +87,12 @@ public class SalesOrderDao {
                                 new PricingRules.PriceItem(resultSet.getLong("id"), resultSet.getBigDecimal("price"),
                                         resultSet.getBigDecimal("floor_price")));
                     }
+                }
+            }
+            try (PreparedStatement statement = connection.prepareStatement(categorySql);
+                 ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    categoryPaths.put(resultSet.getLong("id"), resultSet.getString("path"));
                 }
             }
             try (PreparedStatement statement = connection.prepareStatement(discountSql)) {
@@ -101,8 +112,23 @@ public class SalesOrderDao {
         }
         List<PricingRules.DiscountPolicy> policies = new ArrayList<>();
         policyHeads.forEach((id, head) -> policies.add(new PricingRules.DiscountPolicy(id, (Long) head[0],
-                (Long) head[1], (String) head[2], tiers.get(id))));
+                (Long) head[1], subtree((Long) head[1], categoryPaths), (String) head[2], tiers.get(id))));
         return new PricingRules(prices, policies);
+    }
+
+    // Nhóm hàng categoryId cùng mọi nhóm con; rỗng nếu chính sách không theo nhóm hàng
+    static Set<Long> subtree(Long categoryId, Map<Long, String> categoryPaths) {
+        String path = categoryId == null ? null : categoryPaths.get(categoryId);
+        if (path == null) {
+            return Set.of();
+        }
+        Set<Long> ids = new HashSet<>();
+        categoryPaths.forEach((id, candidate) -> {
+            if (candidate.startsWith(path)) {
+                ids.add(id);
+            }
+        });
+        return ids;
     }
 
     // Số thứ tự lớn nhất của các mã đơn bắt đầu bằng prefix (vd DH261007-0012 -> 12); 0 nếu chưa có

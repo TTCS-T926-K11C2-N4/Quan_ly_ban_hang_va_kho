@@ -24,6 +24,7 @@ public final class AuditCatalog {
     static {
         ENTITIES.put("INVENTORY", "Tồn kho");
         ENTITIES.put("PRICE", "Bảng giá");
+        ENTITIES.put("DISCOUNT_POLICY", "Chính sách chiết khấu");
         ENTITIES.put("CREDIT_LIMIT", "Hạn mức công nợ");
         ENTITIES.put("INVOICE", "Hoá đơn");
         ENTITIES.put("PRODUCT", "Sản phẩm");
@@ -86,6 +87,11 @@ public final class AuditCatalog {
         action("PRICE_LIST_VERSION", "Tạo phiên bản", GROUP_CREATE);
         action("PRICE_LIST_SHORTEN", "Rút ngắn hiệu lực", GROUP_UPDATE);
         action("CREDIT_LIMIT_UPDATE", "Sửa", GROUP_UPDATE);
+        action("DISCOUNT_POLICY_CREATE", "Thêm mới", GROUP_CREATE);
+        action("DISCOUNT_POLICY_UPDATE", "Sửa", GROUP_UPDATE);
+        action("DISCOUNT_POLICY_DELETE", "Xoá", GROUP_DELETE);
+        action("DISCOUNT_POLICY_DEACTIVATE", "Ngừng áp dụng", GROUP_STATUS);
+        action("DISCOUNT_POLICY_ACTIVATE", "Áp dụng lại", GROUP_STATUS);
         action("ORDER_CREATE", "Thêm mới", GROUP_CREATE);
         action("ORDER_UPDATE", "Sửa đơn nháp", GROUP_UPDATE);
         action("ORDER_SUBMIT", "Gửi duyệt", GROUP_STATUS);

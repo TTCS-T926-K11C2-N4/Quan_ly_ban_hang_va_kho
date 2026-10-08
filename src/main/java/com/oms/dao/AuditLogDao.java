@@ -53,6 +53,8 @@ public class AuditLogDao {
             + " WHEN 'PRODUCT' THEN COALESCE(p.sku, " + jsonField("sku") + ")"
             + " WHEN 'PRODUCT_CATEGORY' THEN COALESCE(c.code, " + jsonField("code") + ")"
             + " WHEN 'PRICE' THEN COALESCE(pl.code, " + jsonField("code") + ")"
+            // Chính sách chiết khấu: mã CK-xxxx ghi sẵn trong giá trị trước/sau
+            + " WHEN 'DISCOUNT_POLICY' THEN COALESCE(" + jsonField("code") + ")"
             // Khoá/mở giao dịch gắn với đại lý: mã đại lý ghi sẵn trong giá trị trước/sau
             + " WHEN 'CUSTOMER' THEN COALESCE(" + jsonField("code") + ")"
             // Điểm giao hàng: hiện mã đại lý sở hữu điểm giao, ghi sẵn trong giá trị trước/sau
