@@ -38,7 +38,7 @@
                     <c:if test="${currentUser.can('CUSTOMER_VIEW') and not currentUser.customer}">
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'customers' ? ' app-submenu__link--active' : ''}" id="menu-customers"
-                           href="<c:url value='/customers/credit-limit'/>"${activeSubmenu == 'customers' ? ' aria-current="page"' : ''}>Đại lý</a>
+                           href="<c:url value='/customers'/>"${activeSubmenu == 'customers' ? ' aria-current="page"' : ''}>Đại lý</a>
                     </li>
                     </c:if>
                     <c:if test="${currentUser.can('AUDIT_LOG_VIEW')}">

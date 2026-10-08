@@ -255,6 +255,14 @@ class AccessRulesTest {
         assertFalse(AccessRules.isAllowed("/customers/credit-limit", permissionsOf("WAREHOUSE")));
     }
 
+    // S3-08: ai xem được đại lý thì mở được danh sách đại lý (Nhân viên kinh doanh chỉ thấy đại lý mình phụ trách)
+    @Test
+    void customerViewersCanOpenCustomerList() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(permissions.contains("CUSTOMER_VIEW"),
+                AccessRules.isAllowed("/customers", permissions), role));
+        assertTrue(AccessRules.isAllowed("/customers", permissionsOf("SALES_REP")));
+    }
+
     @Test
     void everyLoggedInUserCanOpenDashboardAndChangePassword() {
         assertTrue(AccessRules.isAllowed("/dashboard", Set.of()));

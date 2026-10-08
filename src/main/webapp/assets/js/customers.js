@@ -23,3 +23,16 @@
         form.querySelector("#credit-limit").focus();
     }
 })();
+
+// Danh sách đại lý (S3-08): trên điện thoại các ô lọc thu gọn sau nút "Bộ lọc"; đang có ô lọc được chọn thì mở sẵn
+(function () {
+    var form = document.getElementById("customer-filter-form");
+    var toggle = document.getElementById("customer-filter-toggle");
+    if (!form || !toggle) {
+        return;
+    }
+    toggle.addEventListener("click", function () {
+        var open = form.classList.toggle("customer-filters--open");
+        toggle.setAttribute("aria-expanded", String(open));
+    });
+})();

@@ -616,3 +616,309 @@
         flex: 1 1 auto;
     }
 }
+
+/* Danh sách đại lý (S3-08): tìm kiếm + bộ lọc, bảng dùng chung kiểu bảng của accounts.css.
+   Màn hẹp: ô lọc thu gọn sau nút "Bộ lọc", mỗi đại lý thành một thẻ để dùng một tay ngoài đường. */
+.customer-filters {
+    margin-top: 21px;
+    padding: 16px 18px 18px;
+    border-radius: 10px;
+    background: var(--color-surface);
+}
+
+.customer-filters__search {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+}
+
+.customer-filters__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.customer-filters__field--keyword {
+    flex: 1 1 auto;
+}
+
+.customer-filters__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-account-text);
+}
+
+.customer-filters__search-box {
+    position: relative;
+}
+
+.customer-filters__search-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.customer-filters__keyword {
+    padding-left: 40px;
+}
+
+.customer-filters__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.customer-filters__toggle,
+.customer-filters__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 18px;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Màn rộng luôn hiện đủ ô lọc nên không cần nút thu gọn */
+.customer-filters__toggle {
+    display: none;
+    border: 1px solid var(--color-account-border);
+    background: var(--color-surface);
+    color: var(--color-account-text);
+}
+
+.customer-filters__submit {
+    min-width: 120px;
+    border: 0;
+    background: var(--color-primary);
+    color: #ffffff;
+}
+
+.customer-filters__submit:hover {
+    filter: brightness(0.95);
+}
+
+.customer-filters__toggle:focus-visible,
+.customer-filters__submit:focus-visible,
+.customer-filters__clear:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.customer-filters__icon {
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    -webkit-mask: url("../img/icons/filter.svg") center / contain no-repeat;
+    mask: url("../img/icons/filter.svg") center / contain no-repeat;
+}
+
+.customer-filters__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--color-primary);
+    font-size: 11px;
+    color: #ffffff;
+}
+
+.customer-filters__fields {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 16px;
+    margin-top: 14px;
+}
+
+.customer-filters__clear {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.customer-filters__clear:hover {
+    text-decoration: underline;
+}
+
+.customer-table {
+    min-width: 980px;
+}
+
+.customer-table th:nth-child(1) {
+    width: 120px;
+}
+
+.customer-table__code {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.customer-table__link {
+    color: var(--color-account-text);
+    text-decoration: none;
+}
+
+.customer-table__link:hover,
+.customer-table__phone:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.customer-table__name .customer-table__link {
+    font-weight: 600;
+}
+
+.customer-table__phone {
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.customer-table__none {
+    color: var(--color-account-muted);
+}
+
+.customer-table td.customer-table__empty {
+    height: 96px;
+    text-align: center;
+    color: var(--color-account-muted);
+}
+
+.customer-status {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.customer-status--active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.customer-status--blocked {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.customer-status--inactive {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+@media (max-width: 1279px) {
+    .customer-filters__fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .customer-filters {
+        padding: 14px;
+    }
+
+    .customer-filters__search {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .customer-filters__actions > * {
+        flex: 1 1 0;
+    }
+
+    .customer-filters__toggle {
+        display: inline-flex;
+    }
+
+    .customer-filters__fields {
+        display: none;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-filters--open .customer-filters__fields {
+        display: grid;
+    }
+
+    /* Bảng thành danh sách thẻ: mỗi ô kèm nhãn cột lấy từ data-label */
+    .customer-table {
+        min-width: 0;
+    }
+
+    .customer-table thead {
+        display: none;
+    }
+
+    .customer-table tbody tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 6px 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--color-account-row-line);
+    }
+
+    .customer-table tbody tr:nth-child(even) td {
+        background-color: transparent;
+    }
+
+    .customer-table td,
+    .customer-table td:first-child,
+    .customer-table td:last-child {
+        height: auto;
+        padding: 0;
+        background-image: none;
+    }
+
+    .customer-table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 2px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-account-muted);
+    }
+
+    .customer-table td.customer-table__name {
+        grid-column: 1 / -1;
+        order: -1;
+        font-size: 14px;
+    }
+
+    .customer-table td.customer-table__name::before {
+        content: none;
+    }
+
+    .customer-table tbody tr.customer-table__empty-row {
+        display: block;
+    }
+
+    .customer-table td.customer-table__empty {
+        display: block;
+        height: auto;
+        padding: 24px 0;
+    }
+
+    .customer-table td.customer-table__empty::before {
+        content: none;
+    }
+}
