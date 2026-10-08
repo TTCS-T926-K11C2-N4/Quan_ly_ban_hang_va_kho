@@ -94,6 +94,10 @@
                         <a class="app-submenu__link${activeSubmenu == 'price-lists' ? ' app-submenu__link--active' : ''}" id="menu-price-lists"
                            href="<c:url value='/price-lists'/>"${activeSubmenu == 'price-lists' ? ' aria-current="page"' : ''}>Bảng giá</a>
                     </li>
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'price-history' ? ' app-submenu__link--active' : ''}" id="menu-price-history"
+                           href="<c:url value='/price-history'/>"${activeSubmenu == 'price-history' ? ' aria-current="page"' : ''}>Lịch sử thay đổi giá</a>
+                    </li>
                     </c:if>
                 </ul>
                 </details>

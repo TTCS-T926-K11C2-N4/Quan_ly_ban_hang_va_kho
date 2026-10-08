@@ -344,3 +344,150 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Lịch sử thay đổi giá (S3-02): bộ lọc nhiều ô xuống dòng gọn, bảng giá cũ → mới kèm % tăng/giảm */
+.price-detail__history {
+    margin-top: 12px;
+}
+
+.price-history-scope a {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.price-history-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) repeat(5, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 14px 16px;
+    padding: 16px 18px 18px;
+}
+
+.price-history-filters__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+}
+
+.price-history-filters__clear {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.price-history-filters__clear:hover {
+    text-decoration: underline;
+}
+
+/* Bảng nhiều cột: cuộn ngang trong thẻ khi màn hẹp hơn bảng thay vì tràn ra ngoài */
+.price-history-card .account-table-scroll {
+    overflow-x: auto;
+}
+
+.price-history-table {
+    min-width: 1080px;
+}
+
+.price-history-table th:nth-child(1) { width: 56px; }
+.price-history-table th:nth-child(2) { width: 100px; }
+.price-history-table th:nth-child(4) { width: 70px; }
+
+.price-history-table td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.price-history-table th.price-number,
+.price-history-table td.price-number {
+    padding-right: 24px;
+    text-align: right;
+}
+
+.price-history__product {
+    display: block;
+    font-weight: 600;
+    color: var(--color-account-text);
+}
+
+.price-history__sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--color-account-muted);
+}
+
+.price-history__version {
+    color: var(--color-account-muted);
+}
+
+.price-history__change {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.price-history__old {
+    color: var(--color-account-muted);
+}
+
+.price-history__delta {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.price-history__delta--up {
+    color: #dc2626;
+}
+
+.price-history__delta--down {
+    color: #15803d;
+}
+
+.account-table td.price-history__empty {
+    height: 96px;
+    text-align: center;
+    color: var(--color-account-muted);
+}
+
+@media (max-width: 1439px) {
+    .price-history-filters {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .price-history-filters__keyword {
+        grid-column: 1 / -1;
+    }
+
+    .price-history-filters__actions {
+        grid-column: 3;
+    }
+}
+
+@media (max-width: 1023px) {
+    .price-history-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .price-history-filters__actions {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 639px) {
+    .price-history-filters {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .price-history-filters__actions {
+        justify-content: stretch;
+    }
+
+    .price-history-filters__actions .price-filters__search {
+        flex: 1 1 auto;
+    }
+}
