@@ -36,3 +36,19 @@
         toggle.setAttribute("aria-expanded", String(open));
     });
 })();
+
+// Điểm giao hàng (S3-04): hỏi lại trước khi xoá / ngừng dùng; vừa bấm Sửa hoặc lưu lỗi thì đưa con trỏ vào ô cần sửa
+(function () {
+    document.querySelectorAll("form[data-confirm]").forEach(function (form) {
+        form.addEventListener("submit", function (event) {
+            if (!window.confirm(form.getAttribute("data-confirm"))) {
+                event.preventDefault();
+            }
+        });
+    });
+    var deliveryForm = document.getElementById("delivery-form");
+    if (deliveryForm) {
+        var invalid = deliveryForm.querySelector(".sales-field--invalid .sales-field__control");
+        (invalid || deliveryForm.querySelector("#delivery-address")).focus();
+    }
+})();

@@ -922,3 +922,258 @@
         content: none;
     }
 }
+
+/* Điểm giao hàng (S3-04): mỗi điểm một thẻ, bấm bút chì thì thẻ đó thành form; giá trị hiện trong ô viền nhạt
+   giống ô nhập của thiết kế để thẻ xem và thẻ sửa cùng bố cục */
+.delivery-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.delivery-card {
+    padding: 14px 16px 16px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 10px;
+    background: var(--color-sales-soft);
+    scroll-margin-top: 16px;
+}
+
+.delivery-card--default {
+    border-color: var(--color-sales-accent-border);
+}
+
+.delivery-card--editing {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.delivery-card__form-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+}
+
+.delivery-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 30px;
+    margin-bottom: 10px;
+}
+
+.delivery-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.delivery-card__badge,
+.delivery-card__make-default {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 12px;
+    border-radius: 13px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.delivery-card__badge {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.delivery-card__make-default {
+    border: 1px dashed var(--color-sales-control-border);
+    background: var(--color-surface);
+    color: var(--color-sales-muted);
+    cursor: pointer;
+}
+
+.delivery-card__make-default:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.delivery-card__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+}
+
+.delivery-card__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.delivery-card__actions form {
+    display: flex;
+}
+
+.delivery-card__icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.delivery-card__icon-button--edit {
+    border-color: var(--color-sales-accent-border);
+    background: var(--color-sales-accent-bg);
+}
+
+.delivery-card__icon-button--delete {
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+.delivery-card__icon-button:hover {
+    filter: brightness(0.96);
+}
+
+.delivery-card__make-default:focus-visible,
+.delivery-card__icon-button:focus-visible,
+.delivery-inactive__toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.delivery-card__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    margin: 0;
+}
+
+.delivery-card__wide {
+    grid-column: 1 / -1;
+}
+
+.delivery-card__term {
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+}
+
+.delivery-card__value {
+    min-height: 38px;
+    margin: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 7px;
+    background: var(--color-surface);
+    font-size: 13px;
+    line-height: 18px;
+    overflow-wrap: anywhere;
+}
+
+.delivery-card__phone {
+    color: inherit;
+    text-decoration: none;
+}
+
+.delivery-card__phone:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.delivery-card__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.delivery-card__check input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.delivery-inactive {
+    border: 1px solid var(--color-sales-border);
+    border-radius: 10px;
+}
+
+.delivery-inactive__toggle {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-muted);
+    cursor: pointer;
+}
+
+.delivery-inactive__list {
+    margin: 0;
+    padding: 0 16px 8px;
+    list-style: none;
+}
+
+.delivery-inactive__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--color-sales-border);
+}
+
+.delivery-inactive__address {
+    font-size: 13px;
+    color: var(--color-sales-text);
+}
+
+.delivery-inactive__meta {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.delivery-inactive__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.delivery-inactive__delete {
+    color: #b91c1c;
+}
+
+.delivery-note {
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+@media (max-width: 639px) {
+    .delivery-card__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .delivery-inactive__item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .delivery-section .section-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

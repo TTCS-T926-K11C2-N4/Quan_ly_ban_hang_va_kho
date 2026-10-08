@@ -28,7 +28,9 @@
         taxCode: "Mã số thuế", contactName: "Người liên hệ", paymentTerms: "Điều khoản thanh toán",
         orderNo: "Mã đơn", customerCode: "Mã đại lý", deliveryAddressId: "Điểm giao (mã id)",
         requestedDate: "Ngày giao mong muốn", lineCount: "Số dòng hàng", subtotal: "Tiền hàng",
-        discount: "Chiết khấu", total: "Tổng phải thu"
+        discount: "Chiết khấu", total: "Tổng phải thu",
+        label: "Tên điểm giao", address: "Địa chỉ", receiverName: "Người nhận", receiverPhone: "SĐT người nhận",
+        routeNote: "Ghi chú đường đi", isDefault: "Điểm mặc định"
     };
     // Trường dùng chung bảng tra tên với trường khác
     var LOOKUP_ALIAS = { parentId: "categoryId" };

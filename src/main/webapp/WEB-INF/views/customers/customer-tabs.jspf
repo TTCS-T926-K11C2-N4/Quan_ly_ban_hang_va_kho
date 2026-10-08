@@ -1,8 +1,10 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Chuyển giữa hai màn của Chi tiết đại lý; trang include đặt customerTab: credit-limit | block --%>
+<%-- Chuyển giữa các màn của Chi tiết đại lý; trang include đặt customerTab: credit-limit | block | delivery --%>
 <nav class="customer-tabs" aria-label="Chi tiết đại lý">
     <a class="customer-tabs__link${customerTab == 'credit-limit' ? ' customer-tabs__link--active' : ''}"
        href="<c:url value='/customers/credit-limit'><c:param name='id' value='${customer.id}'/></c:url>"${customerTab == 'credit-limit' ? ' aria-current="page"' : ''}>Hạn mức công nợ</a>
     <a class="customer-tabs__link${customerTab == 'block' ? ' customer-tabs__link--active' : ''}"
        href="<c:url value='/customers/block'><c:param name='id' value='${customer.id}'/></c:url>"${customerTab == 'block' ? ' aria-current="page"' : ''}>Khoá/mở giao dịch</a>
+    <a class="customer-tabs__link${customerTab == 'delivery' ? ' customer-tabs__link--active' : ''}"
+       href="<c:url value='/customers/delivery-addresses'><c:param name='id' value='${customer.id}'/></c:url>"${customerTab == 'delivery' ? ' aria-current="page"' : ''}>Điểm giao hàng</a>
 </nav>
