@@ -1,5 +1,6 @@
 package com.oms.service;
 
+import com.oms.dao.AuditLogDao;
 import com.oms.dao.DeliveryAddressDao;
 import com.oms.dao.PermissionDao;
 import com.oms.dao.SalesOrderDao;
@@ -13,6 +14,7 @@ import com.oms.model.Permission;
 import com.oms.model.PricingRules;
 import com.oms.util.DateTimeUtil;
 import com.oms.util.DbConnection;
+import com.oms.util.JsonUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -44,11 +46,15 @@ public class SalesOrderService {
     // Số lượng theo đơn vị đã chọn: số dương, tối đa 3 chữ số thập phân như cột qty decimal(18,3)
     private static final Pattern QTY_PATTERN = Pattern.compile("\\d{1,12}([.,]\\d{1,3})?");
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+    private static final String AUDIT_ENTITY = "ORDER";
+    private static final String STATUS_DRAFT = "DRAFT";
+    private static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
 
     private final SalesOrderDao orderDao = new SalesOrderDao();
     private final DeliveryAddressDao deliveryAddressDao = new DeliveryAddressDao();
     private final CustomerService customerService = new CustomerService();
     private final PermissionDao permissionDao = new PermissionDao();
+    private final AuditLogDao auditLogDao = new AuditLogDao();
 
     public List<OrderProduct> getProducts() throws SQLException {
         return orderDao.findOrderableProducts();
@@ -166,20 +172,26 @@ public class SalesOrderService {
 
     // Gọi validate trước. null nếu đơn nháp vừa được sửa hoặc gửi ở nơi khác (version đã đổi).
     public Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
-                       OrderQuote quote, long actorUserId) throws SQLException {
+                       OrderQuote quote, long actorUserId, String ipAddress) throws SQLException {
         SalesOrderDao.Header header = new SalesOrderDao.Header(customer.getId(),
                 parseId(form.getDeliveryAddressId()), customer.getDefaultWarehouseId(), customer.getSalesRepId(),
                 submit, form.getRequestedDate() == null ? null : parseDate(form.getRequestedDate()),
                 quote.getSubtotal(), quote.getDiscount(), quote.getTotal(), form.getNote());
         if (draft != null) {
-            return updateDraft(draft, parseVersion(form.getVersion()), header, quote, actorUserId)
+            String action = submit ? "ORDER_SUBMIT" : "ORDER_UPDATE";
+            AuditEntry audit = new AuditEntry(action, JsonUtil.object(draftValues(draft)),
+                    JsonUtil.object(orderValues(draft.getOrderNo(), customer.getCode(), submit, form, quote)),
+                    ipAddress);
+            return updateDraft(draft, parseVersion(form.getVersion()), header, quote, actorUserId, audit)
                     ? new Saved(draft.getForm().getDraftId(), draft.getOrderNo()) : null;
         }
         String prefix = ORDER_NO_PREFIX + DateTimeUtil.today().format(ORDER_NO_DATE) + "-";
         for (int attempt = 1; ; attempt++) {
             String orderNo = prefix + String.format("%04d", orderDao.findMaxOrderNumber(prefix) + 1);
+            AuditEntry audit = new AuditEntry("ORDER_CREATE", null,
+                    JsonUtil.object(orderValues(orderNo, customer.getCode(), submit, form, quote)), ipAddress);
             try {
-                return new Saved(insert(orderNo, header, quote, actorUserId), orderNo);
+                return new Saved(insert(orderNo, header, quote, actorUserId, audit), orderNo);
             } catch (SQLIntegrityConstraintViolationException e) {
                 // Hai người cùng tạo đơn một lúc lấy trùng số: thử lại với số kế tiếp
                 if (attempt == ORDER_NO_ATTEMPTS) {
@@ -189,13 +201,14 @@ public class SalesOrderService {
         }
     }
 
-    private long insert(String orderNo, SalesOrderDao.Header header, OrderQuote quote, long actorUserId)
-            throws SQLException {
+    private long insert(String orderNo, SalesOrderDao.Header header, OrderQuote quote, long actorUserId,
+                        AuditEntry audit) throws SQLException {
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
                 long orderId = orderDao.insert(connection, orderNo, header, actorUserId);
                 insertItems(connection, orderId, quote, actorUserId);
+                insertAudit(connection, actorUserId, orderId, audit);
                 connection.commit();
                 return orderId;
             } catch (SQLException e) {
@@ -206,7 +219,7 @@ public class SalesOrderService {
     }
 
     private boolean updateDraft(SalesOrderDao.Draft draft, long version, SalesOrderDao.Header header,
-                                OrderQuote quote, long actorUserId) throws SQLException {
+                                OrderQuote quote, long actorUserId, AuditEntry audit) throws SQLException {
         long orderId = draft.getForm().getDraftId();
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
@@ -217,6 +230,7 @@ public class SalesOrderService {
                 }
                 orderDao.deleteItems(connection, orderId);
                 insertItems(connection, orderId, quote, actorUserId);
+                insertAudit(connection, actorUserId, orderId, audit);
                 connection.commit();
                 return true;
             } catch (SQLException e) {
@@ -224,6 +238,63 @@ public class SalesOrderService {
                 throw e;
             }
         }
+    }
+
+    // Nhật ký thao tác trên đơn (S2-04), ghi cùng transaction với lần lưu đơn
+    private static final class AuditEntry {
+        private final String action;
+        private final String oldValues;
+        private final String newValues;
+        private final String ipAddress;
+
+        AuditEntry(String action, String oldValues, String newValues, String ipAddress) {
+            this.action = action;
+            this.oldValues = oldValues;
+            this.newValues = newValues;
+            this.ipAddress = ipAddress;
+        }
+    }
+
+    private void insertAudit(Connection connection, long actorUserId, long orderId, AuditEntry audit)
+            throws SQLException {
+        auditLogDao.insert(connection, actorUserId, audit.action, AUDIT_ENTITY, orderId, audit.oldValues,
+                audit.newValues, null, audit.ipAddress);
+    }
+
+    // Giá trị ghi nhật ký: phần đầu đơn và tổng tiền; dòng hàng chỉ ghi số dòng (chi tiết đã có ở sales_order_items),
+    // không có giá vốn
+    static Map<String, Object> orderValues(String orderNo, String customerCode, boolean submit, OrderForm form,
+                                           OrderQuote quote) {
+        return values(orderNo, customerCode, submit ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
+                form.getDeliveryAddressId(), form.getRequestedDate(), quote.getLines().size(), quote.getSubtotal(),
+                quote.getDiscount(), quote.getTotal());
+    }
+
+    static Map<String, Object> draftValues(SalesOrderDao.Draft draft) {
+        OrderForm form = draft.getForm();
+        return values(draft.getOrderNo(), draft.getCustomerCode(), STATUS_DRAFT, form.getDeliveryAddressId(),
+                form.getRequestedDate(), form.getLines().size(), draft.getSubtotal(), draft.getDiscount(),
+                draft.getTotal());
+    }
+
+    private static Map<String, Object> values(String orderNo, String customerCode, String status,
+                                              String deliveryAddressId, String requestedDate, int lineCount,
+                                              BigDecimal subtotal, BigDecimal discount, BigDecimal total) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("orderNo", orderNo);
+        values.put("customerCode", customerCode);
+        values.put("status", status);
+        values.put("deliveryAddressId", parseId(deliveryAddressId));
+        values.put("requestedDate", requestedDate);
+        values.put("lineCount", lineCount);
+        values.put("subtotal", moneyText(subtotal));
+        values.put("discount", moneyText(discount));
+        values.put("total", moneyText(total));
+        return values;
+    }
+
+    private static String moneyText(BigDecimal amount) {
+        return amount == null ? null : amount.stripTrailingZeros().toPlainString();
     }
 
     private void insertItems(Connection connection, long orderId, OrderQuote quote, long actorUserId)

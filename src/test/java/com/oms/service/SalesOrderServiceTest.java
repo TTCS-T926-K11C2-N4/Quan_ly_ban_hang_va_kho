@@ -142,7 +142,37 @@ class SalesOrderServiceTest {
     @Test
     void existingDraftOfBlockedCustomerCanContinue() {
         OrderForm form = new OrderForm("5", "8", null, null, 42L, "0", List.of());
-        SalesOrderDao.Draft draft = new SalesOrderDao.Draft(5, "DH261007-0001", form);
+        SalesOrderDao.Draft draft = new SalesOrderDao.Draft(5, "DL001", "DH261007-0001", form, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO);
         assertTrue(new SalesOrderService().validate(form, customer(true), draft, false, ADDRESSES, null).isEmpty());
+    }
+
+    // S2-04: nhật ký đơn ghi phần đầu đơn và tổng tiền đã tính, gửi đơn thì trạng thái là Chờ duyệt
+    @Test
+    void auditValuesOfSubmittedOrder() {
+        OrderForm form = new OrderForm("5", "8", "2026-10-20", null, null, null, List.of(line("2", "2")));
+        OrderQuote quote = SalesOrderService.price(form.getLines(), PRODUCTS, rules(List.of()));
+        Map<String, Object> values = SalesOrderService.orderValues("DH261008-0001", "DL001", true, form, quote);
+        assertEquals("DH261008-0001", values.get("orderNo"));
+        assertEquals("PENDING_APPROVAL", values.get("status"));
+        assertEquals(8L, values.get("deliveryAddressId"));
+        assertEquals(1, values.get("lineCount"));
+        assertEquals("480000", values.get("subtotal"));
+        assertEquals("480000", values.get("total"));
+    }
+
+    // Giá trị trước khi sửa lấy từ số đã lưu của đơn nháp, không tính lại theo bảng giá hiện tại
+    @Test
+    void auditValuesBeforeEditingDraft() {
+        OrderForm form = new OrderForm("5", "8", null, null, 42L, "3", List.of(line("1", "5"), line("2", "1")));
+        SalesOrderDao.Draft draft = new SalesOrderDao.Draft(5, "DL001", "DH261007-0001", form,
+                new BigDecimal("290000.00"), new BigDecimal("0.00"), new BigDecimal("290000.00"));
+        Map<String, Object> values = SalesOrderService.draftValues(draft);
+        assertEquals("DRAFT", values.get("status"));
+        assertEquals("DL001", values.get("customerCode"));
+        assertEquals(2, values.get("lineCount"));
+        assertNull(values.get("requestedDate"));
+        assertEquals("0", values.get("discount"));
+        assertEquals("290000", values.get("total"));
     }
 }

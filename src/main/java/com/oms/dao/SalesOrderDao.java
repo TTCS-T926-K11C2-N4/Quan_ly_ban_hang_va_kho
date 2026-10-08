@@ -220,16 +220,21 @@ public class SalesOrderDao {
 
     // Đơn nháp dạng form để mở lại; null nếu không có đơn này hoặc đơn không còn là nháp
     public Draft findDraft(long id) throws SQLException {
-        String headerSql = "SELECT customer_id, order_no, delivery_address_id, requested_delivery_date, note, version"
-                + " FROM sales_orders WHERE id = ? AND status = 'DRAFT'";
+        String headerSql = "SELECT o.customer_id, c.code AS customer_code, o.order_no, o.delivery_address_id,"
+                + " o.requested_delivery_date, o.note, o.subtotal_amount, o.discount_amount, o.total_amount, o.version"
+                + " FROM sales_orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ? AND o.status = 'DRAFT'";
         String itemSql = "SELECT i.product_id, p.sku, p.name, i.unit_id, i.qty FROM sales_order_items i"
                 + " JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.line_no";
         try (Connection connection = DbConnection.getConnection()) {
             long customerId;
+            String customerCode;
             String orderNo;
             String deliveryAddressId;
             String requestedDate;
             String note;
+            BigDecimal subtotal;
+            BigDecimal discount;
+            BigDecimal total;
             long version;
             try (PreparedStatement statement = connection.prepareStatement(headerSql)) {
                 statement.setLong(1, id);
@@ -238,11 +243,15 @@ public class SalesOrderDao {
                         return null;
                     }
                     customerId = resultSet.getLong("customer_id");
+                    customerCode = resultSet.getString("customer_code");
                     orderNo = resultSet.getString("order_no");
                     deliveryAddressId = String.valueOf(resultSet.getLong("delivery_address_id"));
                     LocalDate date = resultSet.getObject("requested_delivery_date", LocalDate.class);
                     requestedDate = date == null ? null : date.toString();
                     note = resultSet.getString("note");
+                    subtotal = resultSet.getBigDecimal("subtotal_amount");
+                    discount = resultSet.getBigDecimal("discount_amount");
+                    total = resultSet.getBigDecimal("total_amount");
                     version = resultSet.getLong("version");
                 }
             }
@@ -258,8 +267,8 @@ public class SalesOrderDao {
                     }
                 }
             }
-            return new Draft(customerId, orderNo, new OrderForm(String.valueOf(customerId), deliveryAddressId,
-                    requestedDate, note, id, String.valueOf(version), lines));
+            return new Draft(customerId, customerCode, orderNo, new OrderForm(String.valueOf(customerId),
+                    deliveryAddressId, requestedDate, note, id, String.valueOf(version), lines), subtotal, discount, total);
         }
     }
 
@@ -323,19 +332,33 @@ public class SalesOrderDao {
         }
     }
 
+    // Tiền hàng, chiết khấu, tổng là số đã lưu của đơn nháp, để ghi giá trị trước khi sửa vào nhật ký
     public static class Draft {
         private final long customerId;
+        private final String customerCode;
         private final String orderNo;
         private final OrderForm form;
+        private final BigDecimal subtotal;
+        private final BigDecimal discount;
+        private final BigDecimal total;
 
-        public Draft(long customerId, String orderNo, OrderForm form) {
+        public Draft(long customerId, String customerCode, String orderNo, OrderForm form, BigDecimal subtotal,
+                     BigDecimal discount, BigDecimal total) {
             this.customerId = customerId;
+            this.customerCode = customerCode;
             this.orderNo = orderNo;
             this.form = form;
+            this.subtotal = subtotal;
+            this.discount = discount;
+            this.total = total;
         }
 
         public long getCustomerId() {
             return customerId;
+        }
+
+        public String getCustomerCode() {
+            return customerCode;
         }
 
         public String getOrderNo() {
@@ -344,6 +367,18 @@ public class SalesOrderDao {
 
         public OrderForm getForm() {
             return form;
+        }
+
+        public BigDecimal getSubtotal() {
+            return subtotal;
+        }
+
+        public BigDecimal getDiscount() {
+            return discount;
+        }
+
+        public BigDecimal getTotal() {
+            return total;
         }
     }
 }
