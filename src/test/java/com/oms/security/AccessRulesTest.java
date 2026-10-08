@@ -279,6 +279,19 @@ class AccessRulesTest {
         assertFalse(AccessRules.isAllowed("/customers/delivery-addresses/save", permissionsOf("WAREHOUSE")));
     }
 
+    // S3-06: chỉ Quản lý kinh doanh và Admin phân công / chuyển giao; ai xem được đại lý thì xem được màn phân công
+    @Test
+    void onlySalesManagerAndAdminCanAssignSalesReps() {
+        rolePermissions.forEach((role, permissions) -> {
+            assertEquals("SALES_MANAGER".equals(role) || "ADMIN".equals(role),
+                    AccessRules.isAllowed("/customers/assignments/assign", permissions), role);
+            assertEquals("SALES_MANAGER".equals(role) || "ADMIN".equals(role),
+                    AccessRules.isAllowed("/customers/assignments/transfer", permissions), role);
+            assertEquals(permissions.contains("CUSTOMER_VIEW"),
+                    AccessRules.isAllowed("/customers/assignments", permissions), role);
+        });
+    }
+
     @Test
     void everyLoggedInUserCanOpenDashboardAndChangePassword() {
         assertTrue(AccessRules.isAllowed("/dashboard", Set.of()));

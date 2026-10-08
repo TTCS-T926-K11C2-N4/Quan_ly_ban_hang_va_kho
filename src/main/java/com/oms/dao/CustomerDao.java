@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +74,9 @@ public class CustomerDao {
         List<Object> params = new ArrayList<>();
         // Đại lý đang giao dịch lên trước, rồi theo mã để thứ tự không đổi giữa các trang
         String sql = "SELECT c.id, c.code, c.name, c.phone, c.is_blocked, c.status, r.name AS region_name,"
-                + " g.name AS group_name, u.full_name AS sales_rep_name FROM customers c"
+                + " g.name AS group_name, c.sales_rep_id, u.full_name AS sales_rep_name,"
+                + " (SELECT MAX(h.created_at) FROM customer_assignment_history h WHERE h.customer_id = c.id) AS assigned_at"
+                + " FROM customers c"
                 + " JOIN regions r ON r.id = c.region_id JOIN customer_groups g ON g.id = c.customer_group_id"
                 + " LEFT JOIN users u ON u.id = c.sales_rep_id" + buildWhere(filter, scopeSalesRepId, params)
                 + " ORDER BY c.status = 'ACTIVE' AND NOT c.is_blocked DESC, c.code LIMIT ? OFFSET ?";
@@ -88,7 +91,8 @@ public class CustomerDao {
                     customers.add(new CustomerListItem(resultSet.getLong("id"), resultSet.getString("code"),
                             resultSet.getString("name"), resultSet.getString("phone"),
                             resultSet.getString("region_name"), resultSet.getString("group_name"),
-                            resultSet.getString("sales_rep_name"),
+                            resultSet.getObject("sales_rep_id", Long.class), resultSet.getString("sales_rep_name"),
+                            resultSet.getObject("assigned_at", LocalDateTime.class),
                             CustomerListStatus.of(resultSet.getBoolean("is_blocked"),
                                     Customer.ACTIVE.equals(resultSet.getString("status")))));
                 }
@@ -141,6 +145,9 @@ public class CustomerDao {
         if (filter.getSalesRepId() != null) {
             conditions.add("c.sales_rep_id = ?");
             params.add(filter.getSalesRepId());
+        }
+        if (filter.isUnassigned()) {
+            conditions.add("c.sales_rep_id IS NULL");
         }
         if (filter.getStatus() != null) {
             conditions.add(switch (filter.getStatus()) {

@@ -7,14 +7,22 @@ public class CustomerFilter {
     private final Long regionId;
     private final Long customerGroupId;
     private final Long salesRepId;
+    private final boolean unassigned;
     private final CustomerListStatus status;
 
     public CustomerFilter(String keyword, Long regionId, Long customerGroupId, Long salesRepId,
                           CustomerListStatus status) {
+        this(keyword, regionId, customerGroupId, salesRepId, false, status);
+    }
+
+    // unassigned = true: chỉ đại lý chưa có người phụ trách (màn phân công S3-06); khi đó bỏ qua salesRepId
+    public CustomerFilter(String keyword, Long regionId, Long customerGroupId, Long salesRepId, boolean unassigned,
+                          CustomerListStatus status) {
         this.keyword = keyword;
         this.regionId = regionId;
         this.customerGroupId = customerGroupId;
-        this.salesRepId = salesRepId;
+        this.salesRepId = unassigned ? null : salesRepId;
+        this.unassigned = unassigned;
         this.status = status;
     }
 
@@ -34,12 +42,17 @@ public class CustomerFilter {
         return salesRepId;
     }
 
+    public boolean isUnassigned() {
+        return unassigned;
+    }
+
     public CustomerListStatus getStatus() {
         return status;
     }
 
     // Có ít nhất một điều kiện tìm kiếm/lọc (tên không dùng "empty" vì đó là từ khoá của EL)
     public boolean isFiltered() {
-        return keyword != null || regionId != null || customerGroupId != null || salesRepId != null || status != null;
+        return keyword != null || regionId != null || customerGroupId != null || salesRepId != null || unassigned
+                || status != null;
     }
 }
