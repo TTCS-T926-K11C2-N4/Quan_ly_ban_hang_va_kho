@@ -315,6 +315,19 @@ class AccessRulesTest {
         });
     }
 
+    // S3-03: ai xem được đại lý thì xem hồ sơ; thêm/sửa/ngừng/xoá cần CUSTOMER_MANAGE (NVKD có, giới hạn đại lý mình
+    // ở tầng servlet; Nhân viên kho không có)
+    @Test
+    void customerManagersCanChangeCustomerProfiles() {
+        rolePermissions.forEach((role, permissions) -> {
+            assertEquals(permissions.contains("CUSTOMER_VIEW"), AccessRules.isAllowed("/customers/profile", permissions), role);
+            for (String path : new String[] {"/customers/new", "/customers/edit", "/customers/profile/action"}) {
+                assertEquals(permissions.contains("CUSTOMER_MANAGE"), AccessRules.isAllowed(path, permissions), role + " " + path);
+            }
+        });
+        assertFalse(AccessRules.isAllowed("/customers/new", permissionsOf("WAREHOUSE")));
+    }
+
     @Test
     void everyLoggedInUserCanOpenDashboardAndChangePassword() {
         assertTrue(AccessRules.isAllowed("/dashboard", Set.of()));

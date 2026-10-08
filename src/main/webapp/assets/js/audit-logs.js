@@ -33,7 +33,8 @@
         routeNote: "Ghi chú đường đi", isDefault: "Điểm mặc định",
         salesRep: "Người phụ trách", regions: "Địa bàn",
         scopeType: "Áp cho", target: "SKU / nhóm hàng", discountType: "Cách tính chiết khấu",
-        tiers: "Bậc (số lượng tối thiểu = mức chiết khấu)"
+        tiers: "Bậc (số lượng tối thiểu = mức chiết khấu)",
+        customerGroup: "Nhóm khách hàng", region: "Khu vực", warehouse: "Kho phục vụ"
     };
     // Trường dùng chung bảng tra tên với trường khác
     var LOOKUP_ALIAS = { parentId: "categoryId" };

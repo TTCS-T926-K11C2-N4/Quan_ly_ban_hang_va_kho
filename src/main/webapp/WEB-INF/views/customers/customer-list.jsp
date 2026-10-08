@@ -37,11 +37,22 @@
         <%@ include file="/WEB-INF/views/layout/topbar.jspf" %>
 
         <main class="app-content accounts-page">
-            <header class="page-header">
-                <h1 class="page-header__title">Quản lý đại lý</h1>
-                <p class="page-header__subtitle">Tìm đại lý theo mã, tên, số điện thoại và lọc theo khu vực, nhóm khách hàng,
-                    người phụ trách, trạng thái.</p>
+            <header class="page-header customer-list-header">
+                <div>
+                    <h1 class="page-header__title">Quản lý đại lý</h1>
+                    <p class="page-header__subtitle">Tìm đại lý theo mã, tên, số điện thoại và lọc theo khu vực, nhóm khách hàng,
+                        người phụ trách, trạng thái.</p>
+                </div>
+                <c:if test="${canCreate}">
+                    <a class="account-filters__create" id="create-customer-link" href="<c:url value='/customers/new'/>">
+                        <span aria-hidden="true">+</span> Thêm đại lý
+                    </a>
+                </c:if>
             </header>
+
+            <c:if test="${not empty flashMessage}">
+                <div class="account-flash" id="customer-list-message" role="status"><p><c:out value="${flashMessage}"/></p></div>
+            </c:if>
 
             <form class="customer-filters${activeFilterCount > 0 ? ' customer-filters--open' : ''}" id="customer-filter-form"
                   action="<c:url value='/customers'/>" method="get" role="search">
@@ -134,7 +145,7 @@
                         </thead>
                         <tbody>
                             <c:forEach var="customer" items="${customerPage.items}">
-                                <c:url var="detailUrl" value="/customers/credit-limit"><c:param name="id" value="${customer.id}"/></c:url>
+                                <c:url var="detailUrl" value="/customers/profile"><c:param name="id" value="${customer.id}"/></c:url>
                                 <tr>
                                     <td class="customer-table__code" data-label="Mã đại lý">
                                         <a class="customer-table__link" href="${fn:escapeXml(detailUrl)}"><c:out value="${customer.code}"/></a>

@@ -4,6 +4,7 @@ import com.oms.dao.PriceListDao;
 import com.oms.dao.RegionDao;
 import com.oms.model.CustomerFilter;
 import com.oms.model.CustomerListStatus;
+import com.oms.model.Permission;
 import com.oms.model.SessionUser;
 import com.oms.service.CustomerService;
 import jakarta.servlet.ServletException;
@@ -64,6 +65,8 @@ public class CustomerListServlet extends HttpServlet {
             return;
         }
         request.setAttribute("statuses", CustomerListStatus.values());
+        request.setAttribute("canCreate", user.can(Permission.CUSTOMER_MANAGE));
+        Flash.moveToRequest(request, CustomerProfileServlet.FLASH_DELETED, "flashMessage");
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
