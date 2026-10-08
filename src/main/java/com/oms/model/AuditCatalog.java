@@ -71,6 +71,11 @@ public final class AuditCatalog {
         action("SUPPLIER_DELETE", "Xoá", GROUP_DELETE);
         action("SUPPLIER_DEACTIVATE", "Ngừng giao dịch", GROUP_STATUS);
         action("SUPPLIER_ACTIVATE", "Giao dịch lại", GROUP_STATUS);
+        action("CUSTOMER_CREATE", "Thêm mới", GROUP_CREATE);
+        action("CUSTOMER_UPDATE", "Sửa hồ sơ", GROUP_UPDATE);
+        action("CUSTOMER_DELETE", "Xoá", GROUP_DELETE);
+        action("CUSTOMER_DEACTIVATE", "Ngừng giao dịch", GROUP_STATUS);
+        action("CUSTOMER_ACTIVATE", "Giao dịch lại", GROUP_STATUS);
         action("CUSTOMER_BLOCK", "Khoá giao dịch", GROUP_STATUS);
         action("CUSTOMER_UNBLOCK", "Mở giao dịch", GROUP_STATUS);
         action("CUSTOMER_ASSIGN", "Phân công NV kinh doanh", GROUP_UPDATE);
