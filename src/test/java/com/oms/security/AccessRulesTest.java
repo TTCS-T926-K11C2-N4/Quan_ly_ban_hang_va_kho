@@ -224,6 +224,15 @@ class AccessRulesTest {
         }
     }
 
+    // S3-07: chỉ Kế toán công nợ và Quản lý kinh doanh khoá/mở giao dịch đại lý
+    @Test
+    void onlyAccountantAndSalesManagerCanBlockCustomers() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "ACCOUNTANT".equals(role) || "SALES_MANAGER".equals(role),
+                AccessRules.isAllowed("/customers/block/save", permissions), role));
+        assertTrue(AccessRules.isAllowed("/customers/block", permissionsOf("SALES_REP")));
+    }
+
     @Test
     void customerAndAccountantCannotOpenAccounts() {
         assertFalse(AccessRules.isAllowed("/accounts", permissionsOf("CUSTOMER")));

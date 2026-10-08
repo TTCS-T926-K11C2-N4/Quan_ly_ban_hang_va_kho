@@ -45,6 +45,8 @@ public final class AccessRules {
             Map.entry("/categories/delete", Permission.PRODUCT_MANAGE),
             Map.entry("/categories/status", Permission.PRODUCT_MANAGE),
             Map.entry("/categories/products/move", Permission.PRODUCT_MANAGE),
+            Map.entry("/customers/block", Permission.CUSTOMER_VIEW),
+            Map.entry("/customers/block/save", Permission.CREDIT_MANAGE),
             Map.entry("/price-lists", Permission.PRODUCT_VIEW),
             Map.entry("/price-lists/new", Permission.PRODUCT_MANAGE),
             Map.entry("/price-lists/edit", Permission.PRODUCT_MANAGE),

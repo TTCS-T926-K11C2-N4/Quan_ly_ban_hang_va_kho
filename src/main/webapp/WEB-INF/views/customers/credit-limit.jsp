@@ -6,6 +6,7 @@
 <c:set var="activeSubmenu" value="customers"/>
 <c:set var="breadcrumbSection" value="Đại lý"/>
 <c:set var="breadcrumbPage" value="Hạn mức công nợ"/>
+<c:set var="customerTab" value="credit-limit"/>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -59,6 +60,8 @@
                     </section>
                 </c:when>
                 <c:otherwise>
+                    <%@ include file="/WEB-INF/views/customers/customer-tabs.jspf" %>
+
                     <c:if test="${not empty flashMessage}">
                         <div class="sales-flash" id="credit-limit-message" role="status"><c:out value="${flashMessage}"/></div>
                     </c:if>
