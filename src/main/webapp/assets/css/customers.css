@@ -1177,3 +1177,363 @@
         align-items: stretch;
     }
 }
+
+/* Phân công nhân viên kinh doanh (S3-06): bảng đại lý có ô chọn + thanh phân công, khung chuyển giao hàng loạt,
+   khung Lịch sử chuyển giao bên phải (dưới bảng trên màn hẹp) */
+.assignment-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.assignment-header__transfer {
+    text-decoration: none;
+}
+
+.assignment-transfer {
+    /* Nút .sales-button lấy màu từ biến của .sales-page; trang này dùng khung accounts-page nên khai báo lại */
+    --color-sales-control-border: #cbd5e1;
+    --color-sales-text: #334155;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 21px;
+    padding: 18px;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    background: var(--color-surface);
+    scroll-margin-top: 16px;
+}
+
+.assignment-transfer__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-account-text);
+}
+
+.assignment-transfer__desc {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.assignment-transfer__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 16px;
+}
+
+.assignment-transfer__reason {
+    grid-column: 1 / -1;
+}
+
+.assignment-transfer__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.assignment-field--invalid .account-filters__control {
+    border-color: #dc2626;
+}
+
+.assignment-field__error {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #dc2626;
+}
+
+.assignment-preview {
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #eff6ff;
+    font-size: 13px;
+    color: var(--color-account-text);
+}
+
+.assignment-preview__line {
+    margin-top: 4px;
+}
+
+.assignment-preview__list {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.assignment-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.assignment-layout--with-history {
+    grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.assignment-main {
+    min-width: 0;
+}
+
+/* Bảng rộng hơn phần còn lại khi mở khung lịch sử: cuộn ngang trong thẻ thay vì tràn ra ngoài */
+.assignment-main .account-table-scroll {
+    overflow-x: auto;
+}
+
+.assignment-table {
+    min-width: 900px;
+}
+
+.assignment-table .row-actions__link {
+    white-space: nowrap;
+}
+
+.assignment-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    background: var(--color-surface);
+}
+
+.assignment-bar__count {
+    font-size: 13px;
+    color: var(--color-account-text);
+    white-space: nowrap;
+}
+
+.assignment-bar__rep {
+    flex: 1 1 240px;
+}
+
+.assignment-bar__reason {
+    flex: 1 1 220px;
+    width: auto;
+}
+
+.assignment-bar .customer-filters__submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.assignment-bar__error {
+    flex-basis: 100%;
+}
+
+.assignment-table th.assignment-table__check,
+.assignment-table td.assignment-table__check {
+    width: 44px;
+}
+
+.assignment-table input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.assignment-table tbody tr.assignment-table__row--active td {
+    background-color: #eff6ff;
+}
+
+.assignment-rep {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.assignment-rep__avatar {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #dbeafe;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1d4ed8;
+}
+
+.assignment-unassigned {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 6px;
+    background: #fef3c7;
+    font-size: 12px;
+    font-weight: 600;
+    color: #b45309;
+    white-space: nowrap;
+}
+
+.assignment-history {
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 21px;
+    padding: 18px;
+    border-radius: 12px;
+    background: var(--color-surface);
+    scroll-margin-top: 16px;
+}
+
+.assignment-history__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.assignment-history__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-account-text);
+}
+
+.assignment-history__close {
+    font-size: 20px;
+    line-height: 1;
+    color: var(--color-account-muted);
+    text-decoration: none;
+}
+
+.assignment-history__customer {
+    padding: 12px 14px;
+    border: 1px solid var(--color-account-border);
+    border-radius: 8px;
+}
+
+.assignment-history__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-account-text);
+}
+
+.assignment-history__meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.assignment-timeline {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.assignment-timeline__item {
+    position: relative;
+    padding: 0 0 16px 22px;
+    border-left: 2px solid #dbeafe;
+    margin-left: 6px;
+}
+
+.assignment-timeline__item:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+}
+
+.assignment-timeline__item::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: -7px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-primary);
+}
+
+.assignment-timeline__to {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-account-text);
+}
+
+.assignment-timeline__from,
+.assignment-timeline__time {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.assignment-timeline__reason {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-account-text);
+}
+
+.assignment-history__note {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #eff6ff;
+    font-size: 12px;
+    color: #1e40af;
+}
+
+@media (max-width: 1279px) {
+    .assignment-layout--with-history {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .assignment-history {
+        position: static;
+    }
+}
+
+@media (max-width: 767px) {
+    .assignment-transfer__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 639px) {
+    .assignment-header__transfer {
+        width: 100%;
+    }
+
+    .assignment-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .assignment-bar__rep,
+    .assignment-bar__reason {
+        flex-basis: auto;
+    }
+
+    .assignment-table {
+        min-width: 0;
+    }
+
+    .assignment-table tbody tr.assignment-table__row--active {
+        background: #eff6ff;
+    }
+
+    .assignment-table tbody tr.assignment-table__row--active td {
+        background-color: transparent;
+    }
+
+    /* Thẻ đại lý trên điện thoại: ô chọn nằm cùng hàng tên */
+    .assignment-table td.assignment-table__check {
+        grid-column: 1 / -1;
+        order: -2;
+    }
+
+    .assignment-table td.assignment-table__check::before {
+        content: none;
+    }
+}

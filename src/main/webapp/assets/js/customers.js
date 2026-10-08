@@ -52,3 +52,32 @@
         (invalid || deliveryForm.querySelector("#delivery-address")).focus();
     }
 })();
+
+// Phân công nhân viên kinh doanh (S3-06): tick đại lý, ô chọn tất cả trên trang, đếm số đã chọn và chỉ bật nút
+// Phân công khi đã chọn ít nhất một đại lý
+(function () {
+    var boxes = Array.prototype.slice.call(document.querySelectorAll("[data-assign-checkbox]"));
+    var selectAll = document.getElementById("assign-select-all");
+    var count = document.getElementById("assign-selected-count");
+    var submit = document.getElementById("assign-submit");
+    if (!boxes.length || !count || !submit) {
+        return;
+    }
+    function refresh() {
+        var checked = boxes.filter(function (box) { return box.checked; }).length;
+        count.textContent = String(checked);
+        submit.disabled = checked === 0;
+        if (selectAll) {
+            selectAll.checked = checked === boxes.length;
+            selectAll.indeterminate = checked > 0 && checked < boxes.length;
+        }
+    }
+    boxes.forEach(function (box) { box.addEventListener("change", refresh); });
+    if (selectAll) {
+        selectAll.addEventListener("change", function () {
+            boxes.forEach(function (box) { box.checked = selectAll.checked; });
+            refresh();
+        });
+    }
+    refresh();
+})();
