@@ -179,6 +179,15 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/price-lists", permissionsOf("SALES_REP")));
     }
 
+    // S3-02: ai xem được bảng giá thì xem được lịch sử thay đổi giá; lịch sử chỉ xem nên không có đường dẫn sửa/xoá
+    @Test
+    void priceHistoryIsViewOnlyForProductViewers() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(permissions.contains("PRODUCT_VIEW"),
+                AccessRules.isAllowed("/price-history", permissions), role));
+        assertFalse(AccessRules.isAllowed("/price-history/edit", permissionsOf("ADMIN")));
+        assertFalse(AccessRules.isAllowed("/price-history/delete", permissionsOf("ADMIN")));
+    }
+
     // S2-05: mọi vai trò nội bộ xem được danh mục sản phẩm; chỉ Quản lý kinh doanh và Admin thêm/sửa/xoá/ngừng
     @Test
     void onlyProductManagersCanChangeProducts() {
