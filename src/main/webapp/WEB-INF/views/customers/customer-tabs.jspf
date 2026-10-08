@@ -1,6 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Chuyển giữa các màn của Chi tiết đại lý; trang include đặt customerTab: credit-limit | block | delivery --%>
+<%-- Chuyển giữa các màn của Chi tiết đại lý; trang include đặt customerTab: profile | credit-limit | block | delivery --%>
 <nav class="customer-tabs" aria-label="Chi tiết đại lý">
+    <a class="customer-tabs__link${customerTab == 'profile' ? ' customer-tabs__link--active' : ''}"
+       href="<c:url value='/customers/profile'><c:param name='id' value='${customer.id}'/></c:url>"${customerTab == 'profile' ? ' aria-current="page"' : ''}>Hồ sơ</a>
     <a class="customer-tabs__link${customerTab == 'credit-limit' ? ' customer-tabs__link--active' : ''}"
        href="<c:url value='/customers/credit-limit'><c:param name='id' value='${customer.id}'/></c:url>"${customerTab == 'credit-limit' ? ' aria-current="page"' : ''}>Hạn mức công nợ</a>
     <a class="customer-tabs__link${customerTab == 'block' ? ' customer-tabs__link--active' : ''}"

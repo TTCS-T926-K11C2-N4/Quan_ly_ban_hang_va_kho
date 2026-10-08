@@ -55,14 +55,19 @@
 }
 
 /* Chuyển giữa Hạn mức công nợ và Khoá/mở giao dịch của cùng đại lý */
+/* 4 tab (Hồ sơ, Hạn mức, Khoá/mở, Điểm giao): màn hẹp giữ một dòng và cuộn ngang thay vì gãy chữ */
 .customer-tabs {
     display: flex;
     gap: 4px;
     margin-top: 16px;
+    overflow-x: auto;
     border-bottom: 1px solid var(--color-sales-border);
+    scrollbar-width: none;
 }
 
 .customer-tabs__link {
+    flex-shrink: 0;
+    white-space: nowrap;
     margin-bottom: -1px;
     padding: 10px 14px;
     border-bottom: 2px solid transparent;
@@ -1535,5 +1540,173 @@
 
     .assignment-table td.assignment-table__check::before {
         content: none;
+    }
+}
+
+/* Hồ sơ đại lý (S3-03): tiêu đề có nút thao tác, thẻ mã + tên, hai thẻ Thông tin hồ sơ / Thông tin quản lý */
+.customer-list-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.profile-actions form {
+    display: flex;
+}
+
+.profile-actions__stop {
+    border-color: #fed7aa;
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.profile-actions__delete {
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.profile-head {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.profile-head__code {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #1d4ed8;
+    text-transform: uppercase;
+}
+
+.profile-head__name {
+    margin-top: 6px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-sales-heading);
+}
+
+.profile-head__note {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+    align-items: start;
+}
+
+.profile-card__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-sales-heading);
+}
+
+.profile-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 20px;
+    margin: 0;
+}
+
+.profile-info dt {
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.profile-info dd {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+    overflow-wrap: anywhere;
+}
+
+.profile-info__wide,
+.customer-form__wide {
+    grid-column: 1 / -1;
+}
+
+.profile-info__hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--color-sales-muted);
+}
+
+.profile-info__link {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.profile-info__link:hover {
+    text-decoration: underline;
+}
+
+.profile-notice {
+    margin-top: 16px;
+}
+
+.customer-form__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+}
+
+.customer-form__code {
+    text-transform: uppercase;
+}
+
+.customer-form__code[readonly] {
+    background: var(--color-sales-soft);
+    color: var(--color-sales-muted);
+}
+
+.customer-form__actions {
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+@media (max-width: 1023px) {
+    .profile-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 639px) {
+    .profile-actions,
+    .profile-actions form,
+    .profile-actions .sales-button {
+        width: 100%;
+    }
+
+    .profile-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .profile-info,
+    .customer-form__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-list-header .account-filters__create {
+        width: 100%;
+        justify-content: center;
     }
 }
