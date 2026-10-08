@@ -21,6 +21,8 @@ public final class Permission {
     public static final String CUSTOMER_VIEW = "CUSTOMER_VIEW";
     // Sửa thông tin đại lý, điểm giao hàng (S3-04): Nhân viên kinh doanh chỉ với đại lý mình phụ trách
     public static final String CUSTOMER_MANAGE = "CUSTOMER_MANAGE";
+    // Phân công, chuyển giao nhân viên kinh doanh phụ trách đại lý (S3-06): Quản lý kinh doanh và Admin
+    public static final String CUSTOMER_ASSIGN = "CUSTOMER_ASSIGN";
     // Sửa hạn mức công nợ (S3-05), khoá/mở giao dịch đại lý (S3-07): chỉ Kế toán công nợ và Quản lý kinh doanh,
     // Admin cũng không có
     public static final String CREDIT_MANAGE = "CREDIT_MANAGE";

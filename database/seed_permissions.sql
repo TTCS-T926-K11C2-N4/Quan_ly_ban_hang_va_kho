@@ -11,6 +11,8 @@
 -- Giá vốn và biên lợi nhuận: quyền riêng COST_PRICE_VIEW, chỉ Quản lý kinh doanh có (kể cả Admin cũng không).
 -- Hạn mức công nợ, khoá/mở giao dịch đại lý: quyền riêng CREDIT_MANAGE, chỉ Kế toán công nợ và Quản lý kinh doanh
 -- (AC của S3-05; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự nâng hạn mức cho đại lý của mình).
+-- Phân công / chuyển giao nhân viên kinh doanh phụ trách đại lý: quyền riêng CUSTOMER_ASSIGN cho Quản lý kinh doanh
+-- (AC của S3-06; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự đổi người phụ trách).
 -- ADMIN có mọi quyền còn lại (xem câu lệnh cuối file).
 --
 -- src/test/java/com/oms/security/AccessRulesTest.java đọc trực tiếp file này:
@@ -28,6 +30,7 @@ INSERT INTO `permissions` (`code`, `module`, `action`, `description`) VALUES
   ('CUSTOMER_VIEW', 'Đại lý & hạn mức công nợ', 'VIEW', 'Xem đại lý và hạn mức công nợ'),
   ('CUSTOMER_MANAGE', 'Đại lý & hạn mức công nợ', 'MANAGE', 'Thêm, sửa đại lý và hạn mức công nợ'),
   ('CREDIT_MANAGE', 'Đại lý & hạn mức công nợ', 'MANAGE', 'Sửa hạn mức công nợ, khoá và mở giao dịch đại lý'),
+  ('CUSTOMER_ASSIGN', 'Đại lý & hạn mức công nợ', 'MANAGE', 'Phân công, chuyển giao nhân viên kinh doanh phụ trách đại lý'),
   ('ORDER_VIEW', 'Đơn hàng', 'VIEW', 'Xem đơn hàng'),
   ('ORDER_MANAGE', 'Đơn hàng', 'MANAGE', 'Tạo, sửa, huỷ đơn hàng'),
   ('ORDER_APPROVAL_VIEW', 'Duyệt đơn & giá đặc biệt', 'VIEW', 'Xem đơn chờ duyệt'),
@@ -114,6 +117,7 @@ FROM (VALUES
   ROW('SALES_MANAGER', 'CUSTOMER_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'CUSTOMER_MANAGE', 'ALL'),
   ROW('SALES_MANAGER', 'CREDIT_MANAGE', 'ALL'),
+  ROW('SALES_MANAGER', 'CUSTOMER_ASSIGN', 'ALL'),
   ROW('SALES_MANAGER', 'ORDER_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'ORDER_MANAGE', 'ALL'),
   ROW('SALES_MANAGER', 'ORDER_APPROVAL_VIEW', 'ALL'),
