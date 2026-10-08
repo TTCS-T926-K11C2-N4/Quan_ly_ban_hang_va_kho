@@ -491,3 +491,379 @@
         flex: 1 1 auto;
     }
 }
+
+/* Chính sách chiết khấu (S3-01): danh sách + khung thêm/sửa bên phải (theo thiết kế), hộp quy tắc áp dụng */
+.discount-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.discount-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.discount-layout--with-form {
+    grid-template-columns: minmax(0, 1fr) 380px;
+}
+
+.discount-main {
+    min-width: 0;
+}
+
+.discount-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 14px 16px;
+    padding: 16px 18px 18px;
+}
+
+.discount-card .account-table-scroll {
+    overflow-x: auto;
+}
+
+.discount-table {
+    min-width: 920px;
+}
+
+.discount-table td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.discount-table__name,
+.discount-table__target {
+    font-weight: 600;
+    color: var(--color-account-text);
+}
+
+.discount-table__tiers {
+    max-width: 240px;
+    font-size: 12px;
+    color: var(--color-account-text);
+}
+
+.discount-table tbody tr.discount-table__row--editing td {
+    background-color: #eff6ff;
+}
+
+.discount-scope {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #f1f5f9;
+    font-size: 10px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+}
+
+.discount-badge--active { background: #dcfce7; color: #15803d; }
+.discount-badge--upcoming { background: #dbeafe; color: #1d4ed8; }
+.discount-badge--expired { background: #fee2e2; color: #dc2626; }
+.discount-badge--inactive { background: #f1f5f9; color: #64748b; }
+
+.discount-actions {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.discount-actions form {
+    display: inline-flex;
+}
+
+.discount-actions__button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-account-muted);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.discount-actions__button:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.discount-actions__button--danger:hover {
+    color: #dc2626;
+}
+
+.discount-rule {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    background: #eff6ff;
+    font-size: 12px;
+    color: #1e3a8a;
+}
+
+.discount-rule__title {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.discount-rule__list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    line-height: 1.6;
+}
+
+.discount-rule__doc {
+    margin-top: 6px;
+    color: #1e40af;
+}
+
+/* Khung thêm/sửa */
+.discount-form {
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 21px;
+    padding: 18px;
+    border-radius: 12px;
+    background: var(--color-surface);
+    scroll-margin-top: 16px;
+}
+
+/* .form-group đặt display riêng nên thuộc tính hidden (ô SKU / nhóm hàng theo "Áp cho") phải ghi đè lại */
+.discount-form [hidden] {
+    display: none !important;
+}
+
+.discount-form__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.discount-form__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-account-text);
+}
+
+.discount-form__close {
+    font-size: 20px;
+    line-height: 1;
+    color: var(--color-account-muted);
+    text-decoration: none;
+}
+
+.discount-form__note {
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #fef3c7;
+    font-size: 12px;
+    color: #92400e;
+}
+
+.discount-form__section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+}
+
+.discount-form__section-title {
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #eff6ff;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-account-text);
+}
+
+.discount-form__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.discount-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.discount-choice__option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-account-text);
+    cursor: pointer;
+}
+
+.discount-tiers {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.discount-tiers th {
+    padding: 0 6px 6px 0;
+    font-weight: 600;
+    text-align: left;
+    color: var(--color-account-muted);
+}
+
+.discount-tiers td {
+    padding: 0 6px 8px 0;
+}
+
+.discount-tiers th:last-child,
+.discount-tiers td:last-child {
+    width: 32px;
+    padding-right: 0;
+}
+
+.discount-tiers__remove {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    background: #fef2f2;
+    font-size: 16px;
+    line-height: 1;
+    color: #dc2626;
+    cursor: pointer;
+}
+
+.discount-tiers__add {
+    align-self: flex-start;
+    padding: 6px 12px;
+    border: 1px dashed var(--color-account-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+    cursor: pointer;
+}
+
+.discount-tiers__add:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.discount-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-account-text);
+    cursor: pointer;
+}
+
+.discount-switch__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.discount-switch__track {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: #cbd5e1;
+    transition: background-color 0.15s;
+}
+
+.discount-switch__track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: transform 0.15s;
+}
+
+.discount-switch__input:checked + .discount-switch__track {
+    background: var(--color-primary);
+}
+
+.discount-switch__input:checked + .discount-switch__track::after {
+    transform: translateX(18px);
+}
+
+.discount-switch__input:focus-visible + .discount-switch__track {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.discount-form__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.discount-form__cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    border: 1px solid var(--color-account-border);
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-account-text);
+    text-decoration: none;
+}
+
+.discount-form__save {
+    width: 100%;
+}
+
+@media (max-width: 1279px) {
+    .discount-layout--with-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .discount-form {
+        position: static;
+        order: -1;
+    }
+}
+
+@media (max-width: 767px) {
+    .discount-filters {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 639px) {
+    .discount-header .account-filters__create {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .discount-form__row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
