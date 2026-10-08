@@ -55,6 +55,7 @@ public final class AccessRules {
             Map.entry("/customers/delivery-addresses/save", Permission.CUSTOMER_MANAGE),
             Map.entry("/customers/delivery-addresses/action", Permission.CUSTOMER_MANAGE),
             Map.entry("/price-lists", Permission.PRODUCT_VIEW),
+            Map.entry("/price-history", Permission.PRODUCT_VIEW),
             Map.entry("/price-lists/new", Permission.PRODUCT_MANAGE),
             Map.entry("/price-lists/edit", Permission.PRODUCT_MANAGE),
             Map.entry("/price-lists/version", Permission.PRODUCT_MANAGE),
