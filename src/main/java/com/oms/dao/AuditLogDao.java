@@ -55,6 +55,8 @@ public class AuditLogDao {
             + " WHEN 'PRICE' THEN COALESCE(pl.code, " + jsonField("code") + ")"
             // Khoá/mở giao dịch gắn với đại lý: mã đại lý ghi sẵn trong giá trị trước/sau
             + " WHEN 'CUSTOMER' THEN COALESCE(" + jsonField("code") + ")"
+            // Điểm giao hàng: hiện mã đại lý sở hữu điểm giao, ghi sẵn trong giá trị trước/sau
+            + " WHEN 'DELIVERY_ADDRESS' THEN COALESCE(" + jsonField("code") + ")"
             + " WHEN 'UNIT' THEN COALESCE(un.code, " + jsonField("code") + ")"
             + " WHEN 'SUPPLIER' THEN COALESCE(sp.code, " + jsonField("code") + ")"
             // Hạn mức công nợ gắn với đại lý: mã đại lý ghi sẵn trong giá trị trước/sau

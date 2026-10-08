@@ -263,6 +263,22 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/customers", permissionsOf("SALES_REP")));
     }
 
+    // S3-04: ai xem được đại lý thì xem được điểm giao; sửa điểm giao cần CUSTOMER_MANAGE (Nhân viên kinh doanh có,
+    // giới hạn đại lý mình phụ trách ở tầng service; Nhân viên kho không có)
+    @Test
+    void customerManagersCanChangeDeliveryAddresses() {
+        rolePermissions.forEach((role, permissions) -> {
+            assertEquals(permissions.contains("CUSTOMER_VIEW"),
+                    AccessRules.isAllowed("/customers/delivery-addresses", permissions), role);
+            assertEquals(permissions.contains("CUSTOMER_MANAGE"),
+                    AccessRules.isAllowed("/customers/delivery-addresses/save", permissions), role);
+            assertEquals(permissions.contains("CUSTOMER_MANAGE"),
+                    AccessRules.isAllowed("/customers/delivery-addresses/action", permissions), role);
+        });
+        assertTrue(AccessRules.isAllowed("/customers/delivery-addresses/save", permissionsOf("SALES_REP")));
+        assertFalse(AccessRules.isAllowed("/customers/delivery-addresses/save", permissionsOf("WAREHOUSE")));
+    }
+
     @Test
     void everyLoggedInUserCanOpenDashboardAndChangePassword() {
         assertTrue(AccessRules.isAllowed("/dashboard", Set.of()));
