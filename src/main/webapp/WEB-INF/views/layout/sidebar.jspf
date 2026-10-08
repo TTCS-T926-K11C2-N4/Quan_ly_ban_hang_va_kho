@@ -53,8 +53,9 @@
             </c:if>
             <c:if test="${currentUser.can('ORDER_VIEW')}">
             <li>
+                <%-- Chưa có danh sách đơn (S4-07): người tạo được đơn vào thẳng màn Tạo đơn hàng (S3-09) --%>
                 <a class="app-menu__link${activeMenu == 'sales' ? ' app-menu__link--active' : ''}" id="menu-sales"
-                   href="<c:url value='/sales'/>"${activeMenu == 'sales' ? ' aria-current="page"' : ''}>
+                   href="<c:url value="${currentUser.can('ORDER_MANAGE') and not currentUser.customer ? '/orders/new' : '/sales'}"/>"${activeMenu == 'sales' ? ' aria-current="page"' : ''}>
                     <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Bán hàng
                 </a>
             </li>

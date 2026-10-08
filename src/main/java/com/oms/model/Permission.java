@@ -10,6 +10,8 @@ public final class Permission {
     public static final String AUDIT_LOG_VIEW = "AUDIT_LOG_VIEW";
     public static final String PRODUCT_VIEW = "PRODUCT_VIEW";
     public static final String PRODUCT_MANAGE = "PRODUCT_MANAGE";
+    // Tạo đơn hàng (S3-09): Nhân viên kinh doanh chỉ cho đại lý mình phụ trách (data_scope ASSIGNED)
+    public static final String ORDER_MANAGE = "ORDER_MANAGE";
     // Chỉ Quản lý kinh doanh có, kể cả Admin cũng không (seed_permissions.sql)
     public static final String COST_PRICE_VIEW = "COST_PRICE_VIEW";
     // Nhà cung cấp (S2-09) dùng chung quyền kho: nhân viên kho, quản lý kho, Admin quản lý
