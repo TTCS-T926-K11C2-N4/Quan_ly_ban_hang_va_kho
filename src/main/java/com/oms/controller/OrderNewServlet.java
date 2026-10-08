@@ -92,7 +92,8 @@ public class OrderNewServlet extends HttpServlet {
                 show(request, response, form, draft, errors);
                 return;
             }
-            SalesOrderService.Saved saved = orderService.save(form, customer, draft, submit, quote, userId);
+            SalesOrderService.Saved saved = orderService.save(form, customer, draft, submit, quote, userId,
+                    request.getRemoteAddr());
             if (saved == null) {
                 show(request, response, form, draft, Map.of("form", "Đơn nháp vừa được cập nhật ở nơi khác."
                         + " Mở lại đơn nháp để xem bản mới nhất trước khi sửa tiếp."));
@@ -117,7 +118,10 @@ public class OrderNewServlet extends HttpServlet {
                       SalesOrderDao.Draft draft, Map<String, String> errors)
             throws ServletException, IOException, SQLException {
         long userId = CurrentUser.get(request).getId();
-        List<Customer> customers = customerService.findVisibleCustomers(userId, Permission.ORDER_MANAGE);
+        // Đại lý đã ngừng giao dịch không chọn được cho đơn mới; đơn nháp cũ của đại lý đó vẫn hiện đại lý để mở lại
+        List<Customer> customers = customerService.findVisibleCustomers(userId, Permission.ORDER_MANAGE).stream()
+                .filter(c -> c.isActive() || draft != null && c.getId() == draft.getCustomerId())
+                .toList();
         List<OrderProduct> products = orderService.getProducts();
         Long customerId = AccountFormParser.parseId(form.getCustomerId());
         Customer customer = customerId == null ? null

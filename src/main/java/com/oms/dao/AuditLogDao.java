@@ -59,6 +59,8 @@ public class AuditLogDao {
             + " WHEN 'SUPPLIER' THEN COALESCE(sp.code, " + jsonField("code") + ")"
             // Hạn mức công nợ gắn với đại lý: mã đại lý ghi sẵn trong giá trị trước/sau
             + " WHEN 'CREDIT_LIMIT' THEN COALESCE(" + jsonField("code") + ")"
+            // Đơn hàng: mã đơn ghi sẵn trong giá trị trước/sau
+            + " WHEN 'ORDER' THEN COALESCE(" + jsonField("orderNo") + ")"
             + " END";
 
     private static String jsonField(String field) {

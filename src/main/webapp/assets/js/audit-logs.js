@@ -25,13 +25,16 @@
         passwordChanged: "Đổi mật khẩu", avatarChanged: "Đổi ảnh đại diện",
         customerGroupId: "Nhóm khách hàng", validFrom: "Ngày bắt đầu", validTo: "Ngày kết thúc",
         items: "Dòng giá (SKU: giá bán / giá sàn)", conversions: "Đơn vị quy đổi", previousCode: "Từ bảng giá", nextCode: "Phiên bản mới",
-        taxCode: "Mã số thuế", contactName: "Người liên hệ", paymentTerms: "Điều khoản thanh toán"
+        taxCode: "Mã số thuế", contactName: "Người liên hệ", paymentTerms: "Điều khoản thanh toán",
+        orderNo: "Mã đơn", customerCode: "Mã đại lý", deliveryAddressId: "Điểm giao (mã id)",
+        requestedDate: "Ngày giao mong muốn", lineCount: "Số dòng hàng", subtotal: "Tiền hàng",
+        discount: "Chiết khấu", total: "Tổng phải thu"
     };
     // Trường dùng chung bảng tra tên với trường khác
     var LOOKUP_ALIAS = { parentId: "categoryId" };
     var STATUS_LABELS = {
         ACTIVE: "Hoạt động", LOCKED: "Bị khoá", TEMP_LOCKED: "Khoá tạm", PENDING: "Chờ duyệt",
-        DISCONTINUED: "Ngừng kinh doanh", INACTIVE: "Tạm ngưng"
+        DISCONTINUED: "Ngừng kinh doanh", INACTIVE: "Tạm ngưng", DRAFT: "Nháp", PENDING_APPROVAL: "Chờ duyệt"
     };
 
     var lookups = {};

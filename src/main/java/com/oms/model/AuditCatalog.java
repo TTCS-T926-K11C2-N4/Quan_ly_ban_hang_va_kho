@@ -31,6 +31,7 @@ public final class AuditCatalog {
         ENTITIES.put("UNIT", "Đơn vị tính");
         ENTITIES.put("SUPPLIER", "Nhà cung cấp");
         ENTITIES.put("CUSTOMER", "Đại lý");
+        ENTITIES.put("ORDER", "Đơn hàng");
         ENTITIES.put("USER", "Tài khoản");
 
         GROUPS.put(GROUP_CREATE, "Thêm mới");
@@ -76,6 +77,9 @@ public final class AuditCatalog {
         action("PRICE_LIST_VERSION", "Tạo phiên bản", GROUP_CREATE);
         action("PRICE_LIST_SHORTEN", "Rút ngắn hiệu lực", GROUP_UPDATE);
         action("CREDIT_LIMIT_UPDATE", "Sửa", GROUP_UPDATE);
+        action("ORDER_CREATE", "Thêm mới", GROUP_CREATE);
+        action("ORDER_UPDATE", "Sửa đơn nháp", GROUP_UPDATE);
+        action("ORDER_SUBMIT", "Gửi duyệt", GROUP_STATUS);
     }
 
     private AuditCatalog() {
