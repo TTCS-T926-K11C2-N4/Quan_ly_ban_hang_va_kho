@@ -179,6 +179,20 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/price-lists", permissionsOf("SALES_REP")));
     }
 
+    // S3-01: chính sách chiết khấu quản lý như bảng giá: ai xem được sản phẩm thì xem, chỉ PRODUCT_MANAGE thêm/sửa/xoá
+    @Test
+    void onlyProductManagersCanChangeDiscountPolicies() {
+        rolePermissions.forEach((role, permissions) -> {
+            assertEquals(permissions.contains("PRODUCT_VIEW"),
+                    AccessRules.isAllowed("/discount-policies", permissions), role);
+            assertEquals(permissions.contains("PRODUCT_MANAGE"),
+                    AccessRules.isAllowed("/discount-policies/save", permissions), role);
+            assertEquals(permissions.contains("PRODUCT_MANAGE"),
+                    AccessRules.isAllowed("/discount-policies/action", permissions), role);
+        });
+        assertFalse(AccessRules.isAllowed("/discount-policies/save", permissionsOf("SALES_REP")));
+    }
+
     // S3-02: ai xem được bảng giá thì xem được lịch sử thay đổi giá; lịch sử chỉ xem nên không có đường dẫn sửa/xoá
     @Test
     void priceHistoryIsViewOnlyForProductViewers() {

@@ -15,8 +15,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -109,15 +107,7 @@ public class CustomerAssignmentServlet extends HttpServlet {
 
     // "keyword=...&region=..." của điều kiện lọc đang xem (đã mã hoá URL), để giữ khi mở lịch sử hoặc sau khi lưu
     static String listQuery(HttpServletRequest request) {
-        StringBuilder query = new StringBuilder();
-        for (String name : LIST_PARAMS) {
-            String value = normalize(request.getParameter(name));
-            if (value != null) {
-                query.append(query.length() == 0 ? "" : "&").append(name).append('=')
-                        .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
-            }
-        }
-        return query.toString();
+        return QueryString.of(request, LIST_PARAMS);
     }
 
     static String normalize(String value) {

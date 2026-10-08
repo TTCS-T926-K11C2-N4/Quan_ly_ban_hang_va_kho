@@ -3,6 +3,7 @@ package com.oms.model;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 // Giá và chiết khấu áp cho một nhóm khách hàng vào một ngày (S3-09 tính tiền khi gõ đơn):
 // dòng giá của bảng giá đang hiệu lực (S2-10) theo "productId:unitId" và các chính sách chiết khấu (S3-01).
@@ -52,20 +53,28 @@ public class PricingRules {
         }
     }
 
-    // Một chính sách cho một SKU (productId) hoặc một nhóm hàng (categoryId); tiers sắp min_qty_base tăng dần
+    // Một chính sách cho một SKU (productId) hoặc một nhóm hàng (categoryId); tiers sắp min_qty_base tăng dần.
+    // categoryIds: nhóm hàng của chính sách cùng mọi nhóm con của nó (chính sách theo nhóm áp cho cả nhóm con).
     public static class DiscountPolicy {
         public static final String PERCENT = "PERCENT";
 
         private final long id;
         private final Long productId;
         private final Long categoryId;
+        private final Set<Long> categoryIds;
         private final String discountType;
         private final List<Tier> tiers;
 
         public DiscountPolicy(long id, Long productId, Long categoryId, String discountType, List<Tier> tiers) {
+            this(id, productId, categoryId, categoryId == null ? Set.of() : Set.of(categoryId), discountType, tiers);
+        }
+
+        public DiscountPolicy(long id, Long productId, Long categoryId, Set<Long> categoryIds, String discountType,
+                              List<Tier> tiers) {
             this.id = id;
             this.productId = productId;
             this.categoryId = categoryId;
+            this.categoryIds = Set.copyOf(categoryIds);
             this.discountType = discountType;
             this.tiers = List.copyOf(tiers);
         }
@@ -80,6 +89,11 @@ public class PricingRules {
 
         public Long getCategoryId() {
             return categoryId;
+        }
+
+        // Sản phẩm thuộc nhóm hàng của chính sách hoặc một nhóm con của nhóm đó
+        public boolean coversCategory(long productCategoryId) {
+            return categoryIds.contains(productCategoryId);
         }
 
         public boolean isPercent() {

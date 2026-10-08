@@ -370,7 +370,7 @@ public class SalesOrderService {
     private static BigDecimal discountOf(PricingRules.DiscountPolicy policy, OrderProduct product, BigDecimal qtyBase,
                                          BigDecimal amount) {
         boolean matches = policy.getProductId() != null ? policy.getProductId() == product.getId()
-                : policy.getCategoryId() != null && policy.getCategoryId() == product.getCategoryId();
+                : policy.coversCategory(product.getCategoryId());
         if (!matches) {
             return null;
         }

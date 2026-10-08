@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -67,6 +68,27 @@ class SalesOrderServiceTest {
         assertEquals(new BigDecimal("96000.00"), priced.getDiscount());
         assertEquals(1L, priced.getDiscountPolicyId());
         assertEquals(new BigDecimal("2304000.00"), quote.getTotal());
+    }
+
+    // S3-01: chính sách theo nhóm hàng cha áp cho sản phẩm trong nhóm con (SP001 thuộc nhóm 7, nhóm con của 3);
+    // đúng ví dụ trong docs/quy-tac-chiet-khau.md: 3 thùng = 72 lon, 250đ x 72 = 18.000 lớn hơn 2% x 720.000 = 14.400
+    @Test
+    void categoryPolicyCoversSubcategoriesAndBestWins() {
+        PricingRules.DiscountPolicy byProduct = new PricingRules.DiscountPolicy(1, 10L, null, "PERCENT", List.of(
+                new PricingRules.Tier(new BigDecimal("48"), new BigDecimal("2")),
+                new PricingRules.Tier(new BigDecimal("96"), new BigDecimal("4"))));
+        PricingRules.DiscountPolicy byParentCategory = new PricingRules.DiscountPolicy(2, null, 3L, Set.of(3L, 7L),
+                "AMOUNT_PER_UNIT", List.of(new PricingRules.Tier(new BigDecimal("24"), new BigDecimal("250"))));
+        OrderQuote.Line priced = SalesOrderService.price(List.of(line("2", "3")), PRODUCTS,
+                rules(List.of(byProduct, byParentCategory))).getLines().get(0);
+        assertEquals(new BigDecimal("720000.00"), priced.getAmount());
+        assertEquals(new BigDecimal("18000.00"), priced.getDiscount());
+        assertEquals(2L, priced.getDiscountPolicyId());
+
+        PricingRules.DiscountPolicy otherCategory = new PricingRules.DiscountPolicy(3, null, 4L, Set.of(4L, 8L),
+                "PERCENT", List.of(new PricingRules.Tier(new BigDecimal("1"), new BigDecimal("50"))));
+        assertNull(SalesOrderService.price(List.of(line("2", "3")), PRODUCTS, rules(List.of(otherCategory)))
+                .getLines().get(0).getDiscountPolicyId());
     }
 
     @Test
