@@ -82,17 +82,24 @@ public class CustomerProfileService {
         } else if (form.getName().length() > NAME_MAX_LENGTH) {
             errors.put("name", "Tên đại lý tối đa " + NAME_MAX_LENGTH + " ký tự.");
         }
-        if (form.getTaxCode() != null && !TAX_CODE_PATTERN.matcher(form.getTaxCode()).matches()) {
+        if (form.getTaxCode() == null) {
+            errors.put("taxCode", "Vui lòng nhập mã số thuế.");
+        } else if (!TAX_CODE_PATTERN.matcher(form.getTaxCode()).matches()) {
             errors.put("taxCode", "Mã số thuế gồm 10 số, 10 số kèm -3 số chi nhánh, hoặc 12 số.");
         }
-        if (form.getPhone() != null && !PHONE_PATTERN.matcher(form.getPhone()).matches()) {
+        if (form.getPhone() == null) {
+            errors.put("phone", "Vui lòng nhập số điện thoại.");
+        } else if (!PHONE_PATTERN.matcher(form.getPhone()).matches()) {
             errors.put("phone", "Số điện thoại gồm đúng 10 chữ số.");
         }
-        if (form.getEmail() != null && (form.getEmail().length() > EMAIL_MAX_LENGTH
-                || !EMAIL_PATTERN.matcher(form.getEmail()).matches())) {
+        if (form.getEmail() == null) {
+            errors.put("email", "Vui lòng nhập email.");
+        } else if (form.getEmail().length() > EMAIL_MAX_LENGTH || !EMAIL_PATTERN.matcher(form.getEmail()).matches()) {
             errors.put("email", "Email không hợp lệ.");
         }
-        if (form.getAddress() != null && form.getAddress().length() > ADDRESS_MAX_LENGTH) {
+        if (form.getAddress() == null) {
+            errors.put("address", "Vui lòng nhập địa chỉ trụ sở.");
+        } else if (form.getAddress().length() > ADDRESS_MAX_LENGTH) {
             errors.put("address", "Địa chỉ tối đa " + ADDRESS_MAX_LENGTH + " ký tự.");
         }
 
