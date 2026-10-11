@@ -25,13 +25,13 @@ class CustomerProfileServiceTest {
 
     private static CustomerForm form(String name, String taxCode, String phone, String email, String groupId,
                                      String salesRepId) {
-        return new CustomerForm(5L, "dl00999", name, taxCode, phone, email, null, groupId, "2", salesRepId, "3",
+        return new CustomerForm(5L, "dl00999", name, taxCode, phone, email, "12 Lê Lợi, Hà Nội", groupId, "2", salesRepId, "3",
                 "ACTIVE", "4");
     }
 
     private final CustomerProfileService service = new CustomerProfileService();
 
-    // S3-03 AC1: tên, nhóm khách hàng, khu vực, kho bắt buộc; MST, SĐT, email không bắt buộc nhưng phải đúng định dạng
+    // S3-03 AC1: mọi ô hồ sơ đều bắt buộc; MST, SĐT, email phải đúng định dạng
     @Test
     void validatesProfileFields() throws SQLException {
         Map<String, String> errors = service.validate(form(null, "12345", "0903", "abc", null, null), EDITING,
@@ -56,14 +56,14 @@ class CustomerProfileServiceTest {
     // nhưng không chọn được người không hoạt động khác
     @Test
     void salesRepFollowsAssignPermission() throws SQLException {
-        assertEquals(30L, service.validate(form("A", null, null, null, "1", "9"), EDITING, false, null, OPTIONS)
+        assertEquals(30L, service.validate(form("A", "0107456789", "0903123456", "a@b.vn", "1", "9"), EDITING, false, null, OPTIONS)
                 .values().salesRepId());
-        assertEquals(30L, service.validate(form("A", null, null, null, "1", "30"), EDITING, true, null, OPTIONS)
+        assertEquals(30L, service.validate(form("A", "0107456789", "0903123456", "a@b.vn", "1", "30"), EDITING, true, null, OPTIONS)
                 .values().salesRepId());
-        assertEquals(9L, service.validate(form("A", null, null, null, "1", "9"), EDITING, true, null, OPTIONS)
+        assertEquals(9L, service.validate(form("A", "0107456789", "0903123456", "a@b.vn", "1", "9"), EDITING, true, null, OPTIONS)
                 .values().salesRepId());
         assertEquals("Người phụ trách phải là nhân viên kinh doanh đang hoạt động.",
-                service.validate(form("A", null, null, null, "1", "77"), EDITING, true, null, OPTIONS).errors()
+                service.validate(form("A", "0107456789", "0903123456", "a@b.vn", "1", "77"), EDITING, true, null, OPTIONS).errors()
                         .get("salesRepId"));
     }
 }

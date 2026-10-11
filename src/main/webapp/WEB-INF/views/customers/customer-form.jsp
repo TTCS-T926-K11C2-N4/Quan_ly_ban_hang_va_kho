@@ -58,26 +58,26 @@
                                 <c:if test="${not empty errors.name}"><p class="sales-field__error"><c:out value="${errors.name}"/></p></c:if>
                             </div>
                             <div class="sales-field${not empty errors.taxCode ? ' sales-field--invalid' : ''}">
-                                <label class="sales-field__label" for="customer-tax">Mã số thuế</label>
-                                <input class="sales-field__control" type="text" id="customer-tax" name="taxCode" maxlength="14" inputmode="numeric"
+                                <label class="sales-field__label" for="customer-tax">Mã số thuế<span class="sales-field__required">*</span></label>
+                                <input class="sales-field__control" type="text" id="customer-tax" name="taxCode" maxlength="14" inputmode="numeric" required
                                        value="<c:out value='${form.taxCode}'/>" placeholder="10 số, 10-3 số hoặc 12 số">
                                 <c:if test="${not empty errors.taxCode}"><p class="sales-field__error"><c:out value="${errors.taxCode}"/></p></c:if>
                             </div>
                             <div class="sales-field${not empty errors.phone ? ' sales-field--invalid' : ''}">
-                                <label class="sales-field__label" for="customer-phone">Số điện thoại</label>
-                                <input class="sales-field__control" type="tel" id="customer-phone" name="phone" maxlength="20" inputmode="numeric"
+                                <label class="sales-field__label" for="customer-phone">Số điện thoại<span class="sales-field__required">*</span></label>
+                                <input class="sales-field__control" type="tel" id="customer-phone" name="phone" maxlength="20" inputmode="numeric" required
                                        value="<c:out value='${form.phone}'/>" placeholder="10 chữ số">
                                 <c:if test="${not empty errors.phone}"><p class="sales-field__error"><c:out value="${errors.phone}"/></p></c:if>
                             </div>
                             <div class="sales-field${not empty errors.email ? ' sales-field--invalid' : ''}">
-                                <label class="sales-field__label" for="customer-email">Email</label>
-                                <input class="sales-field__control" type="email" id="customer-email" name="email" maxlength="150"
+                                <label class="sales-field__label" for="customer-email">Email<span class="sales-field__required">*</span></label>
+                                <input class="sales-field__control" type="email" id="customer-email" name="email" maxlength="150" required
                                        value="<c:out value='${form.email}'/>" placeholder="daily@example.com">
                                 <c:if test="${not empty errors.email}"><p class="sales-field__error"><c:out value="${errors.email}"/></p></c:if>
                             </div>
                             <div class="sales-field customer-form__wide${not empty errors.address ? ' sales-field--invalid' : ''}">
-                                <label class="sales-field__label" for="customer-address">Địa chỉ trụ sở</label>
-                                <input class="sales-field__control" type="text" id="customer-address" name="address" maxlength="300"
+                                <label class="sales-field__label" for="customer-address">Địa chỉ trụ sở<span class="sales-field__required">*</span></label>
+                                <input class="sales-field__control" type="text" id="customer-address" name="address" maxlength="300" required
                                        value="<c:out value='${form.address}'/>" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh">
                                 <c:if test="${not empty errors.address}"><p class="sales-field__error"><c:out value="${errors.address}"/></p></c:if>
                             </div>
