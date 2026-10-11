@@ -36,13 +36,14 @@ class AccessRulesTest {
             rolePermissions.computeIfAbsent(row.group(1), role -> new HashSet<>()).add(row.group(2));
         }
 
-        // ADMIN: mọi quyền trừ COST_PRICE_VIEW (câu INSERT cuối file seed)
+        // ADMIN: mọi quyền trừ COST_PRICE_VIEW và CREDIT_MANAGE (câu INSERT cuối file seed)
         Set<String> allPermissions = new HashSet<>();
         Matcher permission = Pattern.compile("(?m)^\\s*\\('([A-Z_]+)', '").matcher(sql);
         while (permission.find()) {
             allPermissions.add(permission.group(1));
         }
         allPermissions.remove("COST_PRICE_VIEW");
+        allPermissions.remove("CREDIT_MANAGE");
         rolePermissions.put("ADMIN", allPermissions);
     }
 
@@ -178,6 +179,29 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/price-lists", permissionsOf("SALES_REP")));
     }
 
+    // S3-01: chính sách chiết khấu quản lý như bảng giá: ai xem được sản phẩm thì xem, chỉ PRODUCT_MANAGE thêm/sửa/xoá
+    @Test
+    void onlyProductManagersCanChangeDiscountPolicies() {
+        rolePermissions.forEach((role, permissions) -> {
+            assertEquals(permissions.contains("PRODUCT_VIEW"),
+                    AccessRules.isAllowed("/discount-policies", permissions), role);
+            assertEquals(permissions.contains("PRODUCT_MANAGE"),
+                    AccessRules.isAllowed("/discount-policies/save", permissions), role);
+            assertEquals(permissions.contains("PRODUCT_MANAGE"),
+                    AccessRules.isAllowed("/discount-policies/action", permissions), role);
+        });
+        assertFalse(AccessRules.isAllowed("/discount-policies/save", permissionsOf("SALES_REP")));
+    }
+
+    // S3-02: ai xem được bảng giá thì xem được lịch sử thay đổi giá; lịch sử chỉ xem nên không có đường dẫn sửa/xoá
+    @Test
+    void priceHistoryIsViewOnlyForProductViewers() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(permissions.contains("PRODUCT_VIEW"),
+                AccessRules.isAllowed("/price-history", permissions), role));
+        assertFalse(AccessRules.isAllowed("/price-history/edit", permissionsOf("ADMIN")));
+        assertFalse(AccessRules.isAllowed("/price-history/delete", permissionsOf("ADMIN")));
+    }
+
     // S2-05: mọi vai trò nội bộ xem được danh mục sản phẩm; chỉ Quản lý kinh doanh và Admin thêm/sửa/xoá/ngừng
     @Test
     void onlyProductManagersCanChangeProducts() {
@@ -223,6 +247,15 @@ class AccessRulesTest {
         }
     }
 
+    // S3-07: chỉ Kế toán công nợ và Quản lý kinh doanh khoá/mở giao dịch đại lý
+    @Test
+    void onlyAccountantAndSalesManagerCanBlockCustomers() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "ACCOUNTANT".equals(role) || "SALES_MANAGER".equals(role),
+                AccessRules.isAllowed("/customers/block/save", permissions), role));
+        assertTrue(AccessRules.isAllowed("/customers/block", permissionsOf("SALES_REP")));
+    }
+
     @Test
     void customerAndAccountantCannotOpenAccounts() {
         assertFalse(AccessRules.isAllowed("/accounts", permissionsOf("CUSTOMER")));
@@ -235,10 +268,81 @@ class AccessRulesTest {
                 assertEquals("SALES_MANAGER".equals(role), permissions.contains("COST_PRICE_VIEW"), role));
     }
 
+    // S3-05: chỉ Kế toán công nợ và Quản lý kinh doanh sửa hạn mức; Nhân viên kinh doanh xem được đại lý của mình
+    @Test
+    void onlyAccountantAndSalesManagerCanEditCreditLimit() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "ACCOUNTANT".equals(role) || "SALES_MANAGER".equals(role),
+                AccessRules.isAllowed("/customers/credit-limit/edit", permissions), role));
+        assertTrue(AccessRules.isAllowed("/customers/credit-limit", permissionsOf("SALES_REP")));
+        assertFalse(AccessRules.isAllowed("/customers/credit-limit", permissionsOf("WAREHOUSE")));
+    }
+
+    // S3-08: ai xem được đại lý thì mở được danh sách đại lý (Nhân viên kinh doanh chỉ thấy đại lý mình phụ trách)
+    @Test
+    void customerViewersCanOpenCustomerList() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(permissions.contains("CUSTOMER_VIEW"),
+                AccessRules.isAllowed("/customers", permissions), role));
+        assertTrue(AccessRules.isAllowed("/customers", permissionsOf("SALES_REP")));
+    }
+
+    // S3-04: ai xem được đại lý thì xem được điểm giao; sửa điểm giao cần CUSTOMER_MANAGE (Nhân viên kinh doanh có,
+    // giới hạn đại lý mình phụ trách ở tầng service; Nhân viên kho không có)
+    @Test
+    void customerManagersCanChangeDeliveryAddresses() {
+        rolePermissions.forEach((role, permissions) -> {
+            assertEquals(permissions.contains("CUSTOMER_VIEW"),
+                    AccessRules.isAllowed("/customers/delivery-addresses", permissions), role);
+            assertEquals(permissions.contains("CUSTOMER_MANAGE"),
+                    AccessRules.isAllowed("/customers/delivery-addresses/save", permissions), role);
+            assertEquals(permissions.contains("CUSTOMER_MANAGE"),
+                    AccessRules.isAllowed("/customers/delivery-addresses/action", permissions), role);
+        });
+        assertTrue(AccessRules.isAllowed("/customers/delivery-addresses/save", permissionsOf("SALES_REP")));
+        assertFalse(AccessRules.isAllowed("/customers/delivery-addresses/save", permissionsOf("WAREHOUSE")));
+    }
+
+    // S3-06: chỉ Quản lý kinh doanh và Admin phân công / chuyển giao; ai xem được đại lý thì xem được màn phân công
+    @Test
+    void onlySalesManagerAndAdminCanAssignSalesReps() {
+        rolePermissions.forEach((role, permissions) -> {
+            assertEquals("SALES_MANAGER".equals(role) || "ADMIN".equals(role),
+                    AccessRules.isAllowed("/customers/assignments/assign", permissions), role);
+            assertEquals("SALES_MANAGER".equals(role) || "ADMIN".equals(role),
+                    AccessRules.isAllowed("/customers/assignments/transfer", permissions), role);
+            assertEquals(permissions.contains("CUSTOMER_VIEW"),
+                    AccessRules.isAllowed("/customers/assignments", permissions), role);
+        });
+    }
+
+    // S3-03: ai xem được đại lý thì xem hồ sơ; thêm/sửa/ngừng/xoá cần CUSTOMER_MANAGE (NVKD có, giới hạn đại lý mình
+    // ở tầng servlet; Nhân viên kho không có)
+    @Test
+    void customerManagersCanChangeCustomerProfiles() {
+        rolePermissions.forEach((role, permissions) -> {
+            assertEquals(permissions.contains("CUSTOMER_VIEW"), AccessRules.isAllowed("/customers/profile", permissions), role);
+            for (String path : new String[] {"/customers/new", "/customers/edit", "/customers/profile/action"}) {
+                assertEquals(permissions.contains("CUSTOMER_MANAGE"), AccessRules.isAllowed(path, permissions), role + " " + path);
+            }
+        });
+        assertFalse(AccessRules.isAllowed("/customers/new", permissionsOf("WAREHOUSE")));
+    }
+
     @Test
     void everyLoggedInUserCanOpenDashboardAndChangePassword() {
         assertTrue(AccessRules.isAllowed("/dashboard", Set.of()));
         assertTrue(AccessRules.isAllowed("/change-password", Set.of()));
+    }
+
+    // S3-09: Nhân viên, Quản lý kinh doanh tạo đơn; kho và kế toán không tạo đơn
+    @Test
+    void salesRolesCanCreateOrders() {
+        for (String path : new String[] {"/orders/new", "/orders/customer-data", "/orders/quote"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_REP")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+        }
     }
 
     @Test

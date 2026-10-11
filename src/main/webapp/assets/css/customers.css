@@ -1,0 +1,1712 @@
+/* Màn Chi tiết đại lý (S3-05 hạn mức công nợ, S3-07 khoá giao dịch) và Tạo đơn hàng (S3-09), theo Figma Page 3.
+   Dùng chung khung trang, thẻ, ô nhập và nút cho cả ba màn. */
+.sales-page {
+    --color-sales-heading: #0f172a;
+    --color-sales-text: #334155;
+    --color-sales-muted: #64748b;
+    --color-sales-subtle: #94a3b8;
+    --color-sales-border: #e2e8f0;
+    --color-sales-control-border: #cbd5e1;
+    --color-sales-soft: #f8fafc;
+    --color-sales-required: #dc2626;
+    --color-sales-accent-bg: #eff6ff;
+    --color-sales-accent-border: #bfdbfe;
+
+    padding: 28px 32px 30px;
+    background: var(--color-sales-soft);
+    color: var(--color-sales-text);
+}
+
+.sales-page .page-header__title {
+    font-size: 24px;
+    line-height: 32px;
+    color: var(--color-sales-heading);
+}
+
+.sales-page .page-header__subtitle {
+    margin-top: 5px;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--color-sales-muted);
+}
+
+/* Thông báo sau khi lưu / lỗi chung */
+.sales-flash {
+    margin-top: 18px;
+    padding: 12px 16px;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    background: #f0fdf4;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #15803d;
+}
+
+.sales-flash--error {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.sales-flash--warning {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #92400e;
+}
+
+/* Chuyển giữa Hạn mức công nợ và Khoá/mở giao dịch của cùng đại lý */
+/* 4 tab (Hồ sơ, Hạn mức, Khoá/mở, Điểm giao): màn hẹp giữ một dòng và cuộn ngang thay vì gãy chữ */
+.customer-tabs {
+    display: flex;
+    gap: 4px;
+    margin-top: 16px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--color-sales-border);
+    scrollbar-width: none;
+}
+
+.customer-tabs__link {
+    flex-shrink: 0;
+    white-space: nowrap;
+    margin-bottom: -1px;
+    padding: 10px 14px;
+    border-bottom: 2px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-muted);
+    text-decoration: none;
+}
+
+.customer-tabs__link:hover {
+    color: var(--color-navy);
+}
+
+.customer-tabs__link--active {
+    border-bottom-color: var(--color-navy);
+    color: var(--color-navy);
+}
+
+.customer-tabs__link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Thẻ nội dung chính */
+.sales-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 18px;
+    padding: 24px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
+}
+
+.sales-card__title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    color: var(--color-sales-heading);
+}
+
+.sales-card__subtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+/* Đầu thẻ đại lý: tên, mã và nhãn trạng thái */
+.customer-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.customer-head__name {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 22px;
+    color: var(--color-sales-heading);
+}
+
+.customer-head__code {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--color-sales-muted);
+}
+
+.status-pill {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #bbf7d0;
+    border-radius: 20px;
+    background: #f0fdf4;
+    font-size: 11px;
+    font-weight: 700;
+    color: #15803d;
+}
+
+.status-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: #16a34a;
+}
+
+.status-pill--blocked {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.status-pill--blocked::before {
+    background: #dc2626;
+}
+
+.status-pill--inactive {
+    border-color: var(--color-sales-border);
+    background: var(--color-sales-soft);
+    color: var(--color-sales-muted);
+}
+
+.status-pill--inactive::before {
+    background: var(--color-sales-subtle);
+}
+
+/* Ô thông tin cơ bản (người liên hệ, điện thoại, trạng thái / địa chỉ) */
+.customer-info {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 18px;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 8px;
+    background: var(--color-sales-soft);
+}
+
+.customer-info__label {
+    font-size: 11px;
+    color: var(--color-sales-muted);
+}
+
+.customer-info__value {
+    margin: 5px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+    overflow-wrap: anywhere;
+}
+
+/* Tiêu đề một phần trong thẻ, có nút bên phải */
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.section-head__title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    color: var(--color-sales-heading);
+}
+
+.section-head__desc {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--color-sales-muted);
+}
+
+.sales-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Nút */
+.sales-button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--color-sales-control-border);
+    border-radius: 7px;
+    background: var(--color-surface);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-sales-text);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.sales-button:hover {
+    background: var(--color-sales-soft);
+}
+
+.sales-button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.sales-button--primary {
+    border-color: var(--color-navy);
+    background: var(--color-navy);
+    color: #ffffff;
+}
+
+.sales-button--primary:hover {
+    background: #1e40af;
+}
+
+.sales-button--soft {
+    border-color: var(--color-sales-accent-border);
+    background: var(--color-sales-accent-bg);
+    color: var(--color-navy);
+}
+
+.sales-button--soft:hover {
+    background: #dbeafe;
+}
+
+.sales-button--small {
+    height: 34px;
+    padding: 0 12px;
+}
+
+.sales-button[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.sales-button__icon {
+    display: block;
+    flex-shrink: 0;
+}
+
+.sales-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* Ô nhập */
+.sales-field {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.sales-field__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-sales-text);
+}
+
+.sales-field__required {
+    margin-left: 2px;
+    color: var(--color-sales-required);
+}
+
+.sales-field__control {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--color-sales-control-border);
+    border-radius: 7px;
+    background: var(--color-surface);
+    font: inherit;
+    font-size: 13px;
+    color: var(--color-sales-heading);
+}
+
+.sales-field__control::placeholder {
+    color: var(--color-sales-subtle);
+}
+
+.sales-field__control:focus {
+    border-color: var(--color-primary);
+    outline: 2px solid rgba(37, 99, 235, 0.18);
+}
+
+.sales-field__control--textarea {
+    height: 76px;
+    padding: 11px 12px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.sales-field__suffix-wrap {
+    position: relative;
+}
+
+.sales-field__suffix-wrap .sales-field__control {
+    padding-right: 48px;
+}
+
+.sales-field__suffix {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.sales-field__hint,
+.sales-field__error {
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.sales-field__hint {
+    color: var(--color-sales-subtle);
+}
+
+.sales-field__error {
+    color: var(--color-sales-required);
+}
+
+.sales-field--invalid .sales-field__control {
+    border-color: var(--color-sales-required);
+}
+
+.sales-field__row {
+    display: flex;
+    gap: 16px;
+}
+
+/* Ô chọn đại lý khi chưa có ?id */
+.customer-picker {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.customer-picker .sales-field {
+    max-width: 480px;
+}
+
+.sales-empty {
+    font-size: 13px;
+    color: var(--color-sales-muted);
+}
+
+/* Hai ô số hạn mức */
+.credit-limits {
+    display: flex;
+    gap: 1px;
+    padding: 22px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 10px;
+    background: var(--color-sales-border);
+}
+
+.credit-limit {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 128px;
+    padding: 18px 20px 24px;
+    background: var(--color-surface);
+}
+
+.credit-limit:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.credit-limit:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.credit-limit__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-sales-muted);
+}
+
+.credit-limit__value {
+    margin: 7px 0;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+    color: var(--color-sales-heading);
+    overflow-wrap: anywhere;
+}
+
+.credit-limit__unit {
+    margin-left: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-sales-muted);
+}
+
+.credit-limit__hint {
+    font-size: 11px;
+    color: var(--color-sales-subtle);
+}
+
+/* Ghi chú có biểu tượng tròn (phân quyền / cảnh báo đơn đang dở) */
+.sales-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 15px;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    background: var(--color-sales-accent-bg);
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-sales-text);
+}
+
+.sales-note__icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    background: #dbeafe;
+}
+
+.sales-note__title {
+    font-weight: 700;
+    color: var(--color-navy);
+}
+
+.sales-note--warning {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #a16207;
+}
+
+.sales-note--warning .sales-note__icon {
+    background: #fef3c7;
+}
+
+.sales-note--warning .sales-note__title {
+    color: #92400e;
+}
+
+/* Khung form có viền (Sửa hạn mức, Khoá giao dịch) */
+.sales-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+    padding: 26px 20px 20px;
+    border: 1px solid var(--color-sales-control-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    box-shadow: 0 4px 7px rgba(15, 23, 42, 0.06);
+}
+
+.sales-panel--lock {
+    gap: 7px;
+    padding-top: 30px;
+    border-color: var(--color-sales-border);
+    box-shadow: 0 3px 6px rgba(15, 23, 42, 0.05);
+}
+
+.sales-panel--lock .sales-panel__title {
+    margin-bottom: 10px;
+}
+
+.sales-panel--lock .sales-actions {
+    margin-top: 10px;
+}
+
+/* Lý do khoá hiện tại khi đại lý đang bị khoá */
+.block-current {
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #7f1d1d;
+}
+
+.block-current__title {
+    font-weight: 700;
+    color: #b91c1c;
+}
+
+.block-current__reason {
+    margin-top: 2px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.block-current__meta {
+    margin-top: 4px;
+    color: #991b1b;
+}
+
+.sales-panel__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-sales-heading);
+}
+
+@media (max-width: 1023px) {
+    .sales-page {
+        padding: 24px 24px 30px;
+    }
+}
+
+@media (max-width: 639px) {
+    .sales-page {
+        padding: 20px 16px 28px;
+    }
+
+    .sales-page .page-header__title {
+        font-size: 22px;
+    }
+
+    .sales-card {
+        padding: 16px;
+    }
+
+    .customer-info {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .credit-limits {
+        flex-direction: column;
+        padding: 12px;
+    }
+
+    .credit-limit:first-child {
+        border-radius: 8px 8px 0 0;
+    }
+
+    .credit-limit:last-child {
+        border-radius: 0 0 8px 8px;
+    }
+
+    .sales-field__row,
+    .customer-picker {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .section-head {
+        align-items: flex-start;
+    }
+
+    .sales-panel {
+        padding: 18px 14px 16px;
+    }
+
+    .sales-actions .sales-button {
+        flex: 1 1 auto;
+    }
+}
+
+/* Danh sách đại lý (S3-08): tìm kiếm + bộ lọc, bảng dùng chung kiểu bảng của accounts.css.
+   Màn hẹp: ô lọc thu gọn sau nút "Bộ lọc", mỗi đại lý thành một thẻ để dùng một tay ngoài đường. */
+.customer-filters {
+    margin-top: 21px;
+    padding: 16px 18px 18px;
+    border-radius: 10px;
+    background: var(--color-surface);
+}
+
+.customer-filters__search {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+}
+
+.customer-filters__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.customer-filters__field--keyword {
+    flex: 1 1 auto;
+}
+
+.customer-filters__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-account-text);
+}
+
+.customer-filters__search-box {
+    position: relative;
+}
+
+.customer-filters__search-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.customer-filters__keyword {
+    padding-left: 40px;
+}
+
+.customer-filters__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.customer-filters__toggle,
+.customer-filters__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 18px;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Màn rộng luôn hiện đủ ô lọc nên không cần nút thu gọn */
+.customer-filters__toggle {
+    display: none;
+    border: 1px solid var(--color-account-border);
+    background: var(--color-surface);
+    color: var(--color-account-text);
+}
+
+.customer-filters__submit {
+    min-width: 120px;
+    border: 0;
+    background: var(--color-primary);
+    color: #ffffff;
+}
+
+.customer-filters__submit:hover {
+    filter: brightness(0.95);
+}
+
+.customer-filters__toggle:focus-visible,
+.customer-filters__submit:focus-visible,
+.customer-filters__clear:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.customer-filters__icon {
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    -webkit-mask: url("../img/icons/filter.svg") center / contain no-repeat;
+    mask: url("../img/icons/filter.svg") center / contain no-repeat;
+}
+
+.customer-filters__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--color-primary);
+    font-size: 11px;
+    color: #ffffff;
+}
+
+.customer-filters__fields {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 16px;
+    margin-top: 14px;
+}
+
+.customer-filters__clear {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.customer-filters__clear:hover {
+    text-decoration: underline;
+}
+
+.customer-table {
+    min-width: 980px;
+}
+
+.customer-table th:nth-child(1) {
+    width: 120px;
+}
+
+.customer-table__code {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.customer-table__link {
+    color: var(--color-account-text);
+    text-decoration: none;
+}
+
+.customer-table__link:hover,
+.customer-table__phone:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.customer-table__name .customer-table__link {
+    font-weight: 600;
+}
+
+.customer-table__phone {
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.customer-table__none {
+    color: var(--color-account-muted);
+}
+
+.customer-table td.customer-table__empty {
+    height: 96px;
+    text-align: center;
+    color: var(--color-account-muted);
+}
+
+.customer-status {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.customer-status--active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.customer-status--blocked {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.customer-status--inactive {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+@media (max-width: 1279px) {
+    .customer-filters__fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .customer-filters {
+        padding: 14px;
+    }
+
+    .customer-filters__search {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .customer-filters__actions > * {
+        flex: 1 1 0;
+    }
+
+    .customer-filters__toggle {
+        display: inline-flex;
+    }
+
+    .customer-filters__fields {
+        display: none;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-filters--open .customer-filters__fields {
+        display: grid;
+    }
+
+    /* Bảng thành danh sách thẻ: mỗi ô kèm nhãn cột lấy từ data-label */
+    .customer-table {
+        min-width: 0;
+    }
+
+    .customer-table thead {
+        display: none;
+    }
+
+    .customer-table tbody tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 6px 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--color-account-row-line);
+    }
+
+    .customer-table tbody tr:nth-child(even) td {
+        background-color: transparent;
+    }
+
+    .customer-table td,
+    .customer-table td:first-child,
+    .customer-table td:last-child {
+        height: auto;
+        padding: 0;
+        background-image: none;
+    }
+
+    .customer-table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 2px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--color-account-muted);
+    }
+
+    .customer-table td.customer-table__name {
+        grid-column: 1 / -1;
+        order: -1;
+        font-size: 14px;
+    }
+
+    .customer-table td.customer-table__name::before {
+        content: none;
+    }
+
+    .customer-table tbody tr.customer-table__empty-row {
+        display: block;
+    }
+
+    .customer-table td.customer-table__empty {
+        display: block;
+        height: auto;
+        padding: 24px 0;
+    }
+
+    .customer-table td.customer-table__empty::before {
+        content: none;
+    }
+}
+
+/* Điểm giao hàng (S3-04): mỗi điểm một thẻ, bấm bút chì thì thẻ đó thành form; giá trị hiện trong ô viền nhạt
+   giống ô nhập của thiết kế để thẻ xem và thẻ sửa cùng bố cục */
+.delivery-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.delivery-card {
+    padding: 14px 16px 16px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 10px;
+    background: var(--color-sales-soft);
+    scroll-margin-top: 16px;
+}
+
+.delivery-card--default {
+    border-color: var(--color-sales-accent-border);
+}
+
+.delivery-card--editing {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.delivery-card__form-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+}
+
+.delivery-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 30px;
+    margin-bottom: 10px;
+}
+
+.delivery-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.delivery-card__badge,
+.delivery-card__make-default {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 12px;
+    border-radius: 13px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.delivery-card__badge {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.delivery-card__make-default {
+    border: 1px dashed var(--color-sales-control-border);
+    background: var(--color-surface);
+    color: var(--color-sales-muted);
+    cursor: pointer;
+}
+
+.delivery-card__make-default:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.delivery-card__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+}
+
+.delivery-card__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.delivery-card__actions form {
+    display: flex;
+}
+
+.delivery-card__icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.delivery-card__icon-button--edit {
+    border-color: var(--color-sales-accent-border);
+    background: var(--color-sales-accent-bg);
+}
+
+.delivery-card__icon-button--delete {
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+.delivery-card__icon-button:hover {
+    filter: brightness(0.96);
+}
+
+.delivery-card__make-default:focus-visible,
+.delivery-card__icon-button:focus-visible,
+.delivery-inactive__toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.delivery-card__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    margin: 0;
+}
+
+.delivery-card__wide {
+    grid-column: 1 / -1;
+}
+
+.delivery-card__term {
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+}
+
+.delivery-card__value {
+    min-height: 38px;
+    margin: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 7px;
+    background: var(--color-surface);
+    font-size: 13px;
+    line-height: 18px;
+    overflow-wrap: anywhere;
+}
+
+.delivery-card__phone {
+    color: inherit;
+    text-decoration: none;
+}
+
+.delivery-card__phone:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.delivery-card__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.delivery-card__check input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.delivery-inactive {
+    border: 1px solid var(--color-sales-border);
+    border-radius: 10px;
+}
+
+.delivery-inactive__toggle {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-muted);
+    cursor: pointer;
+}
+
+.delivery-inactive__list {
+    margin: 0;
+    padding: 0 16px 8px;
+    list-style: none;
+}
+
+.delivery-inactive__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--color-sales-border);
+}
+
+.delivery-inactive__address {
+    font-size: 13px;
+    color: var(--color-sales-text);
+}
+
+.delivery-inactive__meta {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.delivery-inactive__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.delivery-inactive__delete {
+    color: #b91c1c;
+}
+
+.delivery-note {
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+@media (max-width: 639px) {
+    .delivery-card__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .delivery-inactive__item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .delivery-section .section-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Phân công nhân viên kinh doanh (S3-06): bảng đại lý có ô chọn + thanh phân công, khung chuyển giao hàng loạt,
+   khung Lịch sử chuyển giao bên phải (dưới bảng trên màn hẹp) */
+.assignment-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.assignment-header__transfer {
+    text-decoration: none;
+}
+
+.assignment-transfer {
+    /* Nút .sales-button lấy màu từ biến của .sales-page; trang này dùng khung accounts-page nên khai báo lại */
+    --color-sales-control-border: #cbd5e1;
+    --color-sales-text: #334155;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 21px;
+    padding: 18px;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    background: var(--color-surface);
+    scroll-margin-top: 16px;
+}
+
+.assignment-transfer__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-account-text);
+}
+
+.assignment-transfer__desc {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.assignment-transfer__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 16px;
+}
+
+.assignment-transfer__reason {
+    grid-column: 1 / -1;
+}
+
+.assignment-transfer__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.assignment-field--invalid .account-filters__control {
+    border-color: #dc2626;
+}
+
+.assignment-field__error {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #dc2626;
+}
+
+.assignment-preview {
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #eff6ff;
+    font-size: 13px;
+    color: var(--color-account-text);
+}
+
+.assignment-preview__line {
+    margin-top: 4px;
+}
+
+.assignment-preview__list {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.assignment-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.assignment-layout--with-history {
+    grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.assignment-main {
+    min-width: 0;
+}
+
+/* Bảng rộng hơn phần còn lại khi mở khung lịch sử: cuộn ngang trong thẻ thay vì tràn ra ngoài */
+.assignment-main .account-table-scroll {
+    overflow-x: auto;
+}
+
+.assignment-table {
+    min-width: 900px;
+}
+
+.assignment-table .row-actions__link {
+    white-space: nowrap;
+}
+
+.assignment-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    background: var(--color-surface);
+}
+
+.assignment-bar__count {
+    font-size: 13px;
+    color: var(--color-account-text);
+    white-space: nowrap;
+}
+
+.assignment-bar__rep {
+    flex: 1 1 240px;
+}
+
+.assignment-bar__reason {
+    flex: 1 1 220px;
+    width: auto;
+}
+
+.assignment-bar .customer-filters__submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.assignment-bar__error {
+    flex-basis: 100%;
+}
+
+.assignment-table th.assignment-table__check,
+.assignment-table td.assignment-table__check {
+    width: 44px;
+}
+
+.assignment-table input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.assignment-table tbody tr.assignment-table__row--active td {
+    background-color: #eff6ff;
+}
+
+.assignment-rep {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.assignment-rep__avatar {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #dbeafe;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1d4ed8;
+}
+
+.assignment-unassigned {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 6px;
+    background: #fef3c7;
+    font-size: 12px;
+    font-weight: 600;
+    color: #b45309;
+    white-space: nowrap;
+}
+
+.assignment-history {
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 21px;
+    padding: 18px;
+    border-radius: 12px;
+    background: var(--color-surface);
+    scroll-margin-top: 16px;
+}
+
+.assignment-history__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.assignment-history__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-account-text);
+}
+
+.assignment-history__close {
+    font-size: 20px;
+    line-height: 1;
+    color: var(--color-account-muted);
+    text-decoration: none;
+}
+
+.assignment-history__customer {
+    padding: 12px 14px;
+    border: 1px solid var(--color-account-border);
+    border-radius: 8px;
+}
+
+.assignment-history__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-account-text);
+}
+
+.assignment-history__meta {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.assignment-timeline {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.assignment-timeline__item {
+    position: relative;
+    padding: 0 0 16px 22px;
+    border-left: 2px solid #dbeafe;
+    margin-left: 6px;
+}
+
+.assignment-timeline__item:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+}
+
+.assignment-timeline__item::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: -7px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-primary);
+}
+
+.assignment-timeline__to {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-account-text);
+}
+
+.assignment-timeline__from,
+.assignment-timeline__time {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-account-muted);
+}
+
+.assignment-timeline__reason {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--color-account-text);
+}
+
+.assignment-history__note {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #eff6ff;
+    font-size: 12px;
+    color: #1e40af;
+}
+
+@media (max-width: 1279px) {
+    .assignment-layout--with-history {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .assignment-history {
+        position: static;
+    }
+}
+
+@media (max-width: 767px) {
+    .assignment-transfer__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 639px) {
+    .assignment-header__transfer {
+        width: 100%;
+    }
+
+    .assignment-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .assignment-bar__rep,
+    .assignment-bar__reason {
+        flex-basis: auto;
+    }
+
+    .assignment-table {
+        min-width: 0;
+    }
+
+    .assignment-table tbody tr.assignment-table__row--active {
+        background: #eff6ff;
+    }
+
+    .assignment-table tbody tr.assignment-table__row--active td {
+        background-color: transparent;
+    }
+
+    /* Thẻ đại lý trên điện thoại: ô chọn nằm cùng hàng tên */
+    .assignment-table td.assignment-table__check {
+        grid-column: 1 / -1;
+        order: -2;
+    }
+
+    .assignment-table td.assignment-table__check::before {
+        content: none;
+    }
+}
+
+/* Hồ sơ đại lý (S3-03): tiêu đề có nút thao tác, thẻ mã + tên, hai thẻ Thông tin hồ sơ / Thông tin quản lý */
+.customer-list-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.profile-actions form {
+    display: flex;
+}
+
+.profile-actions__stop {
+    border-color: #fed7aa;
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.profile-actions__delete {
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.profile-head {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.profile-head__code {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #1d4ed8;
+    text-transform: uppercase;
+}
+
+.profile-head__name {
+    margin-top: 6px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-sales-heading);
+}
+
+.profile-head__note {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+    align-items: start;
+}
+
+.profile-card__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-sales-heading);
+}
+
+.profile-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 20px;
+    margin: 0;
+}
+
+.profile-info dt {
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.profile-info dd {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+    overflow-wrap: anywhere;
+}
+
+.profile-info__wide,
+.customer-form__wide {
+    grid-column: 1 / -1;
+}
+
+.profile-info__hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--color-sales-muted);
+}
+
+.profile-info__link {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.profile-info__link:hover {
+    text-decoration: underline;
+}
+
+.profile-notice {
+    margin-top: 16px;
+}
+
+.customer-form__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+}
+
+.customer-form__code {
+    text-transform: uppercase;
+}
+
+.customer-form__code[readonly] {
+    background: var(--color-sales-soft);
+    color: var(--color-sales-muted);
+}
+
+.customer-form__actions {
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+@media (max-width: 1023px) {
+    .profile-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 639px) {
+    .profile-actions,
+    .profile-actions form,
+    .profile-actions .sales-button {
+        width: 100%;
+    }
+
+    .profile-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .profile-info,
+    .customer-form__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-list-header .account-filters__create {
+        width: 100%;
+        justify-content: center;
+    }
+}

@@ -24,12 +24,16 @@ public final class AuditCatalog {
     static {
         ENTITIES.put("INVENTORY", "Tồn kho");
         ENTITIES.put("PRICE", "Bảng giá");
+        ENTITIES.put("DISCOUNT_POLICY", "Chính sách chiết khấu");
         ENTITIES.put("CREDIT_LIMIT", "Hạn mức công nợ");
         ENTITIES.put("INVOICE", "Hoá đơn");
         ENTITIES.put("PRODUCT", "Sản phẩm");
         ENTITIES.put("PRODUCT_CATEGORY", "Nhóm hàng");
         ENTITIES.put("UNIT", "Đơn vị tính");
         ENTITIES.put("SUPPLIER", "Nhà cung cấp");
+        ENTITIES.put("CUSTOMER", "Đại lý");
+        ENTITIES.put("DELIVERY_ADDRESS", "Điểm giao hàng");
+        ENTITIES.put("ORDER", "Đơn hàng");
         ENTITIES.put("USER", "Tài khoản");
 
         GROUPS.put(GROUP_CREATE, "Thêm mới");
@@ -67,11 +71,35 @@ public final class AuditCatalog {
         action("SUPPLIER_DELETE", "Xoá", GROUP_DELETE);
         action("SUPPLIER_DEACTIVATE", "Ngừng giao dịch", GROUP_STATUS);
         action("SUPPLIER_ACTIVATE", "Giao dịch lại", GROUP_STATUS);
+        action("CUSTOMER_CREATE", "Thêm mới", GROUP_CREATE);
+        action("CUSTOMER_UPDATE", "Sửa hồ sơ", GROUP_UPDATE);
+        action("CUSTOMER_DELETE", "Xoá", GROUP_DELETE);
+        action("CUSTOMER_DEACTIVATE", "Ngừng giao dịch", GROUP_STATUS);
+        action("CUSTOMER_ACTIVATE", "Giao dịch lại", GROUP_STATUS);
+        action("CUSTOMER_BLOCK", "Khoá giao dịch", GROUP_STATUS);
+        action("CUSTOMER_UNBLOCK", "Mở giao dịch", GROUP_STATUS);
+        action("CUSTOMER_ASSIGN", "Phân công NV kinh doanh", GROUP_UPDATE);
+        action("SALES_REGION_TRANSFER", "Chuyển giao địa bàn", GROUP_UPDATE);
+        action("DELIVERY_ADDRESS_CREATE", "Thêm mới", GROUP_CREATE);
+        action("DELIVERY_ADDRESS_UPDATE", "Sửa", GROUP_UPDATE);
+        action("DELIVERY_ADDRESS_DELETE", "Xoá", GROUP_DELETE);
+        action("DELIVERY_ADDRESS_SET_DEFAULT", "Đặt mặc định", GROUP_UPDATE);
+        action("DELIVERY_ADDRESS_DEACTIVATE", "Ngừng dùng", GROUP_STATUS);
+        action("DELIVERY_ADDRESS_ACTIVATE", "Dùng lại", GROUP_STATUS);
         action("PRICE_LIST_CREATE", "Thêm mới", GROUP_CREATE);
         action("PRICE_LIST_UPDATE", "Sửa", GROUP_UPDATE);
         action("PRICE_LIST_DELETE", "Xoá", GROUP_DELETE);
         action("PRICE_LIST_VERSION", "Tạo phiên bản", GROUP_CREATE);
         action("PRICE_LIST_SHORTEN", "Rút ngắn hiệu lực", GROUP_UPDATE);
+        action("CREDIT_LIMIT_UPDATE", "Sửa", GROUP_UPDATE);
+        action("DISCOUNT_POLICY_CREATE", "Thêm mới", GROUP_CREATE);
+        action("DISCOUNT_POLICY_UPDATE", "Sửa", GROUP_UPDATE);
+        action("DISCOUNT_POLICY_DELETE", "Xoá", GROUP_DELETE);
+        action("DISCOUNT_POLICY_DEACTIVATE", "Ngừng áp dụng", GROUP_STATUS);
+        action("DISCOUNT_POLICY_ACTIVATE", "Áp dụng lại", GROUP_STATUS);
+        action("ORDER_CREATE", "Thêm mới", GROUP_CREATE);
+        action("ORDER_UPDATE", "Sửa đơn nháp", GROUP_UPDATE);
+        action("ORDER_SUBMIT", "Gửi duyệt", GROUP_STATUS);
     }
 
     private AuditCatalog() {

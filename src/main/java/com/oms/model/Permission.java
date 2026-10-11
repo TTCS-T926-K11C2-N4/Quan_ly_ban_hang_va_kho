@@ -10,11 +10,22 @@ public final class Permission {
     public static final String AUDIT_LOG_VIEW = "AUDIT_LOG_VIEW";
     public static final String PRODUCT_VIEW = "PRODUCT_VIEW";
     public static final String PRODUCT_MANAGE = "PRODUCT_MANAGE";
+    // Tạo đơn hàng (S3-09): Nhân viên kinh doanh chỉ cho đại lý mình phụ trách (data_scope ASSIGNED)
+    public static final String ORDER_MANAGE = "ORDER_MANAGE";
     // Chỉ Quản lý kinh doanh có, kể cả Admin cũng không (seed_permissions.sql)
     public static final String COST_PRICE_VIEW = "COST_PRICE_VIEW";
     // Nhà cung cấp (S2-09) dùng chung quyền kho: nhân viên kho, quản lý kho, Admin quản lý
     public static final String INVENTORY_VIEW = "INVENTORY_VIEW";
     public static final String INVENTORY_MANAGE = "INVENTORY_MANAGE";
+    // Đại lý: Nhân viên kinh doanh chỉ thấy đại lý mình phụ trách (data_scope ASSIGNED)
+    public static final String CUSTOMER_VIEW = "CUSTOMER_VIEW";
+    // Sửa thông tin đại lý, điểm giao hàng (S3-04): Nhân viên kinh doanh chỉ với đại lý mình phụ trách
+    public static final String CUSTOMER_MANAGE = "CUSTOMER_MANAGE";
+    // Phân công, chuyển giao nhân viên kinh doanh phụ trách đại lý (S3-06): Quản lý kinh doanh và Admin
+    public static final String CUSTOMER_ASSIGN = "CUSTOMER_ASSIGN";
+    // Sửa hạn mức công nợ (S3-05), khoá/mở giao dịch đại lý (S3-07): chỉ Kế toán công nợ và Quản lý kinh doanh,
+    // Admin cũng không có
+    public static final String CREDIT_MANAGE = "CREDIT_MANAGE";
 
     private Permission() {
     }

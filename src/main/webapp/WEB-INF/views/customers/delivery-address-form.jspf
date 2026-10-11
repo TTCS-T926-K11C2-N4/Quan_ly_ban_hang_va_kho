@@ -1,0 +1,63 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Thẻ form thêm/sửa điểm giao (S3-04); trang include đặt sẵn form, errors, customer --%>
+<form class="delivery-card delivery-card--editing" id="delivery-form" method="post" novalidate
+      action="<c:url value='/customers/delivery-addresses/save'/>">
+    <input type="hidden" name="id" value="${customer.id}">
+    <c:if test="${not empty form.id}"><input type="hidden" name="addressId" value="${form.id}"></c:if>
+    <h3 class="delivery-card__form-title">${empty form.id ? 'Thêm điểm giao mới' : 'Sửa điểm giao'}</h3>
+
+    <div class="delivery-card__grid">
+        <div class="sales-field delivery-card__wide${not empty errors.label ? ' sales-field--invalid' : ''}">
+            <label class="sales-field__label" for="delivery-label">Tên điểm giao</label>
+            <input class="sales-field__control" type="text" id="delivery-label" name="label" maxlength="100"
+                   value="<c:out value='${form.label}'/>" placeholder="Ví dụ: Kho chính, Cửa hàng số 2"
+                   aria-describedby="delivery-label-hint" aria-invalid="${not empty errors.label}">
+            <p class="${not empty errors.label ? 'sales-field__error' : 'sales-field__hint'}" id="delivery-label-hint"><c:out value="${not empty errors.label ? errors.label : 'Không bắt buộc, giúp chọn đúng điểm khi tạo đơn.'}"/></p>
+        </div>
+        <div class="sales-field${not empty errors.address ? ' sales-field--invalid' : ''}">
+            <label class="sales-field__label" for="delivery-address">Địa chỉ<span class="sales-field__required">*</span></label>
+            <input class="sales-field__control" type="text" id="delivery-address" name="address" maxlength="300" required
+                   value="<c:out value='${form.address}'/>" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh"
+                   aria-describedby="delivery-address-error" aria-invalid="${not empty errors.address}">
+            <p class="sales-field__error" id="delivery-address-error"${empty errors.address ? ' hidden' : ''}><c:out value="${errors.address}"/></p>
+        </div>
+        <div class="sales-field${not empty errors.receiverName ? ' sales-field--invalid' : ''}">
+            <label class="sales-field__label" for="delivery-receiver">Người nhận<span class="sales-field__required">*</span></label>
+            <input class="sales-field__control" type="text" id="delivery-receiver" name="receiverName" maxlength="150" required
+                   value="<c:out value='${form.receiverName}'/>" placeholder="Họ tên người nhận hàng"
+                   aria-describedby="delivery-receiver-error" aria-invalid="${not empty errors.receiverName}">
+            <p class="sales-field__error" id="delivery-receiver-error"${empty errors.receiverName ? ' hidden' : ''}><c:out value="${errors.receiverName}"/></p>
+        </div>
+        <div class="sales-field${not empty errors.receiverPhone ? ' sales-field--invalid' : ''}">
+            <label class="sales-field__label" for="delivery-phone">Số điện thoại<span class="sales-field__required">*</span></label>
+            <input class="sales-field__control" type="tel" id="delivery-phone" name="receiverPhone" maxlength="20" required
+                   inputmode="numeric" value="<c:out value='${form.receiverPhone}'/>" placeholder="10 chữ số, ví dụ 0903123456"
+                   aria-describedby="delivery-phone-error" aria-invalid="${not empty errors.receiverPhone}">
+            <p class="sales-field__error" id="delivery-phone-error"${empty errors.receiverPhone ? ' hidden' : ''}><c:out value="${errors.receiverPhone}"/></p>
+        </div>
+        <div class="sales-field${not empty errors.routeNote ? ' sales-field--invalid' : ''}">
+            <label class="sales-field__label" for="delivery-route">Ghi chú đường đi</label>
+            <input class="sales-field__control" type="text" id="delivery-route" name="routeNote" maxlength="500"
+                   value="<c:out value='${form.routeNote}'/>" placeholder="Ví dụ: cổng sau, đối diện chợ, xe tải vào được"
+                   aria-describedby="delivery-route-error" aria-invalid="${not empty errors.routeNote}">
+            <p class="sales-field__error" id="delivery-route-error"${empty errors.routeNote ? ' hidden' : ''}><c:out value="${errors.routeNote}"/></p>
+        </div>
+    </div>
+
+    <%-- Điểm đang là mặc định (editingIsDefault, trang include đặt) thì không cần ô này;
+         bỏ mặc định bằng cách đặt điểm khác làm mặc định --%>
+    <c:choose>
+        <c:when test="${editingIsDefault}"><input type="hidden" name="makeDefault" value="1"></c:when>
+        <c:otherwise>
+            <label class="delivery-card__check">
+                <input type="checkbox" name="makeDefault" value="1"${form.makeDefault ? ' checked' : ''}>
+                <span>Đặt làm điểm giao mặc định (được chọn sẵn khi tạo đơn hàng)</span>
+            </label>
+        </c:otherwise>
+    </c:choose>
+
+    <div class="sales-actions">
+        <a class="sales-button" href="<c:url value='/customers/delivery-addresses'><c:param name='id' value='${customer.id}'/></c:url>">Hủy</a>
+        <button class="sales-button sales-button--primary" type="submit" id="delivery-save">${empty form.id ? 'Thêm điểm giao' : 'Lưu thay đổi'}</button>
+    </div>
+</form>

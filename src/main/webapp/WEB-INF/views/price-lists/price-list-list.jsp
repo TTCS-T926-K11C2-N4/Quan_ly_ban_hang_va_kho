@@ -206,6 +206,10 @@
                             <div><dt>Ngày kết thúc</dt><dd>${selected.validToText}</dd></div>
                         </dl>
 
+                        <p class="price-detail__history">
+                            <a class="price-view-link" id="price-history-link" href="<c:url value='/price-history'><c:param name='priceList' value='${selected.id}'/></c:url>">Lịch sử thay đổi giá</a>
+                        </p>
+
                         <h3 class="price-detail__subtitle">Danh sách giá theo SKU (${fn:length(selectedItems)})</h3>
                         <div class="account-table-scroll">
                             <table class="account-table price-items-table">
