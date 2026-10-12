@@ -1185,6 +1185,19 @@
 
 /* Phân công nhân viên kinh doanh (S3-06): bảng đại lý có ô chọn + thanh phân công, khung chuyển giao hàng loạt,
    khung Lịch sử chuyển giao bên phải (dưới bảng trên màn hẹp) */
+/* Thông báo sau khi phân công: xanh dương khi không có gì thay đổi, vàng khi có đại lý chưa đổi được */
+.account-flash--info {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.account-flash--warning {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #92400e;
+}
+
 .assignment-header {
     display: flex;
     flex-wrap: wrap;

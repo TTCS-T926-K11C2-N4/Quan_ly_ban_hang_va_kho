@@ -80,4 +80,31 @@
         });
     }
     refresh();
+
+    // Đại lý đang do người khác phụ trách sẽ bị chuyển đi: hỏi lại trước khi gửi, liệt kê đang của ai
+    var form = document.getElementById("assign-form");
+    var rep = document.getElementById("assign-to");
+    if (form && rep) {
+        form.addEventListener("submit", function (event) {
+            var option = rep.options[rep.selectedIndex];
+            if (!option || !option.value) {
+                return;
+            }
+            var moving = boxes.filter(function (box) {
+                var current = box.getAttribute("data-rep-id");
+                return box.checked && current && current !== option.value;
+            });
+            if (!moving.length) {
+                return;
+            }
+            var lines = moving.map(function (box) {
+                return "- " + box.getAttribute("data-label") + " (đang của " + box.getAttribute("data-rep-name") + ")";
+            });
+            var text = moving.length + " đại lý đang có người phụ trách sẽ được chuyển sang "
+                + option.getAttribute("data-name") + ":\n" + lines.join("\n") + "\n\nTiếp tục phân công?";
+            if (!window.confirm(text)) {
+                event.preventDefault();
+            }
+        });
+    }
 })();
