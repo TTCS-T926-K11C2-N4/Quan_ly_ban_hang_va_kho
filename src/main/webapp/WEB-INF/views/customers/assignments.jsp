@@ -46,7 +46,7 @@
             </header>
 
             <c:if test="${not empty flashMessage}">
-                <div class="account-flash" id="assignment-message" role="status"><p><c:out value="${flashMessage}"/></p></div>
+                <div class="account-flash${empty flashTone ? '' : ' account-flash--'.concat(flashTone)}" id="assignment-message" role="status"><p><c:out value="${flashMessage}"/></p></div>
             </c:if>
 
             <c:if test="${canAssign and transferOpen}">
@@ -201,7 +201,7 @@
                                 <select class="account-filters__control select__control" id="assign-to" name="toSalesRepId" required>
                                     <option value="">Giao cho nhân viên...</option>
                                     <c:forEach var="rep" items="${activeReps}">
-                                        <option value="${rep.id}"${rep.id == assignToId ? ' selected' : ''}><c:out value="${rep.name}"/><c:if test="${not empty rep.code}"> — <c:out value="${rep.code}"/></c:if></option>
+                                        <option value="${rep.id}" data-name="<c:out value='${rep.name}'/>"${rep.id == assignToId ? ' selected' : ''}><c:out value="${rep.name}"/><c:if test="${not empty rep.code}"> — <c:out value="${rep.code}"/></c:if></option>
                                     </c:forEach>
                                 </select>
                             </div>
@@ -242,6 +242,8 @@
                                             <c:if test="${canAssign}">
                                                 <td class="assignment-table__check" data-label="Chọn">
                                                     <input type="checkbox" name="customerIds" value="${customer.id}" form="assign-form" data-assign-checkbox
+                                                           data-label="<c:out value='${customer.code}'/>" data-rep-id="${customer.salesRepId}"
+                                                           data-rep-name="<c:out value='${customer.salesRepName}'/>"
                                                            aria-label="Chọn đại lý ${fn:escapeXml(customer.code)}"${selectedIds.contains(customer.id) ? ' checked' : ''}>
                                                 </td>
                                             </c:if>
