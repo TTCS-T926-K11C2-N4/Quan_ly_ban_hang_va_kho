@@ -27,6 +27,8 @@ public class CustomerAssignmentServlet extends HttpServlet {
 
     static final String VIEW = "/WEB-INF/views/customers/assignments.jsp";
     static final String FLASH_MESSAGE = "assignmentFlashMessage";
+    // Màu hộp thông báo: "info" (không có gì thay đổi), "warning" (có đại lý chưa đổi được); không đặt là thành công
+    static final String FLASH_TONE = "assignmentFlashTone";
     static final String UNASSIGNED = "none";
     // Điều kiện lọc đi kèm các form POST để quay lại đúng danh sách đang xem
     static final List<String> LIST_PARAMS = List.of("keyword", "region", "group", "salesRep", "page");
@@ -47,6 +49,7 @@ public class CustomerAssignmentServlet extends HttpServlet {
             return;
         }
         Flash.moveToRequest(request, FLASH_MESSAGE, "flashMessage");
+        Flash.moveToRequest(request, FLASH_TONE, "flashTone");
         request.setAttribute("transferOpen", request.getParameter("transfer") != null);
         try {
             show(request, response);

@@ -20,6 +20,8 @@ import java.util.Set;
 @WebServlet("/customers/assignments/assign")
 public class CustomerAssignSaveServlet extends HttpServlet {
 
+    private static final int NAMED_LIMIT = 3;
+
     private final CustomerAssignmentService assignmentService = new CustomerAssignmentService();
 
     @Override
@@ -46,22 +48,55 @@ public class CustomerAssignSaveServlet extends HttpServlet {
             }
             CustomerAssignmentService.AssignResult result = assignmentService.assign(customerIds, toSalesRepId,
                     reason, CurrentUser.get(request).getId(), request.getRemoteAddr());
-            StringBuilder message = new StringBuilder("Đã giao ").append(result.assigned()).append(" đại lý cho ")
-                    .append(CustomerAssignmentService.find(activeReps, toSalesRepId).getName()).append('.');
-            if (result.unchanged() > 0) {
-                message.append(' ').append(result.unchanged()).append(" đại lý đã do người này phụ trách từ trước.");
+            String repName = CustomerAssignmentService.find(activeReps, toSalesRepId).getName();
+            request.getSession().setAttribute(CustomerAssignmentServlet.FLASH_MESSAGE, message(result, repName));
+            String tone = !result.conflict().isEmpty() ? "warning" : result.assigned() == 0 ? "info" : null;
+            if (tone != null) {
+                request.getSession().setAttribute(CustomerAssignmentServlet.FLASH_TONE, tone);
             }
-            if (result.conflict() > 0) {
-                message.append(' ').append(result.conflict())
-                        .append(" đại lý vừa được người khác đổi người phụ trách nên chưa đổi, vui lòng xem lại.");
-            }
-            request.getSession().setAttribute(CustomerAssignmentServlet.FLASH_MESSAGE, message.toString());
             String query = CustomerAssignmentServlet.listQuery(request);
             response.sendRedirect(request.getContextPath() + "/customers/assignments" + (query.isEmpty() ? "" : "?" + query));
         } catch (SQLException e) {
             log("Không phân công được nhân viên kinh doanh", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // Nói rõ đại lý nào được giao mới, chuyển từ ai, bỏ qua vì đã đúng người, chưa đổi được vì người khác vừa đổi
+    static String message(CustomerAssignmentService.AssignResult result, String repName) {
+        StringBuilder message = new StringBuilder();
+        if (result.assigned() == 0 && result.conflict().isEmpty()) {
+            message.append("Không có thay đổi. ");
+            List<String> unchanged = result.unchanged();
+            message.append(unchanged.size() <= NAMED_LIMIT
+                    ? String.join(", ", unchanged) + (unchanged.size() == 1 ? " đã" : " đều đã")
+                    : "Cả " + unchanged.size() + " đại lý đã chọn đều đã").append(" do ").append(repName)
+                    .append(" phụ trách.");
+            return message.toString();
+        }
+        if (result.assigned() > 0) {
+            message.append("Đã giao ").append(result.assigned()).append(" đại lý cho ").append(repName);
+            List<String> parts = new ArrayList<>();
+            if (!result.newlyAssigned().isEmpty() && !result.movedFrom().isEmpty()) {
+                parts.add(result.newlyAssigned().size() + " đại lý mới phân công");
+            }
+            result.movedFrom().forEach((fromName, labels) ->
+                    parts.add(describe(labels) + " chuyển từ " + fromName));
+            message.append(parts.isEmpty() ? "." : ": " + String.join("; ", parts) + ".");
+        }
+        if (!result.unchanged().isEmpty()) {
+            message.append(" Bỏ qua ").append(describe(result.unchanged())).append(" vì đã do người này phụ trách.");
+        }
+        if (!result.conflict().isEmpty()) {
+            message.append(' ').append(describe(result.conflict()))
+                    .append(" vừa được người khác đổi người phụ trách nên chưa đổi, vui lòng tải lại trang và kiểm tra.");
+        }
+        return message.toString().trim();
+    }
+
+    // Ít đại lý thì ghi rõ mã – tên, nhiều thì chỉ ghi số lượng cho thông báo khỏi quá dài
+    private static String describe(List<String> labels) {
+        return labels.size() <= NAMED_LIMIT ? String.join(", ", labels) : labels.size() + " đại lý";
     }
 
     private static List<Long> parseIds(String[] values) {

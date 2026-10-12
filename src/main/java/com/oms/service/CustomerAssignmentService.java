@@ -11,6 +11,7 @@ import com.oms.util.JsonUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +28,15 @@ public class CustomerAssignmentService {
     private static final String CUSTOMER_ENTITY = "CUSTOMER";
     private static final String USER_ENTITY = "USER";
 
-    // Kết quả phân công các đại lý đã chọn: assigned đã đổi, unchanged đã đúng người đó, conflict người khác vừa đổi
-    public record AssignResult(int assigned, int unchanged, int conflict) {
+    // Kết quả phân công các đại lý đã chọn (mỗi phần tử là "mã – tên" đại lý): newlyAssigned trước đó chưa có ai
+    // phụ trách, movedFrom đã chuyển từ người cũ (tên người cũ -> các đại lý), unchanged đã đúng người đó,
+    // conflict người khác vừa đổi trong lúc đang chọn
+    public record AssignResult(List<String> newlyAssigned, Map<String, List<String>> movedFrom, List<String> unchanged,
+                               List<String> conflict) {
+
+        public int assigned() {
+            return newlyAssigned.size() + movedFrom.values().stream().mapToInt(List::size).sum();
+        }
     }
 
     // Xem trước chuyển giao: đại lý và địa bàn sẽ chuyển
@@ -71,25 +79,35 @@ public class CustomerAssignmentService {
     public AssignResult assign(List<Long> customerIds, long toSalesRepId, String reason, long actorUserId,
                                String ipAddress) throws SQLException {
         Map<Long, String> repNames = repNames();
-        int assigned = 0;
-        int unchanged = 0;
-        int conflict = 0;
+        List<String> newlyAssigned = new ArrayList<>();
+        Map<String, List<String>> movedFrom = new LinkedHashMap<>();
+        List<String> unchanged = new ArrayList<>();
+        List<String> conflict = new ArrayList<>();
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
                 for (Long customerId : customerIds) {
                     Customer customer = customerDao.findById(customerId);
                     if (customer == null) {
-                        conflict++;
-                    } else if (Long.valueOf(toSalesRepId).equals(customer.getSalesRepId())) {
-                        unchanged++;
-                    } else if (assignmentDao.updateSalesRep(connection, customerId, customer.getSalesRepId(),
-                            toSalesRepId, actorUserId)) {
-                        recordChange(connection, customer.getId(), customer.getCode(), customer.getSalesRepId(),
-                                toSalesRepId, reason, repNames, actorUserId, ipAddress);
-                        assigned++;
+                        conflict.add("đại lý #" + customerId);
+                        continue;
+                    }
+                    String label = customer.getCode() + " – " + customer.getName();
+                    Long fromSalesRepId = customer.getSalesRepId();
+                    if (Long.valueOf(toSalesRepId).equals(fromSalesRepId)) {
+                        unchanged.add(label);
+                    } else if (assignmentDao.updateSalesRep(connection, customerId, fromSalesRepId, toSalesRepId,
+                            actorUserId)) {
+                        recordChange(connection, customer.getId(), customer.getCode(), fromSalesRepId, toSalesRepId,
+                                reason, repNames, actorUserId, ipAddress);
+                        if (fromSalesRepId == null) {
+                            newlyAssigned.add(label);
+                        } else {
+                            movedFrom.computeIfAbsent(repNames.getOrDefault(fromSalesRepId, "nhân viên khác"),
+                                    name -> new ArrayList<>()).add(label);
+                        }
                     } else {
-                        conflict++;
+                        conflict.add(label);
                     }
                 }
                 connection.commit();
@@ -98,7 +116,7 @@ public class CustomerAssignmentService {
                 throw e;
             }
         }
-        return new AssignResult(assigned, unchanged, conflict);
+        return new AssignResult(newlyAssigned, movedFrom, unchanged, conflict);
     }
 
     public Map<String, String> validateTransfer(Long fromSalesRepId, Long toSalesRepId, String reason,
