@@ -54,41 +54,147 @@
     color: #92400e;
 }
 
-/* Chuyển giữa Hạn mức công nợ và Khoá/mở giao dịch của cùng đại lý */
-/* 4 tab (Hồ sơ, Hạn mức, Khoá/mở, Điểm giao): màn hẹp giữ một dòng và cuộn ngang thay vì gãy chữ */
+/* 4 thẻ chuyển màn của Chi tiết đại lý (Hồ sơ, Hạn mức, Khoá/mở, Điểm giao), mỗi thẻ một màu riêng.
+   Màn hẹp: thẻ giữ một dòng và cuộn ngang thay vì gãy chữ */
 .customer-tabs {
-    display: flex;
-    gap: 4px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
     margin-top: 16px;
-    overflow-x: auto;
-    border-bottom: 1px solid var(--color-sales-border);
-    scrollbar-width: none;
 }
 
 .customer-tabs__link {
-    flex-shrink: 0;
-    white-space: nowrap;
-    margin-bottom: -1px;
-    padding: 10px 14px;
-    border-bottom: 2px solid transparent;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-sales-muted);
+    --tab-color: var(--color-primary);
+    --tab-title: var(--color-navy);
+    --tab-bg: #f8fafc;
+    --tab-border: var(--color-sales-border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--tab-border);
+    border-radius: 12px;
+    background: var(--tab-bg);
     text-decoration: none;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.customer-tabs__link--profile {
+    --tab-color: #2563eb;
+    --tab-title: #1e40af;
+    --tab-bg: #eff6ff;
+    --tab-border: #bfdbfe;
+    --tab-icon: url("../img/icons/user.svg");
+}
+
+.customer-tabs__link--credit {
+    --tab-color: #10b981;
+    --tab-title: #047857;
+    --tab-bg: #ecfdf5;
+    --tab-border: #a7f3d0;
+    --tab-icon: url("../img/icons/coins.svg");
+}
+
+.customer-tabs__link--block {
+    --tab-color: #7c3aed;
+    --tab-title: #6d28d9;
+    --tab-bg: #f5f3ff;
+    --tab-border: #ddd6fe;
+    --tab-icon: url("../img/icons/lock-keyhole.svg");
+}
+
+.customer-tabs__link--delivery {
+    --tab-color: #f59e0b;
+    --tab-title: #b45309;
+    --tab-bg: #fffbeb;
+    --tab-border: #fde68a;
+    --tab-icon: url("../img/icons/map-pin.svg");
 }
 
 .customer-tabs__link:hover {
-    color: var(--color-navy);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
 }
 
+/* Thẻ đang mở: nền trắng, viền và gạch chân đậm theo màu của thẻ */
 .customer-tabs__link--active {
-    border-bottom-color: var(--color-navy);
-    color: var(--color-navy);
+    border: 1.5px solid var(--tab-color);
+    background: var(--color-surface);
+    box-shadow: inset 0 -3px 0 var(--tab-color), 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.customer-tabs__link--active:hover {
+    box-shadow: inset 0 -3px 0 var(--tab-color), 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
 .customer-tabs__link:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+}
+
+.customer-tabs__icon {
+    position: relative;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--tab-color);
+}
+
+.customer-tabs__icon::after {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    background-color: #ffffff;
+    -webkit-mask: var(--tab-icon) center / 20px 20px no-repeat;
+    mask: var(--tab-icon) center / 20px 20px no-repeat;
+}
+
+.customer-tabs__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.customer-tabs__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--tab-title);
+}
+
+.customer-tabs__desc {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--color-sales-muted);
+}
+
+.customer-tabs__chevron {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    background-color: var(--tab-title);
+    -webkit-mask: url("../img/icons/chevron-right.svg") center / 16px 16px no-repeat;
+    mask: url("../img/icons/chevron-right.svg") center / 16px 16px no-repeat;
+}
+
+@media (max-width: 1100px) {
+    .customer-tabs {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+    }
+
+    .customer-tabs__link {
+        flex: 0 0 240px;
+    }
+
+    .customer-tabs__title {
+        white-space: nowrap;
+    }
 }
 
 /* Thẻ nội dung chính */
