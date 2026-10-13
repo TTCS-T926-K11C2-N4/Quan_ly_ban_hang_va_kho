@@ -83,9 +83,21 @@ public class PriceListService {
         return tomorrow.isAfter(afterPrevious) ? tomorrow : afterPrevious;
     }
 
+    // "Áp dụng ngay": phiên bản mới bắt đầu hôm nay, bản cũ kết thúc hôm qua. Chỉ được khi bản cũ bắt đầu
+    // trước hôm nay, vì bản cũ không thể kết thúc trước ngày nó bắt đầu.
+    public static boolean canApplyNow(PriceList previous) {
+        return previous.getValidFrom().isBefore(DateTimeUtil.today());
+    }
+
+    public Map<String, String> validate(PriceListForm form, PriceList editing, PriceList previous)
+            throws SQLException {
+        return validate(form, editing, previous, false);
+    }
+
     // Lỗi theo tên ô (customerGroupId, name, validFrom, validTo, lines, lines.N); rỗng = hợp lệ.
     // editing: bảng đang sửa (null khi thêm). previous: bản cũ khi tạo phiên bản mới (null nếu không phải).
-    public Map<String, String> validate(PriceListForm form, PriceList editing, PriceList previous)
+    // applyNow: tạo phiên bản và áp dụng ngay từ hôm nay (form.validFrom phải là hôm nay).
+    public Map<String, String> validate(PriceListForm form, PriceList editing, PriceList previous, boolean applyNow)
             throws SQLException {
         Map<String, String> errors = new LinkedHashMap<>();
         if (form.getCustomerGroupId() == null) {
@@ -104,6 +116,14 @@ public class PriceListService {
         LocalDate to = parseDate(form.getValidTo());
         if (from == null) {
             errors.put("validFrom", "Vui lòng nhập ngày bắt đầu hiệu lực.");
+        } else if (previous != null && applyNow) {
+            if (!canApplyNow(previous)) {
+                errors.put("validFrom", "Bảng giá " + previous.getCode() + " mới bắt đầu hôm nay nên không áp dụng ngay"
+                        + " được. Phiên bản mới sớm nhất từ ngày " + DateTimeUtil.formatDay(earliestVersionStart(previous))
+                        + ".");
+            } else if (!from.equals(DateTimeUtil.today())) {
+                errors.put("validFrom", "Áp dụng ngay thì ngày bắt đầu phải là hôm nay.");
+            }
         } else if (previous != null && from.isBefore(earliestVersionStart(previous))) {
             errors.put("validFrom", "Phiên bản mới phải bắt đầu từ ngày "
                     + DateTimeUtil.formatDay(earliestVersionStart(previous)) + " trở đi.");
@@ -235,9 +255,10 @@ public class PriceListService {
         }
     }
 
-    // Gọi validate (kèm previous) trước. Mã phiên bản: mã gốc + "-Vn" (BG001-V2).
-    public long createVersion(PriceList previous, PriceListForm form, long actorUserId, String ipAddress)
-            throws SQLException {
+    // Gọi validate (kèm previous, applyNow) trước. Mã phiên bản: mã gốc + "-Vn" (BG001-V2).
+    // applyNow chỉ ghi vào nhật ký; việc rút ngắn bản cũ về hôm trước ngày bắt đầu vẫn như tạo phiên bản thường.
+    public long createVersion(PriceList previous, PriceListForm form, boolean applyNow, long actorUserId,
+                              String ipAddress) throws SQLException {
         Map<Long, PriceListItem> products = productsById();
         Map<Long, PriceListItem> oldItems = itemsByProduct(priceListDao.findItems(previous.getId(), false));
         int versionNo = previous.getVersionNo() + 1;
@@ -262,6 +283,9 @@ public class PriceListService {
                 insertLines(connection, id, form.getLines(), products, oldItems, from, actorUserId);
                 Map<String, Object> created = new LinkedHashMap<>(toValues(code, form, products));
                 created.put("previousCode", previous.getCode());
+                if (applyNow) {
+                    created.put("applyNow", true);
+                }
                 auditLogDao.insert(connection, actorUserId, "PRICE_LIST_VERSION", ENTITY, id,
                         toJson(previous, oldItems.values()), JsonUtil.object(created), null, ipAddress);
                 if (shortened) {

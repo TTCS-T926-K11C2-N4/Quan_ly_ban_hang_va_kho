@@ -4,6 +4,7 @@ import com.oms.model.Permission;
 import com.oms.model.PriceList;
 import com.oms.model.PriceListForm;
 import com.oms.service.PriceListService;
+import com.oms.util.DateTimeUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -76,6 +77,13 @@ public class PriceListCreateServlet extends HttpServlet {
         request.setAttribute("canViewCost", canViewCost);
         if ("version".equals(mode)) {
             request.setAttribute("earliestStart", PriceListService.earliestVersionStart(source));
+            // Ô "Áp dụng ngay từ hôm nay" chỉ hiện khi bản cũ bắt đầu trước hôm nay
+            request.setAttribute("canApplyNow", PriceListService.canApplyNow(source));
+            request.setAttribute("today", DateTimeUtil.today());
+            request.setAttribute("todayText", DateTimeUtil.formatDay(DateTimeUtil.today()));
+            request.setAttribute("yesterdayText", DateTimeUtil.formatDay(DateTimeUtil.today().minusDays(1)));
+            request.setAttribute("earliestStartText",
+                    DateTimeUtil.formatDay(PriceListService.earliestVersionStart(source)));
         }
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
