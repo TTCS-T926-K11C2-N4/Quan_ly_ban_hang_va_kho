@@ -2,6 +2,7 @@ package com.oms.service;
 
 import com.oms.dao.SalesOrderDao;
 import com.oms.model.Customer;
+import com.oms.model.CustomerCredit;
 import com.oms.model.DeliveryAddress;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderProduct;
@@ -11,6 +12,7 @@ import com.oms.util.DateTimeUtil;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -167,7 +169,7 @@ class SalesOrderServiceTest {
     void blockedCustomerCannotStartNewOrder() {
         OrderForm form = new OrderForm("5", "8", null, null, null, null, List.of());
         Map<String, String> errors = new SalesOrderService().validate(form, customer(true), null, false, ADDRESSES,
-                null);
+                null, null);
         assertEquals("Đại lý đang bị khoá giao dịch nên không tạo được đơn mới.", errors.get("customerId"));
     }
 
@@ -176,8 +178,8 @@ class SalesOrderServiceTest {
     void submitRequiresDateAndLinesButDraftDoesNot() {
         OrderForm form = new OrderForm("5", "8", null, null, null, null, List.of());
         SalesOrderService service = new SalesOrderService();
-        assertTrue(service.validate(form, customer(false), null, false, ADDRESSES, null).isEmpty());
-        Map<String, String> errors = service.validate(form, customer(false), null, true, ADDRESSES, null);
+        assertTrue(service.validate(form, customer(false), null, false, ADDRESSES, null, null).isEmpty());
+        Map<String, String> errors = service.validate(form, customer(false), null, true, ADDRESSES, null, null);
         assertEquals("Vui lòng chọn ngày giao mong muốn.", errors.get("requestedDate"));
         assertEquals("Đơn hàng cần ít nhất một dòng hàng.", errors.get("lines"));
     }
@@ -187,7 +189,7 @@ class SalesOrderServiceTest {
         String yesterday = DateTimeUtil.today().minusDays(1).toString();
         OrderForm form = new OrderForm("5", "99", yesterday, null, null, null, List.of());
         Map<String, String> errors = new SalesOrderService().validate(form, customer(false), null, false, ADDRESSES,
-                null);
+                null, null);
         assertEquals("Ngày giao không được trước hôm nay.", errors.get("requestedDate"));
         assertEquals("Điểm giao không thuộc đại lý đã chọn.", errors.get("deliveryAddressId"));
     }
@@ -198,7 +200,44 @@ class SalesOrderServiceTest {
         OrderForm form = new OrderForm("5", "8", null, null, 42L, "0", List.of());
         SalesOrderDao.Draft draft = new SalesOrderDao.Draft(5, "DL001", "DH261007-0001", form, BigDecimal.ZERO,
                 BigDecimal.ZERO, BigDecimal.ZERO);
-        assertTrue(new SalesOrderService().validate(form, customer(true), draft, false, ADDRESSES, null).isEmpty());
+        assertTrue(new SalesOrderService().validate(form, customer(true), draft, false, ADDRESSES, null, null)
+                .isEmpty());
+    }
+
+    private static CustomerCredit credit(String limit, String ledger, String openOrders, String overdue) {
+        return new CustomerCredit(new BigDecimal(limit), 30, new BigDecimal(ledger), new BigDecimal(openOrders),
+                new BigDecimal(overdue), overdue.equals("0") ? null : LocalDate.of(2026, 9, 19));
+    }
+
+    // S4-02 AC2: tổng đơn + công nợ (sổ công nợ và đơn đã gửi chưa xuất hoá đơn) vượt hạn mức thì cần duyệt
+    @Test
+    void orderOverCreditLimitNeedsApproval() {
+        CustomerCredit credit = credit("50000000", "30000000", "15000000", "0");
+        assertEquals(new BigDecimal("5000000"), credit.getAvailable());
+        assertEquals(90, credit.getUsedPercent());
+        assertTrue(!credit.exceeds(new BigDecimal("5000000")));
+        assertTrue(credit.exceeds(new BigDecimal("5000001")));
+        assertEquals(new BigDecimal("1000000"), credit.getExceededBy(new BigDecimal("6000000")));
+        // Hạn mức 0: chưa được cho nợ, đơn nào có tiền cũng vượt
+        CustomerCredit noLimit = credit("0", "0", "0", "0");
+        assertTrue(!noLimit.isLimitGranted() && noLimit.exceeds(new BigDecimal("1000")));
+    }
+
+    // S4-02 AC3: có khoản quá hạn thì chặn đơn mới, kể cả lưu nháp; đơn nháp đã có chỉ lưu được, không gửi được
+    @Test
+    void overdueCustomerCannotStartOrSubmitOrder() {
+        CustomerCredit overdue = credit("30000000", "22000000", "0", "8000000");
+        SalesOrderService service = new SalesOrderService();
+        OrderForm form = new OrderForm("5", "8", null, null, null, null, List.of());
+        assertEquals("Đại lý có 8.000.000 ₫ nợ quá hạn (hạn trả từ 19/09/2026) nên không tạo được đơn mới.",
+                service.validate(form, customer(false), null, false, ADDRESSES, null, overdue).get("customerId"));
+
+        OrderForm draftForm = new OrderForm("5", "8", null, null, 42L, "0", List.of());
+        SalesOrderDao.Draft draft = new SalesOrderDao.Draft(5, "DL001", "DH261007-0001", draftForm, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO);
+        assertTrue(service.validate(draftForm, customer(false), draft, false, ADDRESSES, null, overdue).isEmpty());
+        assertTrue(service.validate(draftForm, customer(false), draft, true, ADDRESSES, null, overdue).get("form")
+                .startsWith("Đại lý có 8.000.000 ₫ nợ quá hạn"));
     }
 
     // S2-04: nhật ký đơn ghi phần đầu đơn và tổng tiền đã tính, gửi đơn thì trạng thái là Chờ duyệt
@@ -206,7 +245,10 @@ class SalesOrderServiceTest {
     void auditValuesOfSubmittedOrder() {
         OrderForm form = new OrderForm("5", "8", "2026-10-20", null, null, null, List.of(line("2", "2")));
         OrderQuote quote = SalesOrderService.price(form.getLines(), PRODUCTS, rules(List.of()));
-        Map<String, Object> values = SalesOrderService.orderValues("DH261008-0001", "DL001", true, form, quote);
+        Map<String, Object> values = SalesOrderService.orderValues("DH261008-0001", "DL001", true, form, quote,
+                true);
+        assertEquals(true, values.get("overCreditLimit"));
+        assertEquals(true, values.get("needsApproval"));
         assertEquals("DH261008-0001", values.get("orderNo"));
         assertEquals("PENDING_APPROVAL", values.get("status"));
         assertEquals(8L, values.get("deliveryAddressId"));

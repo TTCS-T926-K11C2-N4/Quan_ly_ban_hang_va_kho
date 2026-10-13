@@ -1,6 +1,7 @@
 package com.oms.controller;
 
 import com.oms.model.Customer;
+import com.oms.model.CustomerCredit;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderQuote;
 import com.oms.model.Permission;
@@ -64,12 +65,32 @@ public class OrderQuoteServlet extends HttpServlet {
             data.put("discount", quote.getDiscount().signum() == 0 ? money(quote.getDiscount())
                     : "-" + money(quote.getDiscount()));
             data.put("total", money(quote.getTotal()));
-            data.put("needsApproval", quote.isNeedsApproval());
+            CustomerCredit credit = orderService.credit(customer);
+            boolean overLimit = credit != null && credit.exceeds(quote.getTotal());
+            data.put("needsApproval", quote.isNeedsApproval() || overLimit);
+            data.put("credit", credit == null ? null : credit(credit, quote.getTotal()));
             OrderJson.write(response, JsonUtil.object(data));
         } catch (SQLException e) {
             log("Không tính được tiền đơn hàng", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // S4-02: số liệu khối công nợ, tính lại theo tổng đơn đang gõ
+    private static Map<String, Object> credit(CustomerCredit credit, BigDecimal orderTotal) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("granted", credit.isLimitGranted());
+        data.put("limit", money(credit.getCreditLimit()));
+        data.put("maxDebtDays", credit.getMaxDebtDays());
+        data.put("ledger", money(credit.getLedgerBalance()));
+        data.put("openOrders", money(credit.getOpenOrders()));
+        data.put("available", money(credit.getAvailable()));
+        data.put("short", credit.getAvailable().signum() < 0);
+        data.put("usedPercent", credit.getUsedPercent());
+        data.put("after", money(credit.getAvailableAfter(orderTotal)));
+        data.put("overLimit", credit.exceeds(orderTotal));
+        data.put("exceededBy", money(credit.getExceededBy(orderTotal)));
+        return data;
     }
 
     private static String money(BigDecimal amount) {

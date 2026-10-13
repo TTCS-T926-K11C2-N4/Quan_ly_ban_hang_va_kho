@@ -1,10 +1,12 @@
 package com.oms.service;
 
 import com.oms.dao.AuditLogDao;
+import com.oms.dao.CustomerCreditDao;
 import com.oms.dao.DeliveryAddressDao;
 import com.oms.dao.PermissionDao;
 import com.oms.dao.SalesOrderDao;
 import com.oms.model.Customer;
+import com.oms.model.CustomerCredit;
 import com.oms.model.DeliveryAddress;
 import com.oms.model.DraftOrder;
 import com.oms.model.OrderForm;
@@ -15,6 +17,7 @@ import com.oms.model.PricingRules;
 import com.oms.util.DateTimeUtil;
 import com.oms.util.DbConnection;
 import com.oms.util.JsonUtil;
+import com.oms.util.MoneyUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -34,7 +37,8 @@ import java.util.stream.Collectors;
 
 // Tạo đơn hàng cho đại lý (S3-09): chọn đại lý, điểm giao, ngày giao; thêm dòng hàng theo đơn vị tính;
 // tính tiền hàng, chiết khấu, tổng phải thu; lưu nháp để mở lại, hoặc gửi đơn (chuyển Chờ duyệt, S4-06).
-// Đại lý bị khoá giao dịch (S3-07) không tạo được đơn mới; đơn nháp đã có vẫn sửa/gửi tiếp được (có cảnh báo).
+// Đại lý bị khoá giao dịch (S3-07) hoặc có nợ quá hạn (S4-02) không tạo được đơn mới; đơn nháp đã có vẫn sửa được
+// (có cảnh báo). Vượt hạn mức công nợ hoặc dưới giá sàn (S4-01) thì đơn được đánh dấu cần duyệt.
 public class SalesOrderService {
 
     public static final int MAX_LINES = 200;
@@ -57,6 +61,7 @@ public class SalesOrderService {
     private final CustomerService customerService = new CustomerService();
     private final PermissionDao permissionDao = new PermissionDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
+    private final CustomerCreditDao creditDao = new CustomerCreditDao();
 
     public List<OrderProduct> getProducts() throws SQLException {
         return orderDao.findOrderableProducts();
@@ -93,10 +98,16 @@ public class SalesOrderService {
                 rules);
     }
 
+    // Công nợ hiện tại của đại lý (S4-02), null nếu chưa chọn đại lý
+    public CustomerCredit credit(Customer customer) throws SQLException {
+        return customer == null ? null : creditDao.find(customer.getId(), DateTimeUtil.today());
+    }
+
     // Lỗi theo tên ô ("lines.i" là dòng thứ i, "form" là lỗi chung); rỗng nghĩa là hợp lệ.
     // draft: đơn nháp đang mở lại (null khi tạo mới); submit: bấm "Tạo đơn hàng" (true) hay "Lưu nháp".
     public Map<String, String> validate(OrderForm form, Customer customer, SalesOrderDao.Draft draft,
-                                        boolean submit, List<DeliveryAddress> addresses, OrderQuote quote) {
+                                        boolean submit, List<DeliveryAddress> addresses, OrderQuote quote,
+                                        CustomerCredit credit) {
         Map<String, String> errors = new LinkedHashMap<>();
         if (customer == null) {
             errors.put("customerId", "Vui lòng chọn đại lý.");
@@ -106,7 +117,14 @@ public class SalesOrderService {
                 errors.put("customerId", "Đại lý đang bị khoá giao dịch nên không tạo được đơn mới.");
             } else if (!customer.isActive()) {
                 errors.put("customerId", "Đại lý đã ngừng giao dịch.");
+            } else if (credit != null && credit.isOverdue()) {
+                // AC3 của S4-02: có khoản quá hạn thì chặn hẳn đơn mới, kể cả lưu nháp
+                errors.put("customerId", overdueMessage(credit) + " nên không tạo được đơn mới.");
             }
+        } else if (submit && credit != null && credit.isOverdue()) {
+            // Đơn nháp đã có vẫn lưu được (như đại lý bị khoá) nhưng chưa gửi được cho tới khi trả khoản quá hạn
+            errors.put("form", overdueMessage(credit) + " nên chưa gửi được đơn. Đơn nháp vẫn lưu được;"
+                    + " gửi lại sau khi đại lý thanh toán khoản quá hạn.");
         }
         if (customer != null && customer.getDefaultWarehouseId() == null) {
             errors.put("form", "Đại lý chưa có kho phục vụ mặc định nên chưa tạo được đơn. Vui lòng cập nhật"
@@ -153,6 +171,11 @@ public class SalesOrderService {
         return errors;
     }
 
+    public static String overdueMessage(CustomerCredit credit) {
+        return "Đại lý có " + MoneyUtil.format(credit.getOverdueAmount()) + " ₫ nợ quá hạn (hạn trả từ "
+                + credit.getOldestDueDateText() + ")";
+    }
+
     // Đơn vừa lưu: id để mở lại đơn nháp, mã đơn để báo cho người dùng
     public static final class Saved {
         private final long id;
@@ -175,25 +198,16 @@ public class SalesOrderService {
     // Gọi validate trước. null nếu đơn nháp vừa được sửa hoặc gửi ở nơi khác (version đã đổi).
     public Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
                        OrderQuote quote, long actorUserId, String ipAddress) throws SQLException {
-        SalesOrderDao.Header header = new SalesOrderDao.Header(customer.getId(),
-                parseId(form.getDeliveryAddressId()), customer.getDefaultWarehouseId(), customer.getSalesRepId(),
-                submit, form.getRequestedDate() == null ? null : parseDate(form.getRequestedDate()),
-                quote.getSubtotal(), quote.getDiscount(), quote.getTotal(), form.getNote(), quote.isNeedsApproval());
+        Pending pending = new Pending(form, customer, submit, quote, ipAddress);
         if (draft != null) {
-            String action = submit ? "ORDER_SUBMIT" : "ORDER_UPDATE";
-            AuditEntry audit = new AuditEntry(action, JsonUtil.object(draftValues(draft)),
-                    JsonUtil.object(orderValues(draft.getOrderNo(), customer.getCode(), submit, form, quote)),
-                    ipAddress);
-            return updateDraft(draft, parseVersion(form.getVersion()), header, quote, actorUserId, audit)
+            return updateDraft(draft, parseVersion(form.getVersion()), pending, actorUserId)
                     ? new Saved(draft.getForm().getDraftId(), draft.getOrderNo()) : null;
         }
         String prefix = ORDER_NO_PREFIX + DateTimeUtil.today().format(ORDER_NO_DATE) + "-";
         for (int attempt = 1; ; attempt++) {
             String orderNo = prefix + String.format("%04d", orderDao.findMaxOrderNumber(prefix) + 1);
-            AuditEntry audit = new AuditEntry("ORDER_CREATE", null,
-                    JsonUtil.object(orderValues(orderNo, customer.getCode(), submit, form, quote)), ipAddress);
             try {
-                return new Saved(insert(orderNo, header, quote, actorUserId, audit), orderNo);
+                return new Saved(insert(orderNo, pending, actorUserId), orderNo);
             } catch (SQLIntegrityConstraintViolationException e) {
                 // Hai người cùng tạo đơn một lúc lấy trùng số: thử lại với số kế tiếp
                 if (attempt == ORDER_NO_ATTEMPTS) {
@@ -203,13 +217,52 @@ public class SalesOrderService {
         }
     }
 
-    private long insert(String orderNo, SalesOrderDao.Header header, OrderQuote quote, long actorUserId,
-                        AuditEntry audit) throws SQLException {
+    // Đơn sắp ghi. Cờ cần duyệt chỉ chốt được trong transaction, sau khi khoá đại lý và cộng lại công nợ (S4-02)
+    private static final class Pending {
+        private final OrderForm form;
+        private final Customer customer;
+        private final boolean submit;
+        private final OrderQuote quote;
+        private final String ipAddress;
+
+        Pending(OrderForm form, Customer customer, boolean submit, OrderQuote quote, String ipAddress) {
+            this.form = form;
+            this.customer = customer;
+            this.submit = submit;
+            this.quote = quote;
+            this.ipAddress = ipAddress;
+        }
+
+        SalesOrderDao.Header header(boolean overCreditLimit) {
+            return new SalesOrderDao.Header(customer.getId(), parseId(form.getDeliveryAddressId()),
+                    customer.getDefaultWarehouseId(), customer.getSalesRepId(), submit,
+                    form.getRequestedDate() == null ? null : parseDate(form.getRequestedDate()), quote.getSubtotal(),
+                    quote.getDiscount(), quote.getTotal(), form.getNote(),
+                    quote.isNeedsApproval() || overCreditLimit);
+        }
+
+        String newValues(String orderNo, boolean overCreditLimit) {
+            return JsonUtil.object(orderValues(orderNo, customer.getCode(), submit, form, quote, overCreditLimit));
+        }
+    }
+
+    // AC2 của S4-02: khoá dòng đại lý rồi mới so tổng đơn + công nợ với hạn mức. Gọi trước khi ghi đơn,
+    // để đơn nháp đang gửi chưa bị tính vào "đơn chưa xuất hoá đơn".
+    private boolean overCreditLimit(Connection connection, Pending pending) throws SQLException {
+        CustomerCredit credit = creditDao.lock(connection, pending.customer.getId(), DateTimeUtil.today());
+        return credit != null && credit.exceeds(pending.quote.getTotal());
+    }
+
+    private long insert(String orderNo, Pending pending, long actorUserId) throws SQLException {
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
+                boolean overLimit = overCreditLimit(connection, pending);
+                SalesOrderDao.Header header = pending.header(overLimit);
+                AuditEntry audit = new AuditEntry("ORDER_CREATE", null, pending.newValues(orderNo, overLimit),
+                        pending.ipAddress);
                 long orderId = orderDao.insert(connection, orderNo, header, actorUserId);
-                insertItems(connection, orderId, quote, actorUserId);
+                insertItems(connection, orderId, pending.quote, actorUserId);
                 // Vòng đời đơn (S4-06): ghi bước đầu tiên ngay khi tạo
                 orderDao.insertStatusHistory(connection, orderId, null,
                         header.isSubmitted() ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
@@ -224,18 +277,23 @@ public class SalesOrderService {
         }
     }
 
-    private boolean updateDraft(SalesOrderDao.Draft draft, long version, SalesOrderDao.Header header,
-                                OrderQuote quote, long actorUserId, AuditEntry audit) throws SQLException {
+    private boolean updateDraft(SalesOrderDao.Draft draft, long version, Pending pending, long actorUserId)
+            throws SQLException {
         long orderId = draft.getForm().getDraftId();
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
+                boolean overLimit = overCreditLimit(connection, pending);
+                SalesOrderDao.Header header = pending.header(overLimit);
+                AuditEntry audit = new AuditEntry(pending.submit ? "ORDER_SUBMIT" : "ORDER_UPDATE",
+                        JsonUtil.object(draftValues(draft)), pending.newValues(draft.getOrderNo(), overLimit),
+                        pending.ipAddress);
                 if (!orderDao.updateDraft(connection, orderId, version, header, actorUserId)) {
                     connection.rollback();
                     return false;
                 }
                 orderDao.deleteItems(connection, orderId);
-                insertItems(connection, orderId, quote, actorUserId);
+                insertItems(connection, orderId, pending.quote, actorUserId);
                 if (header.isSubmitted()) {
                     orderDao.insertStatusHistory(connection, orderId, STATUS_DRAFT, STATUS_PENDING_APPROVAL,
                             "Gửi duyệt", actorUserId);
@@ -274,13 +332,14 @@ public class SalesOrderService {
     // Giá trị ghi nhật ký: phần đầu đơn và tổng tiền; dòng hàng chỉ ghi số dòng (chi tiết đã có ở sales_order_items),
     // không có giá vốn
     static Map<String, Object> orderValues(String orderNo, String customerCode, boolean submit, OrderForm form,
-                                           OrderQuote quote) {
+                                           OrderQuote quote, boolean overCreditLimit) {
         Map<String, Object> values = values(orderNo, customerCode, submit ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
                 form.getDeliveryAddressId(), form.getRequestedDate(), quote.getLines().size(), quote.getSubtotal(),
                 quote.getDiscount(), quote.getTotal());
         values.put("manualPriceLines", quote.getLines().stream().filter(OrderQuote.Line::isManualPrice).count());
         values.put("belowFloorLines", quote.getBelowFloorLines().size());
-        values.put("needsApproval", quote.isNeedsApproval());
+        values.put("overCreditLimit", overCreditLimit);
+        values.put("needsApproval", quote.isNeedsApproval() || overCreditLimit);
         return values;
     }
 
