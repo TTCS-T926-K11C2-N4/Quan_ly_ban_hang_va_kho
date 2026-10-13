@@ -3,6 +3,7 @@ package com.oms.controller;
 import com.oms.model.PriceList;
 import com.oms.model.PriceListForm;
 import com.oms.service.PriceListService;
+import com.oms.util.DateTimeUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -57,18 +58,25 @@ public class PriceListVersionServlet extends HttpServlet {
                 return;
             }
             PriceListForm read = PriceListFormParser.read(request);
-            PriceListForm form = new PriceListForm(previous.getCustomerGroupId(), read.getName(), read.getValidFrom(),
+            // Áp dụng ngay: ngày bắt đầu luôn là hôm nay, không lấy ngày trình duyệt gửi lên
+            boolean applyNow = request.getParameter("applyNow") != null;
+            String validFrom = applyNow ? DateTimeUtil.today().toString() : read.getValidFrom();
+            PriceListForm form = new PriceListForm(previous.getCustomerGroupId(), read.getName(), validFrom,
                     read.getValidTo(), read.getLines());
-            Map<String, String> errors = priceListService.validate(form, null, previous);
+            Map<String, String> errors = priceListService.validate(form, null, previous, applyNow);
             if (!errors.isEmpty()) {
+                request.setAttribute("applyNow", applyNow);
                 PriceListCreateServlet.showForm(request, response, "version", previous, form, errors,
                         priceListService);
                 return;
             }
-            long id = priceListService.createVersion(previous, form, CurrentUser.get(request).getId(),
+            long id = priceListService.createVersion(previous, form, applyNow, CurrentUser.get(request).getId(),
                     request.getRemoteAddr());
-            request.getSession().setAttribute(PriceListListServlet.FLASH_MESSAGE, "Đã tạo phiên bản mới từ bảng giá "
-                    + previous.getCode() + ". Bản cũ kết thúc hiệu lực trước ngày bản mới bắt đầu.");
+            request.getSession().setAttribute(PriceListListServlet.FLASH_MESSAGE, applyNow
+                    ? "Đã tạo phiên bản mới từ bảng giá " + previous.getCode() + ", áp dụng ngay từ hôm nay. Bản cũ"
+                    + " kết thúc hiệu lực ngày " + DateTimeUtil.formatDay(DateTimeUtil.today().minusDays(1)) + "."
+                    : "Đã tạo phiên bản mới từ bảng giá " + previous.getCode()
+                    + ". Bản cũ kết thúc hiệu lực trước ngày bản mới bắt đầu.");
             response.sendRedirect(request.getContextPath() + "/price-lists?id=" + id);
         } catch (SQLException e) {
             log("Không tạo được phiên bản bảng giá", e);

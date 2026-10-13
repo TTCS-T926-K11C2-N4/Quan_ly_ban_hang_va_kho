@@ -83,6 +83,27 @@
                                    value="${form.validFrom}"<c:if test="${mode == 'version'}"> min="${earliestStart}"</c:if>
                                    aria-describedby="price-from-error" aria-invalid="${not empty errors.validFrom}">
                             <p class="form-group__error" id="price-from-error"${empty errors.validFrom ? ' hidden' : ''}><c:out value="${errors.validFrom}"/></p>
+                            <c:if test="${mode == 'version'}">
+                                <c:choose>
+                                    <c:when test="${canApplyNow}">
+                                        <%-- Áp dụng ngay: ngày bắt đầu là hôm nay, bản cũ kết thúc hôm qua (price-lists.js khoá ô ngày và hỏi lại khi lưu) --%>
+                                        <label class="checkbox price-apply-now">
+                                            <input class="checkbox__input" type="checkbox" id="apply-now" name="applyNow" value="1"
+                                                   data-today="${today}" data-source="<c:out value='${source.code}'/>"
+                                                   data-yesterday="${yesterdayText}"${applyNow ? ' checked' : ''}>
+                                            <span class="checkbox__box" aria-hidden="true"></span>
+                                            <span class="checkbox__label">Áp dụng ngay từ hôm nay (${todayText})</span>
+                                        </label>
+                                        <p class="price-apply-now__hint" id="apply-now-hint"${applyNow ? '' : ' hidden'}>
+                                            Bảng giá <c:out value="${source.code}"/> sẽ kết thúc hiệu lực vào hôm qua (${yesterdayText}).
+                                            Đơn tạo từ lúc lưu dùng giá mới; đơn đã tạo hôm nay giữ giá cũ.
+                                        </p>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <p class="form-group__hint">Bảng giá <c:out value="${source.code}"/> mới bắt đầu hôm nay nên phiên bản mới sớm nhất từ ngày ${earliestStartText}.</p>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:if>
                         </div>
 
                         <div class="form-group${not empty errors.validTo ? ' form-group--invalid' : ''}">
