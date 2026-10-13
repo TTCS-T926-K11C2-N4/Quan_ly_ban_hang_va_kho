@@ -151,8 +151,8 @@ public class SalesOrderDao {
     public long insert(Connection connection, String orderNo, Header header, long actorUserId) throws SQLException {
         String sql = "INSERT INTO sales_orders (order_no, customer_id, delivery_address_id, warehouse_id, sales_rep_id,"
                 + " source, status, requested_delivery_date, subtotal_amount, discount_amount, total_amount, note,"
-                + " submitted_at, created_at, created_by, updated_at, updated_by)"
-                + " VALUES (?, ?, ?, ?, ?, 'SALES_REP', ?, ?, ?, ?, ?, ?, " + submittedAt(header)
+                + " needs_approval, submitted_at, created_at, created_by, updated_at, updated_by)"
+                + " VALUES (?, ?, ?, ?, ?, 'SALES_REP', ?, ?, ?, ?, ?, ?, ?, " + submittedAt(header)
                 + ", UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, orderNo);
@@ -172,7 +172,8 @@ public class SalesOrderDao {
             throws SQLException {
         String sql = "UPDATE sales_orders SET customer_id = ?, delivery_address_id = ?, warehouse_id = ?,"
                 + " sales_rep_id = ?, status = ?, requested_delivery_date = ?, subtotal_amount = ?,"
-                + " discount_amount = ?, total_amount = ?, note = ?, submitted_at = " + submittedAt(header) + ","
+                + " discount_amount = ?, total_amount = ?, note = ?, needs_approval = ?,"
+                + " submitted_at = " + submittedAt(header) + ","
                 + " version = version + 1, updated_at = UTC_TIMESTAMP(), updated_by = ?"
                 + " WHERE id = ? AND version = ? AND status = 'DRAFT'";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -196,9 +197,9 @@ public class SalesOrderDao {
     public void insertItem(Connection connection, long orderId, int lineNo, OrderQuote.Line line, long actorUserId)
             throws SQLException {
         String sql = "INSERT INTO sales_order_items (order_id, line_no, product_id, unit_id, unit_factor, qty, qty_base,"
-                + " unit_price, floor_price, price_list_item_id, discount_policy_id, discount_amount, line_total,"
-                + " created_at, created_by, updated_at, updated_by)"
-                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
+                + " unit_price, floor_price, price_list_item_id, discount_policy_id, is_manual_price, is_below_floor,"
+                + " discount_amount, line_total, created_at, created_by, updated_at, updated_by)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, orderId);
             statement.setInt(2, lineNo);
@@ -211,10 +212,12 @@ public class SalesOrderDao {
             statement.setBigDecimal(9, line.getFloorPrice());
             setNullableLong(statement, 10, line.getPriceListItemId());
             setNullableLong(statement, 11, line.getDiscountPolicyId());
-            statement.setBigDecimal(12, line.getDiscount());
-            statement.setBigDecimal(13, line.getTotal());
-            statement.setLong(14, actorUserId);
-            statement.setLong(15, actorUserId);
+            statement.setBoolean(12, line.isManualPrice());
+            statement.setBoolean(13, line.isBelowFloor());
+            statement.setBigDecimal(14, line.getDiscount());
+            statement.setBigDecimal(15, line.getTotal());
+            statement.setLong(16, actorUserId);
+            statement.setLong(17, actorUserId);
             statement.executeUpdate();
         }
     }
@@ -250,8 +253,9 @@ public class SalesOrderDao {
         String headerSql = "SELECT o.customer_id, c.code AS customer_code, o.order_no, o.delivery_address_id,"
                 + " o.requested_delivery_date, o.note, o.subtotal_amount, o.discount_amount, o.total_amount, o.version"
                 + " FROM sales_orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ? AND o.status = 'DRAFT'";
-        String itemSql = "SELECT i.product_id, p.sku, p.name, i.unit_id, i.qty FROM sales_order_items i"
-                + " JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.line_no";
+        String itemSql = "SELECT i.product_id, p.sku, p.name, i.unit_id, i.qty, i.unit_price, i.is_manual_price"
+                + " FROM sales_order_items i JOIN products p ON p.id = i.product_id WHERE i.order_id = ?"
+                + " ORDER BY i.line_no";
         try (Connection connection = DbConnection.getConnection()) {
             long customerId;
             String customerCode;
@@ -290,7 +294,10 @@ public class SalesOrderDao {
                         lines.add(new OrderForm.Line(String.valueOf(resultSet.getLong("product_id")),
                                 resultSet.getString("sku") + " - " + resultSet.getString("name"),
                                 String.valueOf(resultSet.getLong("unit_id")),
-                                resultSet.getBigDecimal("qty").stripTrailingZeros().toPlainString()));
+                                resultSet.getBigDecimal("qty").stripTrailingZeros().toPlainString(),
+                                // Mở lại đơn nháp giữ giá sửa tay; dòng theo bảng giá thì tính lại theo giá hiện hành
+                                resultSet.getBoolean("is_manual_price")
+                                        ? resultSet.getBigDecimal("unit_price").stripTrailingZeros().toPlainString() : null));
                     }
                 }
             }
@@ -314,7 +321,8 @@ public class SalesOrderDao {
                 + " LEFT JOIN users cb ON cb.id = o.created_by LEFT JOIN users xb ON xb.id = o.cancelled_by"
                 + " WHERE o.id = ?";
         String itemSql = "SELECT i.line_no, p.sku, p.name, u.name AS unit_name, bu.name AS base_unit_name, i.qty,"
-                + " i.qty_base, i.unit_price, i.discount_amount, i.line_total FROM sales_order_items i"
+                + " i.qty_base, i.unit_price, i.floor_price, i.is_manual_price, i.is_below_floor, i.discount_amount,"
+                + " i.line_total FROM sales_order_items i"
                 + " JOIN products p ON p.id = i.product_id JOIN units u ON u.id = i.unit_id"
                 + " JOIN units bu ON bu.id = p.base_unit_id WHERE i.order_id = ? ORDER BY i.line_no";
         String historySql = "SELECT h.from_status, h.to_status, h.note, h.created_at, u.full_name"
@@ -330,7 +338,9 @@ public class SalesOrderDao {
                                 resultSet.getString("name"), resultSet.getString("unit_name"),
                                 resultSet.getString("base_unit_name"), resultSet.getBigDecimal("qty"),
                                 resultSet.getBigDecimal("qty_base"), resultSet.getBigDecimal("unit_price"),
-                                resultSet.getBigDecimal("discount_amount"), resultSet.getBigDecimal("line_total")));
+                                resultSet.getBigDecimal("floor_price"), resultSet.getBoolean("is_manual_price"),
+                                resultSet.getBoolean("is_below_floor"), resultSet.getBigDecimal("discount_amount"),
+                                resultSet.getBigDecimal("line_total")));
                     }
                 }
             }
@@ -466,6 +476,7 @@ public class SalesOrderDao {
         statement.setBigDecimal(index++, header.discount);
         statement.setBigDecimal(index++, header.total);
         statement.setString(index++, header.note);
+        statement.setBoolean(index++, header.needsApproval);
         return index;
     }
 
@@ -489,10 +500,11 @@ public class SalesOrderDao {
         final BigDecimal discount;
         final BigDecimal total;
         final String note;
+        final boolean needsApproval;
 
         public Header(long customerId, long deliveryAddressId, long warehouseId, Long salesRepId, boolean submitted,
                       LocalDate requestedDate, BigDecimal subtotal, BigDecimal discount, BigDecimal total,
-                      String note) {
+                      String note, boolean needsApproval) {
             this.customerId = customerId;
             this.deliveryAddressId = deliveryAddressId;
             this.warehouseId = warehouseId;
@@ -503,6 +515,7 @@ public class SalesOrderDao {
             this.discount = discount;
             this.total = total;
             this.note = note;
+            this.needsApproval = needsApproval;
         }
 
         public boolean isSubmitted() {

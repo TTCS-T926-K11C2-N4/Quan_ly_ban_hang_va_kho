@@ -160,7 +160,13 @@
                                             <c:out value="${item.qtyText}"/> <c:out value="${item.unitName}"/>
                                             <c:if test="${item.converted}"><span class="order-items__base">= <c:out value="${item.qtyBaseText}"/> <c:out value="${item.baseUnitName}"/></span></c:if>
                                         </td>
-                                        <td data-label="Đơn giá" class="order-items__money"><fmt:formatNumber value="${item.unitPrice}" maxFractionDigits="0"/> ₫</td>
+                                        <td data-label="Đơn giá" class="order-items__money">
+                                            <fmt:formatNumber value="${item.unitPrice}" maxFractionDigits="0"/> ₫
+                                            <c:choose>
+                                                <c:when test="${item.belowFloor}"><span class="order-line__tag order-line__tag--below">Dưới giá sàn</span></c:when>
+                                                <c:when test="${item.manualPrice}"><span class="order-line__tag order-line__tag--manual">Sửa tay</span></c:when>
+                                            </c:choose>
+                                        </td>
                                         <td data-label="Chiết khấu" class="order-items__money">
                                             <c:choose>
                                                 <c:when test="${item.discount.signum() == 0}">—</c:when>

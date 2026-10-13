@@ -57,18 +57,21 @@ public class OrderForm {
         return lines;
     }
 
-    // Một dòng hàng; productText là chữ trong ô tìm hàng (để hiện lại khi chưa chọn được sản phẩm)
+    // Một dòng hàng; productText là chữ trong ô tìm hàng (để hiện lại khi chưa chọn được sản phẩm);
+    // price là đơn giá sửa tay theo đơn vị đã chọn (S4-01), null = lấy giá trong bảng giá
     public static class Line {
         private final String productId;
         private final String productText;
         private final String unitId;
         private final String qty;
+        private final String price;
 
-        public Line(String productId, String productText, String unitId, String qty) {
+        public Line(String productId, String productText, String unitId, String qty, String price) {
             this.productId = productId;
             this.productText = productText;
             this.unitId = unitId;
             this.qty = qty;
+            this.price = price;
         }
 
         public String getProductId() {
@@ -85,6 +88,10 @@ public class OrderForm {
 
         public String getQty() {
             return qty;
+        }
+
+        public String getPrice() {
+            return price;
         }
 
         public boolean isBlank() {

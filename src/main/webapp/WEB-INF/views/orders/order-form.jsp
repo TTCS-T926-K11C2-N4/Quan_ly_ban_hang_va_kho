@@ -122,6 +122,7 @@
                                     <th scope="col" class="order-table__product">Mã hàng / Tên hàng</th>
                                     <th scope="col" class="order-table__unit">Đơn vị tính</th>
                                     <th scope="col" class="order-table__qty">Số lượng</th>
+                                    <th scope="col" class="order-table__price">Đơn giá</th>
                                     <th scope="col">Tiền hàng</th>
                                     <th scope="col">Chiết khấu</th>
                                     <th scope="col">Thành tiền</th>
@@ -153,6 +154,20 @@
                                             <input class="order-line__control order-line__qty" type="text" name="qty" inputmode="decimal" maxlength="16"
                                                    value="<c:out value='${line.qty}'/>" placeholder="0" aria-label="Số lượng dòng ${loop.index + 1}">
                                         </td>
+                                        <%-- S4-01: để trống là giá bảng giá (hiện mờ làm gợi ý); gõ giá khác là sửa tay --%>
+                                        <c:set var="pricedOk" value="${not empty priced and empty priced.error}"/>
+                                        <td class="order-table__price" data-label="Đơn giá">
+                                            <div class="order-line__price-cell">
+                                                <div class="order-line__price-box">
+                                                    <input class="order-line__control order-line__price" type="text" name="price" inputmode="numeric" maxlength="19"
+                                                           value="<c:out value='${line.price}'/>" placeholder="<c:if test='${pricedOk}'><fmt:formatNumber value='${priced.listPrice}' maxFractionDigits='0'/></c:if>"
+                                                           aria-label="Đơn giá dòng ${loop.index + 1}">
+                                                    <button class="order-line__reset" type="button" title="Về giá bảng giá" aria-label="Về giá bảng giá dòng ${loop.index + 1}"${empty line.price ? ' hidden' : ''}>↺</button>
+                                                </div>
+                                                <span class="order-line__tag order-line__tag--manual"${pricedOk and priced.manualPrice and not priced.belowFloor ? '' : ' hidden'}>Sửa tay</span>
+                                                <span class="order-line__tag order-line__tag--below"${pricedOk and priced.belowFloor ? '' : ' hidden'}>Dưới giá sàn · cần duyệt</span>
+                                            </div>
+                                        </td>
                                         <td class="order-line__amount" data-label="Tiền hàng">${empty priced or not empty priced.error ? '—' : ''}<c:if test="${not empty priced and empty priced.error}"><fmt:formatNumber value="${priced.amount}" maxFractionDigits="0"/> ₫</c:if></td>
                                         <td class="order-line__discount" data-label="Chiết khấu">${empty priced or not empty priced.error ? '—' : ''}<c:if test="${not empty priced and empty priced.error}"><fmt:formatNumber value="${priced.discount}" maxFractionDigits="0"/> ₫</c:if></td>
                                         <td class="order-line__total" data-label="Thành tiền">${empty priced or not empty priced.error ? '—' : ''}<c:if test="${not empty priced and empty priced.error}"><fmt:formatNumber value="${priced.total}" maxFractionDigits="0"/> ₫</c:if></td>
@@ -167,6 +182,25 @@
                         </table>
                         <p class="order-table__empty" id="order-lines-empty"${empty form.lines ? '' : ' hidden'}>Chưa có dòng hàng nào. Bấm "Thêm dòng hàng" rồi tìm theo mã hoặc tên hàng.</p>
                     </div>
+                </section>
+
+                <%-- S4-01: dòng sửa giá tay / dưới giá sàn; orders.js dựng lại sau mỗi lần tính tiền --%>
+                <section class="order-alerts${quote.needsApproval ? ' order-alerts--warning' : ''}" id="order-alerts" aria-labelledby="order-alerts-title" aria-live="polite"${not empty quote and quote.priceFlagged ? '' : ' hidden'}>
+                    <h3 class="order-alerts__title" id="order-alerts-title">Thông báo &amp; cảnh báo</h3>
+                    <ul class="order-alerts__list" id="order-alerts-list">
+                        <c:forEach var="priced" items="${quote.lines}" varStatus="loop">
+                            <c:if test="${empty priced.error and (priced.manualPrice or priced.belowFloor)}">
+                                <li class="order-alerts__item order-alerts__item--${priced.belowFloor ? 'warning' : 'info'}">
+                                    <strong>Dòng <fmt:formatNumber value="${loop.index + 1}" minIntegerDigits="2"/> · <c:out value="${priced.product.sku}"/>:</strong>
+                                    <c:choose>
+                                        <c:when test="${priced.belowFloor}">giá thực bán sau chiết khấu <fmt:formatNumber value="${priced.netUnitPrice}" maxFractionDigits="0"/> ₫ thấp hơn giá sàn <fmt:formatNumber value="${priced.floorPrice}" maxFractionDigits="0"/> ₫.</c:when>
+                                        <c:otherwise>đã sửa giá tay <fmt:formatNumber value="${priced.unitPrice}" maxFractionDigits="0"/> ₫ (bảng giá <fmt:formatNumber value="${priced.listPrice}" maxFractionDigits="0"/> ₫).</c:otherwise>
+                                    </c:choose>
+                                </li>
+                            </c:if>
+                        </c:forEach>
+                    </ul>
+                    <p class="order-alerts__note" id="order-alerts-note"${quote.needsApproval ? '' : ' hidden'}>Đơn có dòng bán dưới giá sàn nên sẽ được đánh dấu <strong>Cần duyệt</strong> để quản lý kinh doanh xem xét.</p>
                 </section>
 
                 <div class="order-form__bottom">
@@ -239,6 +273,17 @@
                     <td class="order-table__qty" data-label="Số lượng">
                         <input class="order-line__control order-line__qty" type="text" name="qty" inputmode="decimal" maxlength="16"
                                placeholder="0" aria-label="Số lượng">
+                    </td>
+                    <td class="order-table__price" data-label="Đơn giá">
+                        <div class="order-line__price-cell">
+                            <div class="order-line__price-box">
+                                <input class="order-line__control order-line__price" type="text" name="price" inputmode="numeric" maxlength="19"
+                                       aria-label="Đơn giá">
+                                <button class="order-line__reset" type="button" title="Về giá bảng giá" aria-label="Về giá bảng giá" hidden>↺</button>
+                            </div>
+                            <span class="order-line__tag order-line__tag--manual" hidden>Sửa tay</span>
+                            <span class="order-line__tag order-line__tag--below" hidden>Dưới giá sàn · cần duyệt</span>
+                        </div>
                     </td>
                     <td class="order-line__amount" data-label="Tiền hàng">—</td>
                     <td class="order-line__discount" data-label="Chiết khấu">—</td>

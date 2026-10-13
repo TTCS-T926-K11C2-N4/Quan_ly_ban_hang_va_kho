@@ -1,5 +1,6 @@
 // Màn Tạo đơn hàng (S3-09): thêm/xoá dòng hàng, chọn hàng theo gợi ý mã/tên, đổi đơn vị tính,
 // đổi đại lý thì nạp lại điểm giao; mỗi lần sửa thì hỏi server tính lại tiền (/orders/quote).
+// S4-01: ô Đơn giá để trống là giá bảng giá (hiện mờ), gõ giá khác là sửa tay; giá thực bán dưới giá sàn thì báo cần duyệt.
 (function () {
     var form = document.getElementById("order-form");
     if (!form) {
@@ -14,6 +15,9 @@
     var blockedWarning = document.getElementById("blocked-warning");
     var blockedWarningText = document.getElementById("blocked-warning-text");
     var saveButtons = [document.getElementById("save-draft"), document.getElementById("submit-order")];
+    var alertsBox = document.getElementById("order-alerts");
+    var alertsList = document.getElementById("order-alerts-list");
+    var alertsNote = document.getElementById("order-alerts-note");
     var draftCustomer = form.getAttribute("data-draft-customer");
 
     // Chữ gợi ý "SP001 - Tên hàng" -> id sản phẩm
@@ -33,6 +37,8 @@
             row.querySelector(".order-line__product").setAttribute("aria-label", "Mã hàng hoặc tên hàng dòng " + (index + 1));
             row.querySelector(".order-line__unit").setAttribute("aria-label", "Đơn vị tính dòng " + (index + 1));
             row.querySelector(".order-line__qty").setAttribute("aria-label", "Số lượng dòng " + (index + 1));
+            row.querySelector(".order-line__price").setAttribute("aria-label", "Đơn giá dòng " + (index + 1));
+            row.querySelector(".order-line__reset").setAttribute("aria-label", "Về giá bảng giá dòng " + (index + 1));
             row.querySelector(".order-line__remove").setAttribute("aria-label", "Xoá dòng " + (index + 1));
         });
         emptyNote.hidden = rows().length > 0;
@@ -63,8 +69,36 @@
         if (id !== hidden.value) {
             hidden.value = id;
             fillUnits(row, id);
+            clearPrice(row);
         }
         scheduleQuote();
+    }
+
+    // Giá sửa tay tính theo đơn vị đang chọn nên đổi hàng / đổi đơn vị thì quay về giá bảng giá
+    function clearPrice(row) {
+        row.querySelector(".order-line__price").value = "";
+        row.querySelector(".order-line__reset").hidden = true;
+    }
+
+    function showPrice(row, line) {
+        var priced = line && !line.error;
+        row.querySelector(".order-line__price").placeholder = priced ? line.listPrice : "";
+        row.querySelector(".order-line__reset").hidden = !row.querySelector(".order-line__price").value.trim();
+        row.querySelector(".order-line__tag--manual").hidden = !(priced && line.manual && !line.belowFloor);
+        row.querySelector(".order-line__tag--below").hidden = !(priced && line.belowFloor);
+        row.classList.toggle("order-line--below-floor", Boolean(priced && line.belowFloor));
+    }
+
+    function alertItem(number, line) {
+        var item = document.createElement("li");
+        item.className = "order-alerts__item order-alerts__item--" + (line.belowFloor ? "warning" : "info");
+        var label = document.createElement("strong");
+        label.textContent = "Dòng " + number + " · " + line.sku + ":";
+        item.appendChild(label);
+        item.appendChild(document.createTextNode(line.belowFloor
+            ? " giá thực bán sau chiết khấu " + line.netPrice + " thấp hơn giá sàn " + line.floorPrice + "."
+            : " đã sửa giá tay " + line.unitPrice + " (bảng giá " + line.listPrice + " ₫)."));
+        return item;
     }
 
     function addLine() {
@@ -109,6 +143,7 @@
             }
             // Dòng để trống hoàn toàn không gửi lên server: ghép kết quả theo các dòng có dữ liệu
             var index = 0;
+            alertsList.innerHTML = "";
             rows().forEach(function (row) {
                 var blank = !row.querySelector(".order-line__product").value.trim()
                     && !row.querySelector(".order-line__qty").value.trim();
@@ -120,7 +155,14 @@
                 var ready = row.querySelector(".order-line__product-id").value
                     && row.querySelector(".order-line__qty").value.trim();
                 setLineError(row, line && ready ? line.error : null);
+                showPrice(row, line);
+                if (line && !line.error && (line.manual || line.belowFloor)) {
+                    alertsList.appendChild(alertItem(row.querySelector(".order-line__index").textContent, line));
+                }
             });
+            alertsBox.hidden = alertsList.children.length === 0;
+            alertsBox.classList.toggle("order-alerts--warning", data.needsApproval);
+            alertsNote.hidden = !data.needsApproval;
             setText("order-subtotal", data.subtotal);
             setText("order-discount", data.discount);
             setText("order-total", data.total);
@@ -180,7 +222,8 @@
         var row = event.target.closest(".order-line");
         if (event.target.classList.contains("order-line__product")) {
             onProductChange(row);
-        } else if (event.target.classList.contains("order-line__qty")) {
+        } else if (event.target.classList.contains("order-line__qty")
+            || event.target.classList.contains("order-line__price")) {
             scheduleQuote();
         }
     });
@@ -194,11 +237,20 @@
 
     tbody.addEventListener("change", function (event) {
         if (event.target.classList.contains("order-line__unit")) {
+            clearPrice(event.target.closest(".order-line"));
             scheduleQuote();
         }
     });
 
     tbody.addEventListener("click", function (event) {
+        var reset = event.target.closest(".order-line__reset");
+        if (reset) {
+            var priceRow = reset.closest(".order-line");
+            clearPrice(priceRow);
+            priceRow.querySelector(".order-line__price").focus();
+            scheduleQuote();
+            return;
+        }
         var button = event.target.closest(".order-line__remove");
         if (!button) {
             return;
