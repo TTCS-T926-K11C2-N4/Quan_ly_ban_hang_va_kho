@@ -77,6 +77,12 @@ public final class AccessRules {
             Map.entry("/units/new", Permission.PRODUCT_MANAGE),
             Map.entry("/units/edit", Permission.PRODUCT_MANAGE),
             Map.entry("/units/delete", Permission.PRODUCT_MANAGE),
+            // Phiếu nhập kho (S5-04): ai xem tồn kho cũng xem phiếu; nhân viên kho, quản lý kho lập và ghi sổ
+            Map.entry("/goods-receipts", Permission.INVENTORY_VIEW),
+            Map.entry("/goods-receipts/export", Permission.INVENTORY_VIEW),
+            Map.entry("/goods-receipts/view", Permission.INVENTORY_VIEW),
+            Map.entry("/goods-receipts/new", Permission.INVENTORY_MANAGE),
+            Map.entry("/goods-receipts/edit", Permission.INVENTORY_MANAGE),
             Map.entry("/orders/new", Permission.ORDER_MANAGE),
             Map.entry("/orders/customer-data", Permission.ORDER_MANAGE),
             Map.entry("/orders/quote", Permission.ORDER_MANAGE),

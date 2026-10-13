@@ -908,12 +908,17 @@ CREATE TABLE `goods_receipt_items` (
   `unit_factor` decimal(18,4) NOT NULL,
   `qty` decimal(18,3) NOT NULL,
   `qty_base` decimal(18,3) NOT NULL,
+  `unit_price` decimal(18,2) NOT NULL DEFAULT 0 COMMENT 'Đơn giá nhập theo đơn vị nhập (unit_id); thành tiền = qty * unit_price (S5-04)',
+  `location_id` bigint COMMENT 'Vị trí cất hàng trong kho nhập (S5-04)',
+  CONSTRAINT fk_goods_receipt_items_location_id FOREIGN KEY (`location_id`) REFERENCES `warehouse_locations`(`id`),
   PRIMARY KEY (`id`),
   CONSTRAINT ck_goods_receipt_items_1 CHECK (qty_base <> 0),
+  CONSTRAINT ck_goods_receipt_items_2 CHECK (unit_price >= 0),
   KEY ix_goods_receipt_items_receipt_id (`receipt_id`),
   KEY ix_goods_receipt_items_product_id (`product_id`),
   KEY ix_goods_receipt_items_lot_id (`lot_id`),
-  KEY ix_goods_receipt_items_unit_id (`unit_id`)
+  KEY ix_goods_receipt_items_unit_id (`unit_id`),
+  KEY ix_goods_receipt_items_location_id (`location_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Dòng phiếu nhập: nhập theo đơn vị bất kỳ, quy về đơn vị cơ sở khi ghi sổ.';
 
 CREATE TABLE `stock_transfers` (
