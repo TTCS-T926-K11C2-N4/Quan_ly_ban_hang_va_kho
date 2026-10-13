@@ -82,6 +82,9 @@ public final class AccessRules {
             Map.entry("/orders/quote", Permission.ORDER_MANAGE),
             Map.entry("/orders/view", Permission.ORDER_VIEW),
             Map.entry("/orders/cancel", Permission.ORDER_MANAGE),
+            // Sổ tồn kho (S5-05): ai xem tồn kho cũng xem được (nhân viên kinh doanh xem tồn khả dụng)
+            Map.entry("/stock", Permission.INVENTORY_VIEW),
+            Map.entry("/stock/export", Permission.INVENTORY_VIEW),
             Map.entry("/products/image", Permission.PRODUCT_VIEW),
             Map.entry("/products/new", Permission.PRODUCT_MANAGE),
             Map.entry("/products/edit", Permission.PRODUCT_MANAGE),
