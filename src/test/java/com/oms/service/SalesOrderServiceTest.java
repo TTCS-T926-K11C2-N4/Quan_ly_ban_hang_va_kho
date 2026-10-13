@@ -7,6 +7,7 @@ import com.oms.model.DeliveryAddress;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderProduct;
 import com.oms.model.OrderQuote;
+import com.oms.model.OrderStock;
 import com.oms.model.PricingRules;
 import com.oms.util.DateTimeUtil;
 import org.junit.jupiter.api.Test;
@@ -169,7 +170,7 @@ class SalesOrderServiceTest {
     void blockedCustomerCannotStartNewOrder() {
         OrderForm form = new OrderForm("5", "8", null, null, null, null, List.of());
         Map<String, String> errors = new SalesOrderService().validate(form, customer(true), null, false, ADDRESSES,
-                null, null);
+                null, null, null);
         assertEquals("Đại lý đang bị khoá giao dịch nên không tạo được đơn mới.", errors.get("customerId"));
     }
 
@@ -178,8 +179,8 @@ class SalesOrderServiceTest {
     void submitRequiresDateAndLinesButDraftDoesNot() {
         OrderForm form = new OrderForm("5", "8", null, null, null, null, List.of());
         SalesOrderService service = new SalesOrderService();
-        assertTrue(service.validate(form, customer(false), null, false, ADDRESSES, null, null).isEmpty());
-        Map<String, String> errors = service.validate(form, customer(false), null, true, ADDRESSES, null, null);
+        assertTrue(service.validate(form, customer(false), null, false, ADDRESSES, null, null, null).isEmpty());
+        Map<String, String> errors = service.validate(form, customer(false), null, true, ADDRESSES, null, null, null);
         assertEquals("Vui lòng chọn ngày giao mong muốn.", errors.get("requestedDate"));
         assertEquals("Đơn hàng cần ít nhất một dòng hàng.", errors.get("lines"));
     }
@@ -189,7 +190,7 @@ class SalesOrderServiceTest {
         String yesterday = DateTimeUtil.today().minusDays(1).toString();
         OrderForm form = new OrderForm("5", "99", yesterday, null, null, null, List.of());
         Map<String, String> errors = new SalesOrderService().validate(form, customer(false), null, false, ADDRESSES,
-                null, null);
+                null, null, null);
         assertEquals("Ngày giao không được trước hôm nay.", errors.get("requestedDate"));
         assertEquals("Điểm giao không thuộc đại lý đã chọn.", errors.get("deliveryAddressId"));
     }
@@ -200,7 +201,7 @@ class SalesOrderServiceTest {
         OrderForm form = new OrderForm("5", "8", null, null, 42L, "0", List.of());
         SalesOrderDao.Draft draft = new SalesOrderDao.Draft(5, "DL001", "DH261007-0001", form, BigDecimal.ZERO,
                 BigDecimal.ZERO, BigDecimal.ZERO);
-        assertTrue(new SalesOrderService().validate(form, customer(true), draft, false, ADDRESSES, null, null)
+        assertTrue(new SalesOrderService().validate(form, customer(true), draft, false, ADDRESSES, null, null, null)
                 .isEmpty());
     }
 
@@ -230,14 +231,49 @@ class SalesOrderServiceTest {
         SalesOrderService service = new SalesOrderService();
         OrderForm form = new OrderForm("5", "8", null, null, null, null, List.of());
         assertEquals("Đại lý có 8.000.000 ₫ nợ quá hạn (hạn trả từ 19/09/2026) nên không tạo được đơn mới.",
-                service.validate(form, customer(false), null, false, ADDRESSES, null, overdue).get("customerId"));
+                service.validate(form, customer(false), null, false, ADDRESSES, null, overdue, null).get("customerId"));
 
         OrderForm draftForm = new OrderForm("5", "8", null, null, 42L, "0", List.of());
         SalesOrderDao.Draft draft = new SalesOrderDao.Draft(5, "DL001", "DH261007-0001", draftForm, BigDecimal.ZERO,
                 BigDecimal.ZERO, BigDecimal.ZERO);
-        assertTrue(service.validate(draftForm, customer(false), draft, false, ADDRESSES, null, overdue).isEmpty());
-        assertTrue(service.validate(draftForm, customer(false), draft, true, ADDRESSES, null, overdue).get("form")
+        assertTrue(service.validate(draftForm, customer(false), draft, false, ADDRESSES, null, overdue, null).isEmpty());
+        assertTrue(service.validate(draftForm, customer(false), draft, true, ADDRESSES, null, overdue, null).get("form")
                 .startsWith("Đại lý có 8.000.000 ₫ nợ quá hạn"));
+    }
+
+    // S4-03: khả dụng = thực tế − giữ chỗ; hai dòng cùng SKU cộng chung; gợi ý tối đa theo đơn vị đang đặt
+    @Test
+    void stockShortageSuggestsMaxQuantity() {
+        // Kho có 100 Lon, 25 Lon đang giữ chỗ cho đơn khác -> khả dụng 75 Lon
+        Map<Long, OrderStock.Level> levels = Map.of(10L,
+                new OrderStock.Level(new BigDecimal("100.000"), new BigDecimal("25.000")));
+        OrderQuote fits = SalesOrderService.price(List.of(line("2", "3")), PRODUCTS, rules(List.of()));
+        OrderStock.Line ok = SalesOrderService.checkStock(fits, levels, "Kho trung tâm").getLines().get(0);
+        assertTrue(ok.isTracked() && !ok.isShortage());
+        assertEquals("75 Lon (≈ 3 Thùng)", ok.getAvailableText());
+
+        // 3 Thùng (72 Lon) + 10 Lon = 82 Lon > 75: cả hai dòng báo vượt; dòng Thùng còn tối đa 2 Thùng (65 Lon)
+        OrderQuote over = SalesOrderService.price(List.of(line("2", "3"), line("1", "10")), PRODUCTS,
+                rules(List.of()));
+        OrderStock stock = SalesOrderService.checkStock(over, levels, "Kho trung tâm");
+        assertTrue(stock.getLines().get(0).isShortage() && stock.getLines().get(1).isShortage());
+        assertEquals("2 Thùng", stock.getLines().get(0).getMaxText());
+        assertEquals("3 Lon", stock.getLines().get(1).getMaxText());
+
+        // Lưu nháp vẫn được, gửi đơn thì bị chặn kèm gợi ý
+        OrderForm form = new OrderForm("5", "8", "2026-10-20", null, null, null, List.of());
+        SalesOrderService service = new SalesOrderService();
+        assertTrue(service.validate(form, customer(false), null, false, ADDRESSES, null, null, stock).isEmpty());
+        assertEquals("Vượt tồn khả dụng: Kho trung tâm còn 75 Lon (≈ 3 Thùng). Đặt tối đa 2 Thùng.",
+                service.validate(form, customer(false), null, true, ADDRESSES, null, null, stock).get("lines.0"));
+    }
+
+    // SKU chưa có dòng tồn ở kho (chưa nhập kho) thì chưa theo dõi tồn: không chặn
+    @Test
+    void untrackedStockIsNotBlocked() {
+        OrderQuote quote = SalesOrderService.price(List.of(line("2", "500")), PRODUCTS, rules(List.of()));
+        OrderStock.Line line = SalesOrderService.checkStock(quote, Map.of(), "Kho trung tâm").getLines().get(0);
+        assertTrue(line.isChecked() && !line.isTracked() && !line.isShortage());
     }
 
     // S2-04: nhật ký đơn ghi phần đầu đơn và tổng tiền đã tính, gửi đơn thì trạng thái là Chờ duyệt

@@ -91,13 +91,18 @@ public class OrderNewServlet extends HttpServlet {
             OrderQuote quote = customer == null ? null
                     : orderService.quote(customer, form.getLines(), orderService.getProducts());
             Map<String, String> errors = orderService.validate(form, customer, draft, submit, addresses, quote,
-                    orderService.credit(customer));
+                    orderService.credit(customer), orderService.stock(customer, quote));
             if (!errors.isEmpty()) {
                 show(request, response, form, draft, errors);
                 return;
             }
-            SalesOrderService.Saved saved = orderService.save(form, customer, draft, submit, quote, userId,
-                    request.getRemoteAddr());
+            SalesOrderService.Saved saved;
+            try {
+                saved = orderService.save(form, customer, draft, submit, quote, userId, request.getRemoteAddr());
+            } catch (SalesOrderService.StockShortageException e) {
+                show(request, response, form, draft, e.getErrors());
+                return;
+            }
             if (saved == null) {
                 show(request, response, form, draft, Map.of("form", "Đơn nháp vừa được cập nhật ở nơi khác."
                         + " Mở lại đơn nháp để xem bản mới nhất trước khi sửa tiếp."));
@@ -141,6 +146,8 @@ public class OrderNewServlet extends HttpServlet {
         OrderQuote quote = customer == null ? null : orderService.quote(customer, form.getLines(), products);
         CustomerCredit credit = orderService.credit(customer);
         request.setAttribute("quote", quote);
+        // S4-03: tồn khả dụng dưới ô Số lượng của từng dòng
+        request.setAttribute("stock", orderService.stock(customer, quote));
         // S4-02: khối công nợ dưới ô Đại lý; vượt hạn mức thì báo cần duyệt, quá hạn thì chặn đơn mới
         request.setAttribute("credit", credit);
         request.setAttribute("overCreditLimit", credit != null && credit.exceeds(quote.getTotal()));

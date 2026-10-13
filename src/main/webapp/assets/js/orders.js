@@ -2,6 +2,7 @@
 // đổi đại lý thì nạp lại điểm giao; mỗi lần sửa thì hỏi server tính lại tiền (/orders/quote).
 // S4-01: ô Đơn giá để trống là giá bảng giá (hiện mờ), gõ giá khác là sửa tay; giá thực bán dưới giá sàn thì báo cần duyệt.
 // S4-02: khối công nợ dưới ô Đại lý tính lại theo tổng đơn; vượt hạn mức thì cần duyệt, nợ quá hạn thì khoá nút lưu.
+// S4-03: dưới ô Số lượng hiện tồn khả dụng ở kho phục vụ đại lý; vượt tồn thì báo đỏ, có nút điền nhanh số tối đa.
 (function () {
     var form = document.getElementById("order-form");
     if (!form) {
@@ -105,6 +106,34 @@
         return item;
     }
 
+    // Dòng lỗi giá/số lượng (line.stock = null) thì ẩn; SKU chưa có số tồn ở kho chỉ nhắc, không chặn
+    function showStock(row, line) {
+        var box = row.querySelector(".order-line__stock");
+        var text = box.querySelector(".order-line__stock-text");
+        var max = box.querySelector(".order-line__stock-max");
+        var stock = line && !line.error ? line.stock : null;
+        box.hidden = !stock;
+        max.hidden = true;
+        row.classList.toggle("order-line--short", Boolean(stock && stock.shortage));
+        if (!stock) {
+            return;
+        }
+        box.classList.toggle("order-line__stock--untracked", !stock.tracked);
+        box.classList.toggle("order-line__stock--short", stock.shortage);
+        if (!stock.tracked) {
+            text.textContent = "Chưa có số tồn ở kho";
+        } else if (!stock.shortage) {
+            text.textContent = "Khả dụng: " + stock.available;
+        } else {
+            text.textContent = "Vượt tồn · khả dụng " + stock.available;
+            if (stock.maxQty !== "0") {
+                max.hidden = false;
+                max.textContent = "Đặt tối đa " + stock.max;
+                max.setAttribute("data-qty", stock.maxQty);
+            }
+        }
+    }
+
     function creditItem(credit) {
         var item = document.createElement("li");
         item.className = "order-alerts__item order-alerts__item--warning";
@@ -196,11 +225,14 @@
                     && row.querySelector(".order-line__qty").value.trim();
                 setLineError(row, line && ready ? line.error : null);
                 showPrice(row, line);
+                showStock(row, line);
                 if (line && !line.error && (line.manual || line.belowFloor)) {
                     alertsList.appendChild(alertItem(row.querySelector(".order-line__index").textContent, line));
                 }
             });
             showCredit(data.credit);
+            document.getElementById("order-stock-warehouse").hidden = !data.warehouse;
+            setText("order-stock-warehouse-name", data.warehouse || "");
             if (data.credit && data.credit.overLimit) {
                 alertsList.insertBefore(creditItem(data.credit), alertsList.firstChild);
             }
@@ -293,6 +325,14 @@
     });
 
     tbody.addEventListener("click", function (event) {
+        var fill = event.target.closest(".order-line__stock-max");
+        if (fill) {
+            var qty = fill.closest(".order-line").querySelector(".order-line__qty");
+            qty.value = fill.getAttribute("data-qty");
+            qty.focus();
+            scheduleQuote();
+            return;
+        }
         var reset = event.target.closest(".order-line__reset");
         if (reset) {
             var priceRow = reset.closest(".order-line");

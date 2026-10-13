@@ -4,6 +4,7 @@ import com.oms.model.Customer;
 import com.oms.model.CustomerCredit;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderQuote;
+import com.oms.model.OrderStock;
 import com.oms.model.Permission;
 import com.oms.service.CustomerService;
 import com.oms.service.SalesOrderService;
@@ -42,8 +43,10 @@ public class OrderQuoteServlet extends HttpServlet {
                 return;
             }
             OrderQuote quote = orderService.quote(customer, form.getLines(), orderService.getProducts());
+            OrderStock stock = orderService.stock(customer, quote);
             List<Map<String, Object>> lines = new ArrayList<>();
-            for (OrderQuote.Line line : quote.getLines()) {
+            for (int i = 0; i < quote.getLines().size(); i++) {
+                OrderQuote.Line line = quote.getLines().get(i);
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("amount", line.getError() == null ? money(line.getAmount()) : "—");
                 item.put("discount", line.getError() == null ? money(line.getDiscount()) : "—");
@@ -57,6 +60,7 @@ public class OrderQuoteServlet extends HttpServlet {
                 item.put("netPrice", line.getError() == null ? money(line.getNetUnitPrice()) : null);
                 item.put("manual", line.isManualPrice());
                 item.put("belowFloor", line.isBelowFloor());
+                item.put("stock", stock == null ? null : stock(stock.getLines().get(i)));
                 lines.add(item);
             }
             Map<String, Object> data = new LinkedHashMap<>();
@@ -69,11 +73,26 @@ public class OrderQuoteServlet extends HttpServlet {
             boolean overLimit = credit != null && credit.exceeds(quote.getTotal());
             data.put("needsApproval", quote.isNeedsApproval() || overLimit);
             data.put("credit", credit == null ? null : credit(credit, quote.getTotal()));
+            data.put("warehouse", stock == null ? null : stock.getWarehouseName());
             OrderJson.write(response, JsonUtil.object(data));
         } catch (SQLException e) {
             log("Không tính được tiền đơn hàng", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // S4-03: tồn khả dụng của dòng; dòng lỗi giá/số lượng thì chưa kiểm tồn (null)
+    private static Map<String, Object> stock(OrderStock.Line line) {
+        if (!line.isChecked()) {
+            return null;
+        }
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("tracked", line.isTracked());
+        data.put("available", line.getAvailableText());
+        data.put("shortage", line.isShortage());
+        data.put("max", line.getMaxText());
+        data.put("maxQty", line.getMaxQtyText());
+        return data;
     }
 
     // S4-02: số liệu khối công nợ, tính lại theo tổng đơn đang gõ

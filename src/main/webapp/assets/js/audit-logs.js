@@ -30,7 +30,7 @@
         requestedDate: "Ngày giao mong muốn", lineCount: "Số dòng hàng", subtotal: "Tiền hàng",
         discount: "Chiết khấu", total: "Tổng phải thu", releasedReservations: "Số dòng giữ chỗ đã nhả",
         manualPriceLines: "Số dòng sửa giá tay", belowFloorLines: "Số dòng dưới giá sàn", overCreditLimit: "Vượt hạn mức công nợ",
-        needsApproval: "Cần duyệt",
+        needsApproval: "Cần duyệt", reservedLines: "Số dòng đã giữ chỗ tồn",
         label: "Tên điểm giao", address: "Địa chỉ", receiverName: "Người nhận", receiverPhone: "SĐT người nhận",
         routeNote: "Ghi chú đường đi", isDefault: "Điểm mặc định",
         salesRep: "Người phụ trách", regions: "Địa bàn",

@@ -26,7 +26,7 @@
 
 .order-table__table {
     width: 100%;
-    min-width: 980px;
+    min-width: 1010px;
     border-collapse: collapse;
     font-size: 12px;
 }
@@ -66,9 +66,12 @@
     width: 270px;
 }
 
-.order-table__unit,
-.order-table__qty {
+.order-table__unit {
     width: 119px;
+}
+
+.order-table__qty {
+    width: 150px;
 }
 
 .order-table__action {
@@ -218,6 +221,62 @@
 .order-alerts__note {
     font-weight: 600;
     color: #92400e;
+}
+
+/* S4-03: tồn khả dụng dưới ô Số lượng */
+.order-line__qty-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.order-line__stock {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    font-size: 10px;
+    line-height: 1.35;
+    color: #15803d;
+}
+
+.order-line__stock[hidden],
+.order-line__stock-max[hidden] {
+    display: none;
+}
+
+.order-line__stock--untracked {
+    color: var(--color-sales-muted);
+}
+
+.order-line__stock--short {
+    font-weight: 600;
+    color: #b91c1c;
+}
+
+.order-line--short .order-line__qty {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.order-line__stock-max {
+    padding: 1px 8px;
+    border: 1px solid #fca5a5;
+    border-radius: 999px;
+    background: var(--color-surface);
+    font: inherit;
+    font-weight: 600;
+    color: #b91c1c;
+    cursor: pointer;
+}
+
+.order-line__stock-max:hover {
+    background: #fee2e2;
+}
+
+.order-line__stock-max:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
 /* S4-02: khối công nợ đại lý dưới hàng Đại lý / Điểm giao / Ngày giao */
