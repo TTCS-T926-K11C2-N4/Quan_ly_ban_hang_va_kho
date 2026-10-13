@@ -756,3 +756,158 @@ ol {
         min-width: 520px;
     }
 }
+
+/* Thông báo dạng toast (app.js): xếp chồng góc trên phải, màu đặc theo loại, chữ trắng, icon, nút đóng,
+   thanh đếm giờ ở đáy cho thông báo tự ẩn. Màu đậm hơn mẫu để chữ trắng đủ tương phản. */
+.account-flash[hidden],
+.sales-flash[hidden] {
+    display: none;
+}
+
+.toast-stack {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(400px, calc(100vw - 24px));
+}
+
+.toast {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    overflow: hidden;
+    padding: 16px 44px 18px 16px;
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+    color: #ffffff;
+    animation: toast-in 0.25s ease-out;
+}
+
+.toast--success {
+    background: #16a34a;
+}
+
+.toast--info {
+    background: #0284c7;
+}
+
+.toast--warning {
+    background: #d97706;
+}
+
+.toast--error {
+    background: #dc2626;
+}
+
+.toast__icon {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+}
+
+.toast__text {
+    min-width: 0;
+}
+
+.toast__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.toast__body {
+    margin: 4px 0 0;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.toast__body:empty {
+    display: none;
+}
+
+.toast__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 20px;
+    line-height: 1;
+    color: #ffffff;
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.toast__close:hover,
+.toast__close:focus-visible {
+    background: rgba(255, 255, 255, 0.18);
+    opacity: 1;
+}
+
+.toast__close:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 1px;
+}
+
+/* Thanh đếm giờ: chạy hết thì app.js đóng toast; rê chuột vào toast thì dừng */
+.toast__progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.28);
+    transform-origin: left;
+    animation-name: toast-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+.toast:hover .toast__progress {
+    animation-play-state: paused;
+}
+
+.toast--leaving {
+    opacity: 0;
+    transform: translateX(16px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+
+@keyframes toast-progress {
+    to {
+        transform: scaleX(0);
+    }
+}
+
+@media (max-width: 639px) {
+    .toast-stack {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast,
+    .toast--leaving {
+        animation: none;
+        transition: none;
+    }
+}
