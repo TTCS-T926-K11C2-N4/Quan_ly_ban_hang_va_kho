@@ -1,6 +1,7 @@
 // Màn Tạo đơn hàng (S3-09): thêm/xoá dòng hàng, chọn hàng theo gợi ý mã/tên, đổi đơn vị tính,
 // đổi đại lý thì nạp lại điểm giao; mỗi lần sửa thì hỏi server tính lại tiền (/orders/quote).
 // S4-01: ô Đơn giá để trống là giá bảng giá (hiện mờ), gõ giá khác là sửa tay; giá thực bán dưới giá sàn thì báo cần duyệt.
+// S4-02: khối công nợ dưới ô Đại lý tính lại theo tổng đơn; vượt hạn mức thì cần duyệt, nợ quá hạn thì khoá nút lưu.
 (function () {
     var form = document.getElementById("order-form");
     if (!form) {
@@ -14,6 +15,9 @@
     var unitCatalog = document.getElementById("order-unit-catalog");
     var blockedWarning = document.getElementById("blocked-warning");
     var blockedWarningText = document.getElementById("blocked-warning-text");
+    var overdueWarning = document.getElementById("overdue-warning");
+    var overdueWarningText = document.getElementById("overdue-warning-text");
+    var creditBox = document.getElementById("order-credit");
     var saveButtons = [document.getElementById("save-draft"), document.getElementById("submit-order")];
     var alertsBox = document.getElementById("order-alerts");
     var alertsList = document.getElementById("order-alerts-list");
@@ -101,6 +105,42 @@
         return item;
     }
 
+    function creditItem(credit) {
+        var item = document.createElement("li");
+        item.className = "order-alerts__item order-alerts__item--warning";
+        var label = document.createElement("strong");
+        label.textContent = "Hạn mức công nợ:";
+        item.appendChild(label);
+        item.appendChild(document.createTextNode(" tổng đơn cộng công nợ hiện tại vượt hạn mức "
+            + credit.exceededBy + "."));
+        return item;
+    }
+
+    function showCredit(credit) {
+        creditBox.hidden = !credit;
+        if (!credit) {
+            return;
+        }
+        creditBox.classList.toggle("order-credit--over", credit.overLimit);
+        setText("credit-terms", "Số ngày nợ tối đa: " + credit.maxDebtDays + " ngày");
+        setText("credit-limit", credit.granted ? credit.limit : "Chưa cấp hạn mức");
+        setText("credit-ledger", credit.ledger);
+        setText("credit-open", credit.openOrders);
+        setText("credit-available", credit.available);
+        document.getElementById("credit-available").classList.toggle("order-credit__value--negative", credit.short);
+        var bar = document.getElementById("credit-bar");
+        bar.value = credit.usedPercent;
+        bar.textContent = credit.usedPercent + "%";
+        var after = document.getElementById("credit-after");
+        var amount = document.createElement("strong");
+        amount.textContent = credit.overLimit ? credit.exceededBy : credit.after;
+        after.innerHTML = "";
+        after.appendChild(document.createTextNode(credit.overLimit ? "Vượt hạn mức " : "Sau đơn này còn "));
+        after.appendChild(amount);
+        after.appendChild(document.createTextNode(credit.overLimit
+            ? " nếu gửi đơn này: đơn sẽ được đánh dấu cần duyệt." : "."));
+    }
+
     function addLine() {
         tbody.appendChild(template.content.cloneNode(true));
         renumber();
@@ -160,6 +200,10 @@
                     alertsList.appendChild(alertItem(row.querySelector(".order-line__index").textContent, line));
                 }
             });
+            showCredit(data.credit);
+            if (data.credit && data.credit.overLimit) {
+                alertsList.insertBefore(creditItem(data.credit), alertsList.firstChild);
+            }
             alertsBox.hidden = alertsList.children.length === 0;
             alertsBox.classList.toggle("order-alerts--warning", data.needsApproval);
             alertsNote.hidden = !data.needsApproval;
@@ -171,15 +215,19 @@
         });
     }
 
-    function showBlocked(blocked, reason) {
+    // overdue: câu báo nợ quá hạn từ server (null nếu không có). Đơn nháp đã có của đại lý quá hạn: lưu được, không gửi được
+    function showBlocked(blocked, reason, overdue) {
         var editingOwnDraft = draftCustomer && draftCustomer === customerSelect.value;
         blockedWarning.hidden = !blocked;
         blockedWarningText.textContent = !blocked ? "" : "Lý do: " + reason + ". " + (editingOwnDraft
             ? "Đơn nháp này vẫn được xử lý tiếp, nhưng không tạo được đơn mới cho đại lý."
             : "Không tạo được đơn mới cho đại lý này.");
-        saveButtons.forEach(function (button) {
-            button.disabled = blocked && !editingOwnDraft;
-        });
+        overdueWarning.hidden = !overdue;
+        overdueWarningText.textContent = !overdue ? "" : overdue + ". " + (editingOwnDraft
+            ? "Đơn nháp này vẫn lưu được nhưng chưa gửi được cho tới khi đại lý thanh toán khoản quá hạn."
+            : "Không tạo được đơn mới cho đại lý này.");
+        saveButtons[0].disabled = Boolean(blocked || overdue) && !editingOwnDraft;
+        saveButtons[1].disabled = blocked && !editingOwnDraft || Boolean(overdue);
     }
 
     function onCustomerChange() {
@@ -188,8 +236,10 @@
         placeholder.value = "";
         placeholder.textContent = "Chọn điểm giao";
         addressSelect.appendChild(placeholder);
-        showBlocked(false, "");
+        showBlocked(false, "", null);
         if (!customerSelect.value) {
+            showCredit(null);
+            alertsBox.hidden = true;
             return;
         }
         var url = form.getAttribute("data-customer-url") + "?customerId=" + encodeURIComponent(customerSelect.value);
@@ -208,7 +258,7 @@
                     option.selected = address.isDefault;
                     addressSelect.appendChild(option);
                 });
-                showBlocked(data.blocked, data.blockReason || "");
+                showBlocked(data.blocked, data.blockReason || "", data.overdue);
                 scheduleQuote();
             })
             .catch(function () {
