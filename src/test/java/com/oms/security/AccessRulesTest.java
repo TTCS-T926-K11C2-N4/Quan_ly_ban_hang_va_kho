@@ -138,6 +138,25 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/units", permissionsOf("WAREHOUSE")));
     }
 
+    // S5-03: ai xem tồn kho cũng xem được kho và vị trí; chỉ Quản lý kho và Admin thêm, sửa kho và vị trí
+    @Test
+    void onlyWarehouseManagersDeclareWarehouses() {
+        for (String path : new String[] {"/warehouses", "/warehouses/export", "/warehouses/locations"}) {
+            for (String role : new String[] {"WAREHOUSE", "WH_MANAGER", "SALES_REP", "ACCOUNTANT", "ADMIN"}) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("CUSTOMER")), path);
+        }
+        for (String path : new String[] {"/warehouses/new", "/warehouses/edit", "/warehouses/locations/save",
+                "/warehouses/locations/status"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("WH_MANAGER")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            for (String role : new String[] {"WAREHOUSE", "SALES_REP", "SALES_MANAGER", "ACCOUNTANT", "CUSTOMER"}) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
     // S2-09: ai xem kho thì xem được nhà cung cấp; chỉ nhân viên kho, quản lý kho, Admin thêm/sửa/xoá/ngừng giao dịch
     @Test
     void onlyWarehouseStaffCanManageSuppliers() {

@@ -722,6 +722,7 @@ CREATE TABLE `warehouses` (
   `id` bigint AUTO_INCREMENT,
   `code` varchar(30) NOT NULL UNIQUE,
   `name` varchar(150) NOT NULL,
+  `description` varchar(200) COMMENT 'Mô tả ngắn hiện dưới tên kho, vd Kho chính, Khu cách ly hàng lỗi (S5-03)',
   `address` varchar(300),
   `manager_user_id` bigint,
   CONSTRAINT fk_warehouses_manager_user_id FOREIGN KEY (`manager_user_id`) REFERENCES `users`(`id`),
@@ -741,6 +742,8 @@ CREATE TABLE `warehouse_locations` (
   `id` bigint AUTO_INCREMENT,
   `warehouse_id` bigint NOT NULL,
   CONSTRAINT fk_warehouse_locations_warehouse_id FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`),
+  `parent_id` bigint COMMENT 'Khu chứa kệ này (cây vị trí Khu > Kệ, S5-03); NULL với khu và kệ đứng riêng',
+  CONSTRAINT fk_warehouse_locations_parent_id FOREIGN KEY (`parent_id`) REFERENCES `warehouse_locations`(`id`),
   `code` varchar(30) NOT NULL,
   `name` varchar(100),
   `location_type` varchar(30) NOT NULL DEFAULT 'RACK' CHECK (`location_type` IN ('ZONE','RACK')) COMMENT 'ZONE | RACK',
@@ -753,7 +756,8 @@ CREATE TABLE `warehouse_locations` (
   `updated_by` bigint,
   CONSTRAINT fk_warehouse_locations_updated_by FOREIGN KEY (`updated_by`) REFERENCES `users`(`id`),
   PRIMARY KEY (`id`),
-  UNIQUE KEY ux_warehouse_locations_warehouse_id_code (`warehouse_id`, `code`)
+  UNIQUE KEY ux_warehouse_locations_warehouse_id_code (`warehouse_id`, `code`),
+  KEY ix_warehouse_locations_parent_id (`parent_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Vị trí lưu trong kho (khu / kệ). pick_sequence = thứ tự đi soạn hàng (S6-03).';
 
 CREATE TABLE `lots` (
