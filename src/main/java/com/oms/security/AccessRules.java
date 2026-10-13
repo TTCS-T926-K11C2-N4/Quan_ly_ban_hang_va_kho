@@ -91,6 +91,10 @@ public final class AccessRules {
             Map.entry("/products/import/preview", Permission.PRODUCT_MANAGE),
             Map.entry("/products/import/result", Permission.PRODUCT_MANAGE),
             Map.entry("/products/import/errors", Permission.PRODUCT_MANAGE),
+            // Giữ chỗ tồn (S5-06): ai xem tồn kho cũng xem được; nhân viên kinh doanh chỉ thấy đơn của đại lý mình
+            // (lọc theo phạm vi ORDER_VIEW trong StockReservationService)
+            Map.entry("/stock/reservations", Permission.INVENTORY_VIEW),
+            Map.entry("/stock/reservations/view", Permission.INVENTORY_VIEW),
             Map.entry("/products/status", Permission.PRODUCT_MANAGE));
 
     private AccessRules() {
