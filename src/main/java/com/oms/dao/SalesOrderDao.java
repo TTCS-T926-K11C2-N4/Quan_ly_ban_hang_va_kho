@@ -194,13 +194,14 @@ public class SalesOrderDao {
     }
 
     // Chụp lại đơn vị, hệ số, giá, giá sàn, chiết khấu của dòng để đổi bảng giá/hệ số sau này không làm sai đơn
-    public void insertItem(Connection connection, long orderId, int lineNo, OrderQuote.Line line, long actorUserId)
+    // Trả về id dòng vừa ghi (để giữ chỗ tồn khi gửi đơn, S4-03)
+    public long insertItem(Connection connection, long orderId, int lineNo, OrderQuote.Line line, long actorUserId)
             throws SQLException {
         String sql = "INSERT INTO sales_order_items (order_id, line_no, product_id, unit_id, unit_factor, qty, qty_base,"
                 + " unit_price, floor_price, price_list_item_id, discount_policy_id, is_manual_price, is_below_floor,"
                 + " discount_amount, line_total, created_at, created_by, updated_at, updated_by)"
                 + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, orderId);
             statement.setInt(2, lineNo);
             statement.setLong(3, line.getProduct().getId());
@@ -219,6 +220,10 @@ public class SalesOrderDao {
             statement.setLong(16, actorUserId);
             statement.setLong(17, actorUserId);
             statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                keys.next();
+                return keys.getLong(1);
+            }
         }
     }
 
@@ -444,8 +449,19 @@ public class SalesOrderDao {
         }
     }
 
-    // Nhả tồn đang giữ chỗ cho các dòng của đơn (giữ chỗ tạo khi đơn được duyệt, S5-06); trả về số dòng giữ chỗ đã nhả
+    // Nhả tồn đang giữ chỗ cho các dòng của đơn (giữ chỗ tạo khi gửi đơn, S4-03): trừ lại qty_reserved_base rồi
+    // đánh dấu RELEASED, cùng transaction; trả về số dòng giữ chỗ đã nhả
     public int releaseReservations(Connection connection, long orderId, String reason) throws SQLException {
+        String balanceSql = "UPDATE stock_balances b JOIN (SELECT r.warehouse_id, r.product_id, SUM(r.qty_base) AS qty"
+                + " FROM stock_reservations r JOIN sales_order_items i ON i.id = r.order_item_id"
+                + " WHERE i.order_id = ? AND r.status = 'ACTIVE' GROUP BY r.warehouse_id, r.product_id) x"
+                + " ON x.warehouse_id = b.warehouse_id AND x.product_id = b.product_id"
+                + " SET b.qty_reserved_base = b.qty_reserved_base - x.qty, b.version = b.version + 1,"
+                + " b.updated_at = UTC_TIMESTAMP()";
+        try (PreparedStatement statement = connection.prepareStatement(balanceSql)) {
+            statement.setLong(1, orderId);
+            statement.executeUpdate();
+        }
         String sql = "UPDATE stock_reservations SET status = 'RELEASED', released_at = UTC_TIMESTAMP(),"
                 + " release_reason = ? WHERE status = 'ACTIVE'"
                 + " AND order_item_id IN (SELECT id FROM sales_order_items WHERE order_id = ?)";
