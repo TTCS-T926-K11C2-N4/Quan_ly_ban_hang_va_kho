@@ -254,7 +254,7 @@
             <%-- "Mở lại": chọn đơn nháp đã lưu để gõ tiếp (AC4 của S3-09) --%>
             <dialog class="order-drafts" id="order-drafts" aria-labelledby="order-drafts-title">
                 <div class="order-drafts__head">
-                    <h2 class="sales-panel__title" id="order-drafts-title">Mở lại đơn nháp</h2>
+                    <h2 class="sales-panel__title" id="order-drafts-title">Mở lại đơn nháp / xem đơn đã gửi</h2>
                     <button class="order-drafts__close" type="button" id="close-drafts" aria-label="Đóng">×</button>
                 </div>
                 <c:choose>
@@ -270,6 +270,26 @@
                                         <span class="order-drafts__no"><c:out value="${item.orderNo}"/></span>
                                         <span class="order-drafts__customer"><c:out value="${item.customerName}"/><c:if test="${item.customerBlocked}"> · đang khoá giao dịch</c:if></span>
                                         <span class="order-drafts__meta">Sửa lúc <c:out value="${item.updatedAtText}"/> · <fmt:formatNumber value="${item.total}" maxFractionDigits="0"/> ₫</span>
+                                    </a>
+                                </li>
+                            </c:forEach>
+                        </ul>
+                    </c:otherwise>
+                </c:choose>
+                <%-- Đơn đã gửi: bấm để xem chi tiết và vòng đời đơn (S4-06) --%>
+                <h3 class="order-drafts__section" id="order-recent-title">Đơn đã gửi gần đây</h3>
+                <c:choose>
+                    <c:when test="${empty recentOrders}">
+                        <p class="sales-empty">Chưa có đơn nào được gửi.</p>
+                    </c:when>
+                    <c:otherwise>
+                        <ul class="order-drafts__list" aria-labelledby="order-recent-title">
+                            <c:forEach var="item" items="${recentOrders}">
+                                <li>
+                                    <a class="order-drafts__item" href="<c:url value='/orders/view'><c:param name='id' value='${item.id}'/></c:url>">
+                                        <span class="order-drafts__no"><c:out value="${item.orderNo}"/> <span class="order-status order-status--${item.statusTone}">${item.statusLabel}</span></span>
+                                        <span class="order-drafts__customer"><c:out value="${item.customerName}"/></span>
+                                        <span class="order-drafts__meta">Cập nhật <c:out value="${item.updatedAtText}"/> · <fmt:formatNumber value="${item.total}" maxFractionDigits="0"/> ₫</span>
                                     </a>
                                 </li>
                             </c:forEach>

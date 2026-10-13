@@ -233,3 +233,59 @@
     }
     renumber();
 })();
+
+// Chi tiết đơn hàng (S4-06): mở hộp Huỷ đơn / Ý nghĩa trạng thái, đóng bằng nút hoặc bấm ra ngoài;
+// huỷ đơn bắt buộc lý do (server kiểm tra lại). Lưu lỗi lý do thì hộp huỷ tự mở lại (data-open).
+(function () {
+    var cancelDialog = document.getElementById("cancel-order-dialog");
+    var legendDialog = document.getElementById("status-legend-dialog");
+    if (!cancelDialog && !legendDialog) {
+        return;
+    }
+    function open(dialog, focus) {
+        if (dialog && typeof dialog.showModal === "function") {
+            dialog.showModal();
+            if (focus) {
+                focus.focus();
+            }
+        }
+    }
+    document.querySelectorAll(".order-dialog").forEach(function (dialog) {
+        dialog.addEventListener("click", function (event) {
+            if (event.target === dialog || event.target.closest("[data-close-dialog]")) {
+                dialog.close();
+            }
+        });
+    });
+    var legendButton = document.getElementById("open-status-legend");
+    if (legendButton) {
+        legendButton.addEventListener("click", function () { open(legendDialog); });
+    }
+    if (!cancelDialog) {
+        return;
+    }
+    var reason = document.getElementById("cancel-reason");
+    var openButton = document.getElementById("open-cancel-order");
+    if (openButton) {
+        openButton.addEventListener("click", function () { open(cancelDialog, reason); });
+    }
+    if (cancelDialog.getAttribute("data-open") === "1") {
+        open(cancelDialog, reason);
+    }
+    var field = reason.closest(".sales-field");
+    cancelDialog.querySelector("form").addEventListener("submit", function (event) {
+        if (reason.value.trim()) {
+            return;
+        }
+        event.preventDefault();
+        var error = field.querySelector(".sales-field__error");
+        if (!error) {
+            error = document.createElement("p");
+            error.className = "sales-field__error";
+            field.appendChild(error);
+        }
+        error.textContent = "Vui lòng nhập lý do huỷ đơn.";
+        field.classList.add("sales-field--invalid");
+        reason.focus();
+    });
+})();
