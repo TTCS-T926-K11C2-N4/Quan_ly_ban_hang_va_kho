@@ -1,6 +1,7 @@
 package com.oms.controller;
 
 import com.oms.model.Customer;
+import com.oms.model.CustomerCredit;
 import com.oms.model.DeliveryAddress;
 import com.oms.model.Permission;
 import com.oms.service.CustomerService;
@@ -18,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// S3-09: khi đổi đại lý trên màn tạo đơn, orders.js lấy điểm giao và trạng thái khoá của đại lý đó (JSON)
+// S3-09: khi đổi đại lý trên màn tạo đơn, orders.js lấy điểm giao, trạng thái khoá và nợ quá hạn (S4-02) của đại lý (JSON)
 @WebServlet("/orders/customer-data")
 public class OrderCustomerDataServlet extends HttpServlet {
 
@@ -47,6 +48,9 @@ public class OrderCustomerDataServlet extends HttpServlet {
             data.put("blocked", customer.isBlocked());
             data.put("blockReason", customer.getBlockReason());
             data.put("active", customer.isActive());
+            // S4-02 AC3: có nợ quá hạn thì chặn tạo đơn mới như đại lý bị khoá
+            CustomerCredit credit = orderService.credit(customer);
+            data.put("overdue", credit != null && credit.isOverdue() ? SalesOrderService.overdueMessage(credit) : null);
             data.put("addresses", addresses);
             OrderJson.write(response, JsonUtil.object(data));
         } catch (SQLException e) {

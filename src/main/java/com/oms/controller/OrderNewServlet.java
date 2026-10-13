@@ -2,6 +2,7 @@ package com.oms.controller;
 
 import com.oms.dao.SalesOrderDao;
 import com.oms.model.Customer;
+import com.oms.model.CustomerCredit;
 import com.oms.model.DeliveryAddress;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderProduct;
@@ -89,7 +90,8 @@ public class OrderNewServlet extends HttpServlet {
                     : orderService.getDeliveryAddresses(customer.getId());
             OrderQuote quote = customer == null ? null
                     : orderService.quote(customer, form.getLines(), orderService.getProducts());
-            Map<String, String> errors = orderService.validate(form, customer, draft, submit, addresses, quote);
+            Map<String, String> errors = orderService.validate(form, customer, draft, submit, addresses, quote,
+                    orderService.credit(customer));
             if (!errors.isEmpty()) {
                 show(request, response, form, draft, errors);
                 return;
@@ -136,8 +138,14 @@ public class OrderNewServlet extends HttpServlet {
         request.setAttribute("selectedCustomer", customer);
         request.setAttribute("addresses", customer == null ? List.of()
                 : orderService.getDeliveryAddresses(customer.getId()));
-        request.setAttribute("quote", customer == null ? null
-                : orderService.quote(customer, form.getLines(), products));
+        OrderQuote quote = customer == null ? null : orderService.quote(customer, form.getLines(), products);
+        CustomerCredit credit = orderService.credit(customer);
+        request.setAttribute("quote", quote);
+        // S4-02: khối công nợ dưới ô Đại lý; vượt hạn mức thì báo cần duyệt, quá hạn thì chặn đơn mới
+        request.setAttribute("credit", credit);
+        request.setAttribute("overCreditLimit", credit != null && credit.exceeds(quote.getTotal()));
+        request.setAttribute("overdueMessage", credit != null && credit.isOverdue()
+                ? SalesOrderService.overdueMessage(credit) : null);
         request.setAttribute("form", form);
         request.setAttribute("draft", draft);
         request.setAttribute("drafts", orderService.findVisibleDrafts(userId));

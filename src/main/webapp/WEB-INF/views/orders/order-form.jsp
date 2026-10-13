@@ -7,6 +7,8 @@
 <c:set var="breadcrumbPage" value="Tạo đơn hàng"/>
 <%-- Đang mở lại đơn nháp của đại lý bị khoá: vẫn sửa/gửi được nhưng có cảnh báo (AC3 của S3-07) --%>
 <c:set var="draftOfBlocked" value="${not empty draft and not empty selectedCustomer and selectedCustomer.blocked and draft.customerId == selectedCustomer.id}"/>
+<%-- S4-02 AC3: nợ quá hạn chặn đơn mới; đơn nháp đã có của đại lý thì lưu được nhưng không gửi được --%>
+<c:set var="ownDraft" value="${not empty draft and not empty selectedCustomer and draft.customerId == selectedCustomer.id}"/>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -49,6 +51,10 @@
             <div class="sales-flash sales-flash--warning" id="blocked-warning" role="status" data-toast="off"${draftOfBlocked ? '' : ' hidden'}>
                 <strong>Đại lý đang bị khoá giao dịch.</strong>
                 <span id="blocked-warning-text"><c:if test="${draftOfBlocked}">Lý do: <c:out value="${selectedCustomer.blockReason}"/>. Đơn nháp này vẫn được xử lý tiếp, nhưng không tạo được đơn mới cho đại lý.</c:if></span>
+            </div>
+            <div class="sales-flash sales-flash--error" id="overdue-warning" role="status" data-toast="off"${empty overdueMessage ? ' hidden' : ''}>
+                <strong>Đại lý có nợ quá hạn.</strong>
+                <span id="overdue-warning-text"><c:if test="${not empty overdueMessage}"><c:out value="${overdueMessage}"/>. ${ownDraft ? 'Đơn nháp này vẫn lưu được nhưng chưa gửi được cho tới khi đại lý thanh toán khoản quá hạn.' : 'Không tạo được đơn mới cho đại lý này.'}</c:if></span>
             </div>
 
             <form class="sales-card order-form" id="order-form" method="post" action="<c:url value='/orders/new'/>" novalidate
@@ -101,6 +107,39 @@
                         <p class="sales-field__error" id="order-date-error"${empty errors.requestedDate ? ' hidden' : ''}><c:out value="${errors.requestedDate}"/></p>
                     </div>
                 </div>
+
+                <%-- S4-02 AC1: công nợ hiện tại, hạn mức và phần còn lại của đại lý; orders.js cập nhật sau mỗi lần tính tiền --%>
+                <section class="order-credit${overCreditLimit ? ' order-credit--over' : ''}" id="order-credit" aria-labelledby="order-credit-title" aria-live="polite"${empty credit ? ' hidden' : ''}>
+                    <div class="order-credit__head">
+                        <h3 class="order-credit__title" id="order-credit-title">Công nợ đại lý</h3>
+                        <span class="order-credit__terms" id="credit-terms">Số ngày nợ tối đa: ${credit.maxDebtDays} ngày</span>
+                    </div>
+                    <dl class="order-credit__stats">
+                        <div class="order-credit__stat">
+                            <dt>Hạn mức</dt>
+                            <dd id="credit-limit">${credit.limitGranted ? '' : 'Chưa cấp hạn mức'}<c:if test="${credit.limitGranted}"><fmt:formatNumber value="${credit.creditLimit}" maxFractionDigits="0"/> ₫</c:if></dd>
+                        </div>
+                        <div class="order-credit__stat">
+                            <dt>Công nợ hiện tại</dt>
+                            <dd id="credit-ledger"><fmt:formatNumber value="${empty credit ? 0 : credit.ledgerBalance}" maxFractionDigits="0"/> ₫</dd>
+                        </div>
+                        <div class="order-credit__stat">
+                            <dt>Đơn chưa xuất hoá đơn</dt>
+                            <dd id="credit-open"><fmt:formatNumber value="${empty credit ? 0 : credit.openOrders}" maxFractionDigits="0"/> ₫</dd>
+                        </div>
+                        <div class="order-credit__stat order-credit__stat--main">
+                            <dt>Còn lại</dt>
+                            <dd id="credit-available"${not empty credit and credit.available.signum() < 0 ? ' class="order-credit__value--negative"' : ''}><fmt:formatNumber value="${empty credit ? 0 : credit.available}" maxFractionDigits="0"/> ₫</dd>
+                        </div>
+                    </dl>
+                    <progress class="order-credit__bar" id="credit-bar" max="100" value="${empty credit ? 0 : credit.usedPercent}" aria-label="Phần hạn mức đã dùng">${credit.usedPercent}%</progress>
+                    <p class="order-credit__after" id="credit-after">
+                        <c:choose>
+                            <c:when test="${overCreditLimit}">Vượt hạn mức <strong><fmt:formatNumber value="${credit.getExceededBy(quote.total)}" maxFractionDigits="0"/> ₫</strong> nếu gửi đơn này: đơn sẽ được đánh dấu cần duyệt.</c:when>
+                            <c:when test="${not empty credit}">Sau đơn này còn <strong><fmt:formatNumber value="${credit.getAvailableAfter(quote.total)}" maxFractionDigits="0"/> ₫</strong>.</c:when>
+                        </c:choose>
+                    </p>
+                </section>
 
                 <section class="order-lines" aria-labelledby="order-lines-title">
                     <div class="section-head">
@@ -185,9 +224,13 @@
                 </section>
 
                 <%-- S4-01: dòng sửa giá tay / dưới giá sàn; orders.js dựng lại sau mỗi lần tính tiền --%>
-                <section class="order-alerts${quote.needsApproval ? ' order-alerts--warning' : ''}" id="order-alerts" aria-labelledby="order-alerts-title" aria-live="polite"${not empty quote and quote.priceFlagged ? '' : ' hidden'}>
+                <c:set var="needsApproval" value="${quote.needsApproval or overCreditLimit}"/>
+                <section class="order-alerts${needsApproval ? ' order-alerts--warning' : ''}" id="order-alerts" aria-labelledby="order-alerts-title" aria-live="polite"${not empty quote and (quote.priceFlagged or overCreditLimit) ? '' : ' hidden'}>
                     <h3 class="order-alerts__title" id="order-alerts-title">Thông báo &amp; cảnh báo</h3>
                     <ul class="order-alerts__list" id="order-alerts-list">
+                        <c:if test="${overCreditLimit}">
+                            <li class="order-alerts__item order-alerts__item--warning"><strong>Hạn mức công nợ:</strong> tổng đơn cộng công nợ hiện tại vượt hạn mức <fmt:formatNumber value="${credit.getExceededBy(quote.total)}" maxFractionDigits="0"/> ₫.</li>
+                        </c:if>
                         <c:forEach var="priced" items="${quote.lines}" varStatus="loop">
                             <c:if test="${empty priced.error and (priced.manualPrice or priced.belowFloor)}">
                                 <li class="order-alerts__item order-alerts__item--${priced.belowFloor ? 'warning' : 'info'}">
@@ -200,7 +243,7 @@
                             </c:if>
                         </c:forEach>
                     </ul>
-                    <p class="order-alerts__note" id="order-alerts-note"${quote.needsApproval ? '' : ' hidden'}>Đơn có dòng bán dưới giá sàn nên sẽ được đánh dấu <strong>Cần duyệt</strong> để quản lý kinh doanh xem xét.</p>
+                    <p class="order-alerts__note" id="order-alerts-note"${needsApproval ? '' : ' hidden'}>Đơn sẽ được đánh dấu <strong>Cần duyệt</strong> để quản lý kinh doanh xem xét.</p>
                 </section>
 
                 <div class="order-form__bottom">
@@ -229,12 +272,12 @@
 
                 <div class="sales-actions order-form__actions">
                     <a class="sales-button" href="<c:url value='${currentUser.homePath}'/>">Hủy</a>
-                    <button class="sales-button sales-button--soft" type="submit" name="action" value="draft" id="save-draft">
+                    <button class="sales-button sales-button--soft" type="submit" name="action" value="draft" id="save-draft"${not empty overdueMessage and not ownDraft ? ' disabled' : ''}>
                         <img class="sales-button__icon" src="<c:url value='/assets/img/icons/save.svg'/>" alt="" width="15" height="15">
                         Lưu nháp
                     </button>
                     <button class="sales-button" type="button" id="open-drafts" aria-haspopup="dialog">Mở lại</button>
-                    <button class="sales-button sales-button--primary" type="submit" name="action" value="submit" id="submit-order">
+                    <button class="sales-button sales-button--primary" type="submit" name="action" value="submit" id="submit-order"${not empty overdueMessage ? ' disabled' : ''}>
                         Tạo đơn hàng
                         <img class="sales-button__icon" src="<c:url value='/assets/img/icons/arrow-right.svg'/>" alt="" width="15" height="15">
                     </button>
