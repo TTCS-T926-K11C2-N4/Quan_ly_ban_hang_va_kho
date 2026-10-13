@@ -26,7 +26,7 @@
 
 .order-table__table {
     width: 100%;
-    min-width: 860px;
+    min-width: 980px;
     border-collapse: collapse;
     font-size: 12px;
 }
@@ -73,6 +73,151 @@
 
 .order-table__action {
     width: 57px;
+}
+
+/* S4-01: ô Đơn giá sửa tay + nhãn Sửa tay / Dưới giá sàn */
+.order-table__price {
+    width: 150px;
+}
+
+.order-line__price-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.order-line__price-box {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.order-line__price {
+    text-align: right;
+}
+
+.order-line__price::placeholder {
+    color: #94a3b8;
+}
+
+.order-line--below-floor .order-line__price {
+    border-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.order-line__reset {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    font-size: 14px;
+    line-height: 1;
+    color: #475569;
+    cursor: pointer;
+}
+
+.order-line__reset:hover {
+    background: var(--color-sales-soft);
+}
+
+.order-line__reset:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.order-line__reset[hidden],
+.order-line__tag[hidden],
+.order-alerts[hidden] {
+    display: none;
+}
+
+.order-line__tag {
+    display: inline-flex;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+.order-line__tag--manual {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.order-line__tag--below {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.order-items__money .order-line__tag {
+    display: table;
+    margin: 3px 0 0 auto;
+}
+
+/* Khung Thông báo & cảnh báo dưới bảng hàng */
+.order-alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+    font-size: 12px;
+    color: var(--color-sales-text);
+}
+
+.order-alerts--warning {
+    border-color: #fde68a;
+    background: #fffbeb;
+}
+
+.order-alerts__title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-sales-heading);
+}
+
+.order-alerts__list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.order-alerts__item {
+    position: relative;
+    padding-left: 14px;
+    line-height: 1.5;
+}
+
+.order-alerts__item::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2563eb;
+}
+
+.order-alerts__item--warning::before {
+    background: #d97706;
+}
+
+.order-alerts__note {
+    font-weight: 600;
+    color: #92400e;
 }
 
 .order-line__total {
