@@ -100,6 +100,7 @@ public final class AuditCatalog {
         action("ORDER_CREATE", "Thêm mới", GROUP_CREATE);
         action("ORDER_UPDATE", "Sửa đơn nháp", GROUP_UPDATE);
         action("ORDER_SUBMIT", "Gửi duyệt", GROUP_STATUS);
+        action("ORDER_CANCEL", "Huỷ đơn", GROUP_STATUS);
     }
 
     private AuditCatalog() {

@@ -8,6 +8,7 @@ import com.oms.model.OrderProduct;
 import com.oms.model.OrderQuote;
 import com.oms.model.Permission;
 import com.oms.service.CustomerService;
+import com.oms.service.OrderLifecycleService;
 import com.oms.service.SalesOrderService;
 import com.oms.util.DateTimeUtil;
 import jakarta.servlet.ServletException;
@@ -33,6 +34,7 @@ public class OrderNewServlet extends HttpServlet {
 
     private final CustomerService customerService = new CustomerService();
     private final SalesOrderService orderService = new SalesOrderService();
+    private final OrderLifecycleService lifecycle = new OrderLifecycleService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -100,9 +102,10 @@ public class OrderNewServlet extends HttpServlet {
                 return;
             }
             if (submit) {
-                request.getSession().setAttribute(FLASH_MESSAGE, "Đã tạo đơn hàng " + saved.getOrderNo() + " cho \""
-                        + customer.getName() + "\" và chuyển sang chờ duyệt.");
-                response.sendRedirect(request.getContextPath() + "/orders/new");
+                // Gửi đơn xong mở trang chi tiết để theo dõi vòng đời đơn (S4-06)
+                request.getSession().setAttribute(OrderViewServlet.FLASH_MESSAGE, "Đã tạo đơn hàng "
+                        + saved.getOrderNo() + " cho \"" + customer.getName() + "\" và chuyển sang chờ duyệt.");
+                response.sendRedirect(request.getContextPath() + "/orders/view?id=" + saved.getId());
             } else {
                 request.getSession().setAttribute(FLASH_MESSAGE, "Đã lưu nháp đơn " + saved.getOrderNo()
                         + ". Có thể bấm \"Mở lại\" để gõ tiếp bất cứ lúc nào.");
@@ -138,6 +141,7 @@ public class OrderNewServlet extends HttpServlet {
         request.setAttribute("form", form);
         request.setAttribute("draft", draft);
         request.setAttribute("drafts", orderService.findVisibleDrafts(userId));
+        request.setAttribute("recentOrders", lifecycle.findVisibleRecent(userId));
         request.setAttribute("errors", errors);
         request.setAttribute("today", DateTimeUtil.today().toString());
         request.getRequestDispatcher(VIEW).forward(request, response);

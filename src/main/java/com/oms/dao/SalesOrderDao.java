@@ -1,6 +1,7 @@
 package com.oms.dao;
 
 import com.oms.model.DraftOrder;
+import com.oms.model.OrderDetail;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderProduct;
 import com.oms.model.OrderQuote;
@@ -237,7 +238,7 @@ public class SalesOrderDao {
                     drafts.add(new DraftOrder(resultSet.getLong("id"), resultSet.getString("order_no"),
                             resultSet.getString("name"), resultSet.getBoolean("is_blocked"),
                             resultSet.getBigDecimal("total_amount"),
-                            resultSet.getObject("updated_at", LocalDateTime.class)));
+                            resultSet.getObject("updated_at", LocalDateTime.class), DRAFT));
                 }
             }
         }
@@ -298,6 +299,153 @@ public class SalesOrderDao {
         }
     }
 
+    // Chi tiết đơn cho màn Chi tiết đơn hàng (S4-06); null nếu không có đơn này
+    public OrderDetail findDetail(long id) throws SQLException {
+        String headerSql = "SELECT o.id, o.order_no, o.status, o.version, o.customer_id, c.code AS customer_code,"
+                + " c.name AS customer_name, c.tax_code, c.phone AS customer_phone, c.address AS customer_address,"
+                + " g.name AS group_name, a.label, a.address AS delivery_address, a.receiver_name, a.receiver_phone,"
+                + " a.route_note, w.name AS warehouse_name, rep.full_name AS rep_name, cb.full_name AS created_by_name,"
+                + " o.requested_delivery_date, o.created_at, o.submitted_at, o.approved_at, o.cancelled_at,"
+                + " o.cancel_reason, xb.full_name AS cancelled_by_name, o.needs_approval, o.subtotal_amount,"
+                + " o.discount_amount, o.total_amount, o.note FROM sales_orders o"
+                + " JOIN customers c ON c.id = o.customer_id JOIN customer_groups g ON g.id = c.customer_group_id"
+                + " JOIN customer_delivery_addresses a ON a.id = o.delivery_address_id"
+                + " JOIN warehouses w ON w.id = o.warehouse_id LEFT JOIN users rep ON rep.id = o.sales_rep_id"
+                + " LEFT JOIN users cb ON cb.id = o.created_by LEFT JOIN users xb ON xb.id = o.cancelled_by"
+                + " WHERE o.id = ?";
+        String itemSql = "SELECT i.line_no, p.sku, p.name, u.name AS unit_name, bu.name AS base_unit_name, i.qty,"
+                + " i.qty_base, i.unit_price, i.discount_amount, i.line_total FROM sales_order_items i"
+                + " JOIN products p ON p.id = i.product_id JOIN units u ON u.id = i.unit_id"
+                + " JOIN units bu ON bu.id = p.base_unit_id WHERE i.order_id = ? ORDER BY i.line_no";
+        String historySql = "SELECT h.from_status, h.to_status, h.note, h.created_at, u.full_name"
+                + " FROM order_status_history h LEFT JOIN users u ON u.id = h.created_by WHERE h.order_id = ?"
+                + " ORDER BY h.created_at, h.id";
+        try (Connection connection = DbConnection.getConnection()) {
+            List<OrderDetail.Item> items = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(itemSql)) {
+                statement.setLong(1, id);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        items.add(new OrderDetail.Item(resultSet.getInt("line_no"), resultSet.getString("sku"),
+                                resultSet.getString("name"), resultSet.getString("unit_name"),
+                                resultSet.getString("base_unit_name"), resultSet.getBigDecimal("qty"),
+                                resultSet.getBigDecimal("qty_base"), resultSet.getBigDecimal("unit_price"),
+                                resultSet.getBigDecimal("discount_amount"), resultSet.getBigDecimal("line_total")));
+                    }
+                }
+            }
+            List<OrderDetail.HistoryEntry> history = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(historySql)) {
+                statement.setLong(1, id);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        history.add(new OrderDetail.HistoryEntry(resultSet.getString("from_status"),
+                                resultSet.getString("to_status"), resultSet.getString("note"),
+                                resultSet.getObject("created_at", LocalDateTime.class),
+                                resultSet.getString("full_name")));
+                    }
+                }
+            }
+            try (PreparedStatement statement = connection.prepareStatement(headerSql)) {
+                statement.setLong(1, id);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) {
+                        return null;
+                    }
+                    return new OrderDetail(resultSet.getLong("id"), resultSet.getString("order_no"),
+                            resultSet.getString("status"), resultSet.getLong("version"),
+                            resultSet.getLong("customer_id"), resultSet.getString("customer_code"),
+                            resultSet.getString("customer_name"), resultSet.getString("tax_code"),
+                            resultSet.getString("customer_phone"), resultSet.getString("customer_address"),
+                            resultSet.getString("group_name"), resultSet.getString("label"),
+                            resultSet.getString("delivery_address"), resultSet.getString("receiver_name"),
+                            resultSet.getString("receiver_phone"), resultSet.getString("route_note"),
+                            resultSet.getString("warehouse_name"), resultSet.getString("rep_name"),
+                            resultSet.getString("created_by_name"),
+                            resultSet.getObject("requested_delivery_date", LocalDate.class),
+                            resultSet.getObject("created_at", LocalDateTime.class),
+                            resultSet.getObject("submitted_at", LocalDateTime.class),
+                            resultSet.getObject("approved_at", LocalDateTime.class),
+                            resultSet.getObject("cancelled_at", LocalDateTime.class),
+                            resultSet.getString("cancel_reason"), resultSet.getString("cancelled_by_name"),
+                            resultSet.getBoolean("needs_approval"), resultSet.getBigDecimal("subtotal_amount"),
+                            resultSet.getBigDecimal("discount_amount"), resultSet.getBigDecimal("total_amount"),
+                            resultSet.getString("note"), items, history);
+                }
+            }
+        }
+    }
+
+    // Đơn đã gửi (không còn nháp) mới cập nhật gần nhất; salesRepId như findDrafts
+    public List<DraftOrder> findRecentSubmitted(Long salesRepId, int limit) throws SQLException {
+        String sql = "SELECT o.id, o.order_no, c.name, c.is_blocked, o.status, o.total_amount, o.updated_at"
+                + " FROM sales_orders o JOIN customers c ON c.id = o.customer_id WHERE o.status <> 'DRAFT'"
+                + (salesRepId == null ? "" : " AND c.sales_rep_id = ?") + " ORDER BY o.updated_at DESC, o.id DESC"
+                + " LIMIT ?";
+        List<DraftOrder> orders = new ArrayList<>();
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            int next = 1;
+            if (salesRepId != null) {
+                statement.setLong(next++, salesRepId);
+            }
+            statement.setInt(next, limit);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    orders.add(new DraftOrder(resultSet.getLong("id"), resultSet.getString("order_no"),
+                            resultSet.getString("name"), resultSet.getBoolean("is_blocked"),
+                            resultSet.getBigDecimal("total_amount"),
+                            resultSet.getObject("updated_at", LocalDateTime.class), resultSet.getString("status")));
+                }
+            }
+        }
+        return orders;
+    }
+
+    // Lịch sử đổi trạng thái chỉ được thêm (trigger chặn sửa/xoá); fromStatus = null khi đơn vừa được tạo
+    public void insertStatusHistory(Connection connection, long orderId, String fromStatus, String toStatus,
+                                    String note, long actorUserId) throws SQLException {
+        String sql = "INSERT INTO order_status_history (order_id, from_status, to_status, note, created_at, created_by)"
+                + " VALUES (?, ?, ?, ?, UTC_TIMESTAMP(), ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, orderId);
+            statement.setString(2, fromStatus);
+            statement.setString(3, toStatus);
+            statement.setString(4, note);
+            statement.setLong(5, actorUserId);
+            statement.executeUpdate();
+        }
+    }
+
+    // Huỷ đơn khi còn đúng trạng thái và đúng version lúc mở; false nếu đơn vừa đổi trạng thái / được sửa nơi khác
+    public boolean cancel(Connection connection, long id, long version, String fromStatus, String reason,
+                          long actorUserId) throws SQLException {
+        String sql = "UPDATE sales_orders SET status = 'CANCELLED', cancel_reason = ?, cancelled_at = UTC_TIMESTAMP(),"
+                + " cancelled_by = ?, version = version + 1, updated_at = UTC_TIMESTAMP(), updated_by = ?"
+                + " WHERE id = ? AND version = ? AND status = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, reason);
+            statement.setLong(2, actorUserId);
+            statement.setLong(3, actorUserId);
+            statement.setLong(4, id);
+            statement.setLong(5, version);
+            statement.setString(6, fromStatus);
+            return statement.executeUpdate() == 1;
+        }
+    }
+
+    // Nhả tồn đang giữ chỗ cho các dòng của đơn (giữ chỗ tạo khi đơn được duyệt, S5-06); trả về số dòng giữ chỗ đã nhả
+    public int releaseReservations(Connection connection, long orderId, String reason) throws SQLException {
+        String sql = "UPDATE stock_reservations SET status = 'RELEASED', released_at = UTC_TIMESTAMP(),"
+                + " release_reason = ? WHERE status = 'ACTIVE'"
+                + " AND order_item_id IN (SELECT id FROM sales_order_items WHERE order_id = ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, reason);
+            statement.setLong(2, orderId);
+            return statement.executeUpdate();
+        }
+    }
+
     private static String submittedAt(Header header) {
         return header.submitted ? "UTC_TIMESTAMP()" : "NULL";
     }
@@ -355,6 +503,10 @@ public class SalesOrderDao {
             this.discount = discount;
             this.total = total;
             this.note = note;
+        }
+
+        public boolean isSubmitted() {
+            return submitted;
         }
     }
 

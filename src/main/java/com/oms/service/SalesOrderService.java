@@ -208,6 +208,10 @@ public class SalesOrderService {
             try {
                 long orderId = orderDao.insert(connection, orderNo, header, actorUserId);
                 insertItems(connection, orderId, quote, actorUserId);
+                // Vòng đời đơn (S4-06): ghi bước đầu tiên ngay khi tạo
+                orderDao.insertStatusHistory(connection, orderId, null,
+                        header.isSubmitted() ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
+                        header.isSubmitted() ? "Tạo đơn và gửi duyệt" : "Tạo đơn nháp", actorUserId);
                 insertAudit(connection, actorUserId, orderId, audit);
                 connection.commit();
                 return orderId;
@@ -230,6 +234,10 @@ public class SalesOrderService {
                 }
                 orderDao.deleteItems(connection, orderId);
                 insertItems(connection, orderId, quote, actorUserId);
+                if (header.isSubmitted()) {
+                    orderDao.insertStatusHistory(connection, orderId, STATUS_DRAFT, STATUS_PENDING_APPROVAL,
+                            "Gửi duyệt", actorUserId);
+                }
                 insertAudit(connection, actorUserId, orderId, audit);
                 connection.commit();
                 return true;
