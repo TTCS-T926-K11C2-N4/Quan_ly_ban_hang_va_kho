@@ -143,7 +143,11 @@
 
                 <section class="order-lines" aria-labelledby="order-lines-title">
                     <div class="section-head">
-                        <h3 class="section-head__title order-lines__title" id="order-lines-title">Danh sách hàng hóa</h3>
+                        <div>
+                            <h3 class="section-head__title order-lines__title" id="order-lines-title">Danh sách hàng hóa</h3>
+                            <%-- S4-03 AC1: tồn khả dụng tính theo kho phục vụ của đại lý --%>
+                            <p class="section-head__desc" id="order-stock-warehouse"${empty stock.warehouseName ? ' hidden' : ''}>Tồn khả dụng tại <strong id="order-stock-warehouse-name"><c:out value="${stock.warehouseName}"/></strong> (kho phục vụ đại lý)</p>
+                        </div>
                         <button class="sales-button sales-button--soft sales-button--small" type="button" id="add-order-line">
                             <img class="sales-button__icon" src="<c:url value='/assets/img/icons/plus.svg'/>" alt="" width="14" height="14">
                             Thêm dòng hàng
@@ -173,7 +177,9 @@
                                     <c:set var="lineKey">lines.${loop.index}</c:set>
                                     <c:set var="priced" value="${quote.lines[loop.index]}"/>
                                     <c:set var="lineProduct" value="${productsById[line.productId]}"/>
-                                    <tr class="order-line${not empty errors[lineKey] ? ' order-line--invalid' : ''}">
+                                    <c:set var="lineStock" value="${empty stock ? null : stock.lines[loop.index]}"/>
+                                    <c:set var="stockShown" value="${not empty lineStock and lineStock.checked}"/>
+                                    <tr class="order-line${not empty errors[lineKey] ? ' order-line--invalid' : ''}${stockShown and lineStock.shortage ? ' order-line--short' : ''}">
                                         <td class="order-table__index order-line__index" data-label="STT"><fmt:formatNumber value="${loop.index + 1}" minIntegerDigits="2"/></td>
                                         <td class="order-table__product" data-label="Mã hàng / Tên hàng">
                                             <input type="hidden" class="order-line__product-id" name="productId" value="<c:out value='${line.productId}'/>">
@@ -190,8 +196,19 @@
                                             </select>
                                         </td>
                                         <td class="order-table__qty" data-label="Số lượng">
-                                            <input class="order-line__control order-line__qty" type="text" name="qty" inputmode="decimal" maxlength="16"
-                                                   value="<c:out value='${line.qty}'/>" placeholder="0" aria-label="Số lượng dòng ${loop.index + 1}">
+                                            <div class="order-line__qty-cell">
+                                                <input class="order-line__control order-line__qty" type="text" name="qty" inputmode="decimal" maxlength="16"
+                                                       value="<c:out value='${line.qty}'/>" placeholder="0" aria-label="Số lượng dòng ${loop.index + 1}">
+                                                <p class="order-line__stock${stockShown and not lineStock.tracked ? ' order-line__stock--untracked' : ''}${stockShown and lineStock.shortage ? ' order-line__stock--short' : ''}"${stockShown ? '' : ' hidden'}>
+                                                    <span class="order-line__stock-text"><c:choose>
+                                                        <c:when test="${not stockShown}"></c:when>
+                                                        <c:when test="${not lineStock.tracked}">Chưa có số tồn ở kho</c:when>
+                                                        <c:when test="${lineStock.shortage}">Vượt tồn · khả dụng <c:out value="${lineStock.availableText}"/></c:when>
+                                                        <c:otherwise>Khả dụng: <c:out value="${lineStock.availableText}"/></c:otherwise>
+                                                    </c:choose></span>
+                                                    <button class="order-line__stock-max" type="button" data-qty="${lineStock.maxQtyText}"${stockShown and lineStock.shortage and lineStock.maxQty.signum() > 0 ? '' : ' hidden'}>Đặt tối đa <c:out value="${lineStock.maxText}"/></button>
+                                                </p>
+                                            </div>
                                         </td>
                                         <%-- S4-01: để trống là giá bảng giá (hiện mờ làm gợi ý); gõ giá khác là sửa tay --%>
                                         <c:set var="pricedOk" value="${not empty priced and empty priced.error}"/>
@@ -314,8 +331,14 @@
                         <select class="order-line__control order-line__unit" name="unitId" aria-label="Đơn vị tính"></select>
                     </td>
                     <td class="order-table__qty" data-label="Số lượng">
-                        <input class="order-line__control order-line__qty" type="text" name="qty" inputmode="decimal" maxlength="16"
-                               placeholder="0" aria-label="Số lượng">
+                        <div class="order-line__qty-cell">
+                            <input class="order-line__control order-line__qty" type="text" name="qty" inputmode="decimal" maxlength="16"
+                                   placeholder="0" aria-label="Số lượng">
+                            <p class="order-line__stock" hidden>
+                                <span class="order-line__stock-text"></span>
+                                <button class="order-line__stock-max" type="button" hidden></button>
+                            </p>
+                        </div>
                     </td>
                     <td class="order-table__price" data-label="Đơn giá">
                         <div class="order-line__price-cell">
