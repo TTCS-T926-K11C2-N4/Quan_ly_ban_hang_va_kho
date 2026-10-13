@@ -429,6 +429,17 @@ ol {
     margin: 0 8px;
 }
 
+/* Cấp cha có link (breadcrumbParent): cùng màu chữ breadcrumb, gạch chân khi rê chuột */
+.app-breadcrumb__link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.app-breadcrumb__link:hover {
+    color: var(--color-text);
+    text-decoration: underline;
+}
+
 .app-search {
     display: flex;
     flex-shrink: 0;
