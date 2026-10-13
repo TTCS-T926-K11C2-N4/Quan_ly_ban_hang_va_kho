@@ -48,6 +48,14 @@ public class OrderQuoteServlet extends HttpServlet {
                 item.put("discount", line.getError() == null ? money(line.getDiscount()) : "—");
                 item.put("total", line.getError() == null ? money(line.getTotal()) : "—");
                 item.put("error", line.getError());
+                // S4-01: giá bảng giá làm gợi ý cho ô Đơn giá; giá sàn để cảnh báo khi giá thực bán xuống dưới
+                item.put("sku", line.getProduct() == null ? null : line.getProduct().getSku());
+                item.put("listPrice", line.getError() == null ? MoneyUtil.format(line.getListPrice()) : null);
+                item.put("floorPrice", line.getError() == null ? money(line.getFloorPrice()) : null);
+                item.put("unitPrice", line.getError() == null ? money(line.getUnitPrice()) : null);
+                item.put("netPrice", line.getError() == null ? money(line.getNetUnitPrice()) : null);
+                item.put("manual", line.isManualPrice());
+                item.put("belowFloor", line.isBelowFloor());
                 lines.add(item);
             }
             Map<String, Object> data = new LinkedHashMap<>();
@@ -56,6 +64,7 @@ public class OrderQuoteServlet extends HttpServlet {
             data.put("discount", quote.getDiscount().signum() == 0 ? money(quote.getDiscount())
                     : "-" + money(quote.getDiscount()));
             data.put("total", money(quote.getTotal()));
+            data.put("needsApproval", quote.isNeedsApproval());
             OrderJson.write(response, JsonUtil.object(data));
         } catch (SQLException e) {
             log("Không tính được tiền đơn hàng", e);

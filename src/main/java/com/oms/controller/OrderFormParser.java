@@ -6,8 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-// Đọc form "Tạo đơn hàng" (S3-09): mỗi dòng hàng gửi 4 ô cùng tên (productId, productText, unitId, qty) theo thứ tự
-// dòng. Bỏ khoảng trắng thừa, ô trống thành null; dòng để trống hoàn toàn thì bỏ qua.
+// Đọc form "Tạo đơn hàng" (S3-09): mỗi dòng hàng gửi 5 ô cùng tên (productId, productText, unitId, qty, price)
+// theo thứ tự dòng; price để trống là dùng giá bảng giá (S4-01). Bỏ khoảng trắng thừa, ô trống thành null; dòng để trống hoàn toàn thì bỏ qua.
 final class OrderFormParser {
 
     private OrderFormParser() {
@@ -18,11 +18,12 @@ final class OrderFormParser {
         String[] productTexts = values(request, "productText");
         String[] unitIds = values(request, "unitId");
         String[] qtys = values(request, "qty");
+        String[] prices = values(request, "price");
         int count = Math.max(Math.max(productIds.length, productTexts.length), Math.max(unitIds.length, qtys.length));
         List<OrderForm.Line> lines = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             OrderForm.Line line = new OrderForm.Line(at(productIds, i), at(productTexts, i), at(unitIds, i),
-                    at(qtys, i));
+                    at(qtys, i), at(prices, i));
             if (!line.isBlank()) {
                 lines.add(line);
             }

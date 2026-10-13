@@ -45,6 +45,8 @@ public class SalesOrderService {
     private static final DateTimeFormatter ORDER_NO_DATE = DateTimeFormatter.ofPattern("yyMMdd");
     // Số lượng theo đơn vị đã chọn: số dương, tối đa 3 chữ số thập phân như cột qty decimal(18,3)
     private static final Pattern QTY_PATTERN = Pattern.compile("\\d{1,12}([.,]\\d{1,3})?");
+    // Đơn giá sửa tay (S4-01): số nguyên VNĐ, có thể ngăn nghìn bằng dấu chấm, tối đa 13 chữ số như decimal(18,2)
+    private static final Pattern MONEY_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{3}){1,4}|\\d{1,13}");
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final String AUDIT_ENTITY = "ORDER";
     private static final String STATUS_DRAFT = "DRAFT";
@@ -176,7 +178,7 @@ public class SalesOrderService {
         SalesOrderDao.Header header = new SalesOrderDao.Header(customer.getId(),
                 parseId(form.getDeliveryAddressId()), customer.getDefaultWarehouseId(), customer.getSalesRepId(),
                 submit, form.getRequestedDate() == null ? null : parseDate(form.getRequestedDate()),
-                quote.getSubtotal(), quote.getDiscount(), quote.getTotal(), form.getNote());
+                quote.getSubtotal(), quote.getDiscount(), quote.getTotal(), form.getNote(), quote.isNeedsApproval());
         if (draft != null) {
             String action = submit ? "ORDER_SUBMIT" : "ORDER_UPDATE";
             AuditEntry audit = new AuditEntry(action, JsonUtil.object(draftValues(draft)),
@@ -273,16 +275,22 @@ public class SalesOrderService {
     // không có giá vốn
     static Map<String, Object> orderValues(String orderNo, String customerCode, boolean submit, OrderForm form,
                                            OrderQuote quote) {
-        return values(orderNo, customerCode, submit ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
+        Map<String, Object> values = values(orderNo, customerCode, submit ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
                 form.getDeliveryAddressId(), form.getRequestedDate(), quote.getLines().size(), quote.getSubtotal(),
                 quote.getDiscount(), quote.getTotal());
+        values.put("manualPriceLines", quote.getLines().stream().filter(OrderQuote.Line::isManualPrice).count());
+        values.put("belowFloorLines", quote.getBelowFloorLines().size());
+        values.put("needsApproval", quote.isNeedsApproval());
+        return values;
     }
 
     static Map<String, Object> draftValues(SalesOrderDao.Draft draft) {
         OrderForm form = draft.getForm();
-        return values(draft.getOrderNo(), draft.getCustomerCode(), STATUS_DRAFT, form.getDeliveryAddressId(),
-                form.getRequestedDate(), form.getLines().size(), draft.getSubtotal(), draft.getDiscount(),
-                draft.getTotal());
+        Map<String, Object> values = values(draft.getOrderNo(), draft.getCustomerCode(), STATUS_DRAFT,
+                form.getDeliveryAddressId(), form.getRequestedDate(), form.getLines().size(), draft.getSubtotal(),
+                draft.getDiscount(), draft.getTotal());
+        values.put("manualPriceLines", form.getLines().stream().filter(line -> line.getPrice() != null).count());
+        return values;
     }
 
     private static Map<String, Object> values(String orderNo, String customerCode, String status,
@@ -356,8 +364,18 @@ public class SalesOrderService {
             return new OrderQuote.Line("Chưa có giá của " + product.getSku()
                     + " trong bảng giá đang hiệu lực của nhóm khách hàng.");
         }
-        BigDecimal unitPrice = item.getPrice().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal listPrice = item.getPrice().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
         BigDecimal floorPrice = item.getFloorPrice().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
+        // S4-01: sửa giá thủ công được; dưới giá sàn thì vẫn lưu nhưng dòng bị đánh dấu, đơn phải qua duyệt
+        BigDecimal unitPrice = listPrice;
+        if (line.getPrice() != null) {
+            BigDecimal manual = parseMoney(line.getPrice());
+            if (manual == null) {
+                return new OrderQuote.Line("Đơn giá phải là số tiền lớn hơn 0, vd 15.500.");
+            }
+            unitPrice = manual;
+        }
+        boolean manualPrice = unitPrice.compareTo(listPrice) != 0;
         BigDecimal amount = money(unitPrice.multiply(qty));
 
         Long bestPolicy = null;
@@ -370,8 +388,8 @@ public class SalesOrderService {
                 bestPolicy = policy.getId();
             }
         }
-        return new OrderQuote.Line(product, unit, qty, converted.getQtyBase(), unitPrice, floorPrice, item.getId(),
-                bestPolicy, amount, bestDiscount);
+        return new OrderQuote.Line(product, unit, qty, converted.getQtyBase(), listPrice, unitPrice, floorPrice,
+                manualPrice, item.getId(), bestPolicy, amount, bestDiscount);
     }
 
     // null nếu chính sách không áp cho dòng này (khác SKU/nhóm hàng, hoặc chưa đạt bậc số lượng nhỏ nhất)
@@ -399,6 +417,15 @@ public class SalesOrderService {
 
     private static BigDecimal money(BigDecimal value) {
         return value.setScale(0, RoundingMode.HALF_UP).setScale(2);
+    }
+
+    // Đơn giá sửa tay: "15500" hoặc "15.500"; null nếu sai định dạng hoặc không lớn hơn 0
+    static BigDecimal parseMoney(String text) {
+        if (text == null || !MONEY_PATTERN.matcher(text).matches()) {
+            return null;
+        }
+        BigDecimal money = new BigDecimal(text.replace(".", "")).setScale(2);
+        return money.signum() > 0 ? money : null;
     }
 
     static BigDecimal parseQty(String text) {

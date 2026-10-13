@@ -301,11 +301,15 @@ public class OrderDetail {
         private final BigDecimal qty;
         private final BigDecimal qtyBase;
         private final BigDecimal unitPrice;
+        private final BigDecimal floorPrice;
+        private final boolean manualPrice;
+        private final boolean belowFloor;
         private final BigDecimal discount;
         private final BigDecimal lineTotal;
 
         public Item(int lineNo, String sku, String productName, String unitName, String baseUnitName, BigDecimal qty,
-                    BigDecimal qtyBase, BigDecimal unitPrice, BigDecimal discount, BigDecimal lineTotal) {
+                    BigDecimal qtyBase, BigDecimal unitPrice, BigDecimal floorPrice, boolean manualPrice,
+                    boolean belowFloor, BigDecimal discount, BigDecimal lineTotal) {
             this.lineNo = lineNo;
             this.sku = sku;
             this.productName = productName;
@@ -314,6 +318,9 @@ public class OrderDetail {
             this.qty = qty;
             this.qtyBase = qtyBase;
             this.unitPrice = unitPrice;
+            this.floorPrice = floorPrice;
+            this.manualPrice = manualPrice;
+            this.belowFloor = belowFloor;
             this.discount = discount;
             this.lineTotal = lineTotal;
         }
@@ -353,6 +360,18 @@ public class OrderDetail {
 
         public BigDecimal getUnitPrice() {
             return unitPrice;
+        }
+
+        public BigDecimal getFloorPrice() {
+            return floorPrice;
+        }
+
+        public boolean isManualPrice() {
+            return manualPrice;
+        }
+
+        public boolean isBelowFloor() {
+            return belowFloor;
         }
 
         public BigDecimal getDiscount() {

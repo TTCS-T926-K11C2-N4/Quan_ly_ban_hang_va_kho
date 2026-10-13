@@ -36,7 +36,7 @@ class SalesOrderServiceTest {
     }
 
     private static OrderForm.Line line(String unitId, String qty) {
-        return new OrderForm.Line("10", "SP001 - Nước uống đóng chai", unitId, qty);
+        return new OrderForm.Line("10", "SP001 - Nước uống đóng chai", unitId, qty, null);
     }
 
     // Bảng giá chỉ có giá theo Lon: giá Thùng = giá Lon x 24; số lượng quy về đơn vị cơ sở để lưu qty_base
@@ -106,11 +106,43 @@ class SalesOrderServiceTest {
     void lineWithoutPriceOrInvalidQtyIsRejected() {
         PricingRules noPrices = new PricingRules(Map.of(), List.of());
         List<OrderQuote.Line> lines = SalesOrderService.price(List.of(line("1", "5"), line("1", "0"),
-                line("9", "5"), new OrderForm.Line(null, "nước", "1", "5")), PRODUCTS, noPrices).getLines();
+                line("9", "5"), new OrderForm.Line(null, "nước", "1", "5", null)), PRODUCTS, noPrices).getLines();
         assertEquals("Chưa có giá của SP001 trong bảng giá đang hiệu lực của nhóm khách hàng.", lines.get(0).getError());
         assertEquals("Số lượng phải lớn hơn 0, tối đa 3 chữ số thập phân.", lines.get(1).getError());
         assertEquals("Chọn đơn vị tính đã khai báo cho SP001.", lines.get(2).getError());
         assertEquals("Chọn sản phẩm trong danh sách gợi ý theo mã hoặc tên hàng.", lines.get(3).getError());
+    }
+
+    // S4-01: sửa giá tay được, nhưng thấp hơn giá sàn (9.500/Lon) thì đơn bị đánh dấu cần duyệt
+    @Test
+    void manualPriceBelowFloorNeedsApproval() {
+        OrderQuote above = SalesOrderService.price(List.of(
+                new OrderForm.Line("10", "SP001", "1", "10", "9.800")), PRODUCTS, rules(List.of()));
+        OrderQuote.Line priced = above.getLines().get(0);
+        assertTrue(priced.isManualPrice());
+        assertEquals(new BigDecimal("10000.00"), priced.getListPrice());
+        assertEquals(new BigDecimal("98000.00"), priced.getAmount());
+        assertTrue(!priced.isBelowFloor() && !above.isNeedsApproval());
+
+        OrderQuote below = SalesOrderService.price(List.of(line("1", "10"),
+                new OrderForm.Line("10", "SP001", "1", "10", "9000")), PRODUCTS, rules(List.of()));
+        assertTrue(below.getLines().get(1).isBelowFloor());
+        assertTrue(below.isNeedsApproval());
+        assertEquals(1, below.getBelowFloorLines().size());
+
+        // Giá sửa tay 9.800 trên sàn nhưng chiết khấu 4% còn 9.408/Lon thì vẫn dưới sàn 9.500
+        PricingRules.DiscountPolicy fourPercent = new PricingRules.DiscountPolicy(1, 10L, null, "PERCENT",
+                List.of(new PricingRules.Tier(new BigDecimal("1"), new BigDecimal("4"))));
+        OrderQuote discounted = SalesOrderService.price(List.of(
+                new OrderForm.Line("10", "SP001", "1", "10", "9.800"), line("1", "10")), PRODUCTS,
+                rules(List.of(fourPercent)));
+        assertTrue(discounted.getLines().get(0).isBelowFloor());
+        assertEquals(new BigDecimal("9408"), discounted.getLines().get(0).getNetUnitPrice());
+        assertTrue(!discounted.getLines().get(1).isBelowFloor());
+
+        assertEquals("Đơn giá phải là số tiền lớn hơn 0, vd 15.500.", SalesOrderService.price(List.of(
+                new OrderForm.Line("10", "SP001", "1", "10", "0")), PRODUCTS, rules(List.of()))
+                .getLines().get(0).getError());
     }
 
     @Test
