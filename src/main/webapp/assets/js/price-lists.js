@@ -117,3 +117,47 @@
         }
     });
 })();
+
+// Tạo phiên bản: "Áp dụng ngay từ hôm nay" điền và khoá ô ngày bắt đầu là hôm nay, bỏ tích thì trả lại ngày cũ;
+// khi lưu hỏi lại vì bản cũ sẽ kết thúc hôm qua (server vẫn tự đặt ngày là hôm nay, không tin ô ngày)
+(function () {
+    var applyNow = document.getElementById("apply-now");
+    var from = document.getElementById("price-from");
+    var hint = document.getElementById("apply-now-hint");
+    if (!applyNow || !from) {
+        return;
+    }
+    var chosen = from.value;
+    function sync() {
+        if (applyNow.checked) {
+            chosen = from.readOnly ? chosen : from.value;
+            from.min = "";
+            from.value = applyNow.getAttribute("data-today");
+        } else {
+            from.min = from.getAttribute("data-min") || "";
+            from.value = chosen;
+        }
+        from.readOnly = applyNow.checked;
+        if (hint) {
+            hint.hidden = !applyNow.checked;
+        }
+    }
+    from.setAttribute("data-min", from.min);
+    applyNow.addEventListener("change", sync);
+    if (applyNow.checked) {
+        sync();
+    }
+    from.form.addEventListener("submit", function (event) {
+        if (event.defaultPrevented || !applyNow.checked) {
+            return;
+        }
+        var text = "Áp dụng giá mới ngay từ bây giờ?\n\n"
+            + "- Bảng giá " + applyNow.getAttribute("data-source") + " kết thúc hiệu lực ngày "
+            + applyNow.getAttribute("data-yesterday") + ".\n"
+            + "- Đơn tạo từ lúc này dùng giá của phiên bản mới.\n"
+            + "- Đơn đã tạo hôm nay vẫn giữ giá cũ; đơn nháp mở lại sẽ tính theo giá mới.";
+        if (!window.confirm(text)) {
+            event.preventDefault();
+        }
+    });
+})();
