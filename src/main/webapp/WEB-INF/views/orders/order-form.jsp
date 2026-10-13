@@ -46,7 +46,7 @@
             <c:if test="${not empty errors and empty errors.form}">
                 <div class="sales-flash sales-flash--error" role="alert">Đơn hàng chưa được lưu. Vui lòng kiểm tra các ô báo lỗi bên dưới.</div>
             </c:if>
-            <div class="sales-flash sales-flash--warning" id="blocked-warning" role="status"${draftOfBlocked ? '' : ' hidden'}>
+            <div class="sales-flash sales-flash--warning" id="blocked-warning" role="status" data-toast="off"${draftOfBlocked ? '' : ' hidden'}>
                 <strong>Đại lý đang bị khoá giao dịch.</strong>
                 <span id="blocked-warning-text"><c:if test="${draftOfBlocked}">Lý do: <c:out value="${selectedCustomer.blockReason}"/>. Đơn nháp này vẫn được xử lý tiếp, nhưng không tạo được đơn mới cho đại lý.</c:if></span>
             </div>
