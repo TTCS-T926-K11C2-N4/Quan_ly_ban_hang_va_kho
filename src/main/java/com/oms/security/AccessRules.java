@@ -80,6 +80,8 @@ public final class AccessRules {
             Map.entry("/orders/new", Permission.ORDER_MANAGE),
             Map.entry("/orders/customer-data", Permission.ORDER_MANAGE),
             Map.entry("/orders/quote", Permission.ORDER_MANAGE),
+            Map.entry("/orders/view", Permission.ORDER_VIEW),
+            Map.entry("/orders/cancel", Permission.ORDER_MANAGE),
             Map.entry("/products/image", Permission.PRODUCT_VIEW),
             Map.entry("/products/new", Permission.PRODUCT_MANAGE),
             Map.entry("/products/edit", Permission.PRODUCT_MANAGE),
