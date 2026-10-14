@@ -71,10 +71,7 @@
                     <input type="hidden" name="version" value="<c:out value='${form.version}'/>">
                 </c:if>
 
-                <div>
-                    <h2 class="sales-card__title">Thông tin đơn hàng</h2>
-                    <p class="sales-card__subtitle">Nhập đầy đủ thông tin trước khi lưu hoặc xác nhận đơn hàng.</p>
-                </div>
+                <h2 class="sales-card__title order-form__title">Thông tin đơn hàng</h2>
 
                 <div class="sales-field__row order-form__info">
                     <div class="sales-field${not empty errors.customerId ? ' sales-field--invalid' : ''}">
@@ -114,37 +111,43 @@
                     </div>
                 </div>
 
-                <%-- S4-02 AC1: công nợ hiện tại, hạn mức và phần còn lại của đại lý; orders.js cập nhật sau mỗi lần tính tiền --%>
+                <%-- S4-02 AC1: công nợ hiện tại, hạn mức và phần còn lại của đại lý, gọn trong một dải;
+                     orders.js cập nhật sau mỗi lần tính tiền --%>
                 <section class="order-credit${overCreditLimit ? ' order-credit--over' : ''}" id="order-credit" aria-labelledby="order-credit-title" aria-live="polite"${empty credit ? ' hidden' : ''}>
-                    <div class="order-credit__head">
+                    <div class="order-credit__row">
                         <h3 class="order-credit__title" id="order-credit-title">Công nợ đại lý</h3>
-                        <span class="order-credit__terms" id="credit-terms">Số ngày nợ tối đa: ${credit.maxDebtDays} ngày</span>
+                        <dl class="order-credit__stats">
+                            <div class="order-credit__stat">
+                                <dt>Hạn mức</dt>
+                                <dd id="credit-limit">${credit.limitGranted ? '' : 'Chưa cấp hạn mức'}<c:if test="${credit.limitGranted}"><fmt:formatNumber value="${credit.creditLimit}" maxFractionDigits="0"/> ₫</c:if></dd>
+                            </div>
+                            <div class="order-credit__stat">
+                                <dt>Công nợ hiện tại</dt>
+                                <dd id="credit-ledger"><fmt:formatNumber value="${empty credit ? 0 : credit.ledgerBalance}" maxFractionDigits="0"/> ₫</dd>
+                            </div>
+                            <div class="order-credit__stat">
+                                <dt>Đơn chưa xuất hoá đơn</dt>
+                                <dd id="credit-open"><fmt:formatNumber value="${empty credit ? 0 : credit.openOrders}" maxFractionDigits="0"/> ₫</dd>
+                            </div>
+                            <div class="order-credit__stat order-credit__stat--main">
+                                <dt>Còn lại</dt>
+                                <dd id="credit-available"${not empty credit and credit.available.signum() < 0 ? ' class="order-credit__value--negative"' : ''}><fmt:formatNumber value="${empty credit ? 0 : credit.available}" maxFractionDigits="0"/> ₫</dd>
+                            </div>
+                            <div class="order-credit__stat">
+                                <dt>Ngày nợ tối đa</dt>
+                                <dd id="credit-terms">${empty credit ? 0 : credit.maxDebtDays} ngày</dd>
+                            </div>
+                        </dl>
                     </div>
-                    <dl class="order-credit__stats">
-                        <div class="order-credit__stat">
-                            <dt>Hạn mức</dt>
-                            <dd id="credit-limit">${credit.limitGranted ? '' : 'Chưa cấp hạn mức'}<c:if test="${credit.limitGranted}"><fmt:formatNumber value="${credit.creditLimit}" maxFractionDigits="0"/> ₫</c:if></dd>
-                        </div>
-                        <div class="order-credit__stat">
-                            <dt>Công nợ hiện tại</dt>
-                            <dd id="credit-ledger"><fmt:formatNumber value="${empty credit ? 0 : credit.ledgerBalance}" maxFractionDigits="0"/> ₫</dd>
-                        </div>
-                        <div class="order-credit__stat">
-                            <dt>Đơn chưa xuất hoá đơn</dt>
-                            <dd id="credit-open"><fmt:formatNumber value="${empty credit ? 0 : credit.openOrders}" maxFractionDigits="0"/> ₫</dd>
-                        </div>
-                        <div class="order-credit__stat order-credit__stat--main">
-                            <dt>Còn lại</dt>
-                            <dd id="credit-available"${not empty credit and credit.available.signum() < 0 ? ' class="order-credit__value--negative"' : ''}><fmt:formatNumber value="${empty credit ? 0 : credit.available}" maxFractionDigits="0"/> ₫</dd>
-                        </div>
-                    </dl>
-                    <progress class="order-credit__bar" id="credit-bar" max="100" value="${empty credit ? 0 : credit.usedPercent}" aria-label="Phần hạn mức đã dùng">${credit.usedPercent}%</progress>
-                    <p class="order-credit__after" id="credit-after">
-                        <c:choose>
-                            <c:when test="${overCreditLimit}">Vượt hạn mức <strong><fmt:formatNumber value="${credit.getExceededBy(quote.total)}" maxFractionDigits="0"/> ₫</strong> nếu gửi đơn này: đơn sẽ được đánh dấu cần duyệt.</c:when>
-                            <c:when test="${not empty credit}">Sau đơn này còn <strong><fmt:formatNumber value="${credit.getAvailableAfter(quote.total)}" maxFractionDigits="0"/> ₫</strong>.</c:when>
-                        </c:choose>
-                    </p>
+                    <div class="order-credit__foot">
+                        <progress class="order-credit__bar" id="credit-bar" max="100" value="${empty credit ? 0 : credit.usedPercent}" aria-label="Phần hạn mức đã dùng">${credit.usedPercent}%</progress>
+                        <p class="order-credit__after" id="credit-after">
+                            <c:choose>
+                                <c:when test="${overCreditLimit}">Vượt hạn mức <strong><fmt:formatNumber value="${credit.getExceededBy(quote.total)}" maxFractionDigits="0"/> ₫</strong> nếu gửi đơn này: đơn sẽ được đánh dấu cần duyệt.</c:when>
+                                <c:when test="${not empty credit}">Sau đơn này còn <strong><fmt:formatNumber value="${credit.getAvailableAfter(quote.total)}" maxFractionDigits="0"/> ₫</strong>.</c:when>
+                            </c:choose>
+                        </p>
+                    </div>
                 </section>
 
                 <section class="order-lines" aria-labelledby="order-lines-title">
@@ -269,13 +272,17 @@
                     <p class="order-alerts__note" id="order-alerts-note"${needsApproval ? '' : ' hidden'}>Đơn sẽ được đánh dấu <strong>Cần duyệt</strong> để quản lý kinh doanh xem xét.</p>
                 </section>
 
-                <div class="order-form__bottom">
-                    <div class="sales-field order-form__note${not empty errors.note ? ' sales-field--invalid' : ''}">
-                        <label class="sales-field__label" for="order-note">Ghi chú đơn hàng</label>
-                        <textarea class="sales-field__control sales-field__control--textarea" id="order-note" name="note" maxlength="1000"
-                                  placeholder="Nhập ghi chú nếu có..."><c:out value="${form.note}"/></textarea>
-                        <c:if test="${not empty errors.note}"><p class="sales-field__error"><c:out value="${errors.note}"/></p></c:if>
-                    </div>
+                <%-- Thanh dưới cố định: ghi chú (mở ra khi cần), tổng tiền và nút hành động luôn nằm trong màn hình --%>
+                <div class="order-bar">
+                    <details class="order-note" id="order-note-box"${not empty form.note or not empty errors.note ? ' open' : ''}>
+                        <summary class="order-note__toggle">${empty form.note ? '+ Thêm ghi chú' : 'Ghi chú đơn hàng'}</summary>
+                        <div class="sales-field order-note__body${not empty errors.note ? ' sales-field--invalid' : ''}">
+                            <label class="sales-field__label" for="order-note">Ghi chú đơn hàng</label>
+                            <textarea class="sales-field__control sales-field__control--textarea" id="order-note" name="note" maxlength="1000"
+                                      placeholder="Nhập ghi chú nếu có..."><c:out value="${form.note}"/></textarea>
+                            <c:if test="${not empty errors.note}"><p class="sales-field__error"><c:out value="${errors.note}"/></p></c:if>
+                        </div>
+                    </details>
 
                     <dl class="order-summary" aria-live="polite">
                         <div class="order-summary__row">
@@ -291,19 +298,19 @@
                             <dd id="order-total"><fmt:formatNumber value="${empty quote ? 0 : quote.total}" maxFractionDigits="0"/> ₫</dd>
                         </div>
                     </dl>
-                </div>
 
-                <div class="sales-actions order-form__actions">
-                    <a class="sales-button" href="<c:url value='${currentUser.homePath}'/>">Hủy</a>
-                    <button class="sales-button sales-button--soft" type="submit" name="action" value="draft" id="save-draft"${not empty overdueMessage and not ownDraft ? ' disabled' : ''}>
-                        <img class="sales-button__icon" src="<c:url value='/assets/img/icons/save.svg'/>" alt="" width="15" height="15">
-                        Lưu nháp
-                    </button>
-                    <button class="sales-button" type="button" id="open-drafts" aria-haspopup="dialog">Mở lại</button>
-                    <button class="sales-button sales-button--primary" type="submit" name="action" value="submit" id="submit-order"${not empty overdueMessage ? ' disabled' : ''}>
-                        Tạo đơn hàng
-                        <img class="sales-button__icon" src="<c:url value='/assets/img/icons/arrow-right.svg'/>" alt="" width="15" height="15">
-                    </button>
+                    <div class="sales-actions order-form__actions">
+                        <a class="sales-button" href="<c:url value='${currentUser.homePath}'/>">Hủy</a>
+                        <button class="sales-button sales-button--soft" type="submit" name="action" value="draft" id="save-draft"${not empty overdueMessage and not ownDraft ? ' disabled' : ''}>
+                            <img class="sales-button__icon" src="<c:url value='/assets/img/icons/save.svg'/>" alt="" width="15" height="15">
+                            Lưu nháp
+                        </button>
+                        <button class="sales-button" type="button" id="open-drafts" aria-haspopup="dialog">Mở lại</button>
+                        <button class="sales-button sales-button--primary" type="submit" name="action" value="submit" id="submit-order"${not empty overdueMessage ? ' disabled' : ''}>
+                            Tạo đơn hàng
+                            <img class="sales-button__icon" src="<c:url value='/assets/img/icons/arrow-right.svg'/>" alt="" width="15" height="15">
+                        </button>
+                    </div>
                 </div>
             </form>
 
