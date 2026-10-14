@@ -20,6 +20,8 @@
     <c:param name="level" value="${filter.level.code}"/>
 </c:url>
 <c:set var="pageUrl" value="${fn:escapeXml(listUrl)}&amp;page="/>
+<%-- Cột "Xem" mở danh sách đơn đang giữ chỗ (S5-06); chỉ hiện khi ứng dụng đã có màn đó --%>
+<c:set var="canViewReservations" value="${not empty pageContext.servletContext.servletRegistrations['com.oms.controller.ReservationListServlet']}"/>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -151,7 +153,7 @@
                                 <th scope="col">Đơn vị cơ sở</th>
                                 <th scope="col">Trạng thái</th>
                                 <th scope="col">Nhóm hàng</th>
-                                <th scope="col">Xem</th>
+                                <c:if test="${canViewReservations}"><th scope="col">Xem</th></c:if>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,17 +178,19 @@
                                     <td><c:out value="${stock.baseUnitName}"/></td>
                                     <td><span class="inv-pill inv-pill--${stock.level.tone}">${stock.level.label}</span></td>
                                     <td><c:out value="${stock.categoryName}"/></td>
+                                    <c:if test="${canViewReservations}">
                                     <td>
                                         <a class="inv-icon-button" href="${fn:escapeXml(reservationsUrl)}" title="Xem đơn đang giữ chỗ"
                                            aria-label="Xem đơn đang giữ chỗ <c:out value='${stock.sku}'/> tại <c:out value='${stock.warehouseCode}'/>">
                                             <span class="inv-icon inv-icon--search" aria-hidden="true"></span>
                                         </a>
                                     </td>
+                                    </c:if>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty stockPage.items}">
                                 <tr>
-                                    <td class="inv-table__empty" colspan="9">
+                                    <td class="inv-table__empty" colspan="${canViewReservations ? 9 : 8}">
                                         <c:choose>
                                             <c:when test="${filter.filtered}">Không có SKU nào khớp bộ lọc. Thử bỏ bớt điều kiện lọc.</c:when>
                                             <c:otherwise>Chưa có tồn kho. Tồn được ghi khi ghi sổ phiếu nhập kho.</c:otherwise>
