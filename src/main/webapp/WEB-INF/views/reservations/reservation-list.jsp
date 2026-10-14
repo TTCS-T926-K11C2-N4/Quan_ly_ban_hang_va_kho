@@ -6,8 +6,12 @@
 <c:set var="activeMenu" value="warehouse"/>
 <c:set var="activeSubmenu" value="reservations"/>
 <c:set var="breadcrumbSection" value="Kho hàng"/>
-<c:set var="breadcrumbParent" value="Sổ tồn kho"/>
-<c:set var="breadcrumbParentUrl" value="/stock"/>
+<%-- Liên kết về Sổ tồn kho (S5-05) chỉ hiện khi ứng dụng đã có màn đó --%>
+<c:set var="hasStockLedger" value="${not empty pageContext.servletContext.servletRegistrations['com.oms.controller.StockLedgerServlet']}"/>
+<c:if test="${hasStockLedger}">
+    <c:set var="breadcrumbParent" value="Sổ tồn kho"/>
+    <c:set var="breadcrumbParentUrl" value="/stock"/>
+</c:if>
 <c:set var="breadcrumbPage" value="Chi tiết giữ chỗ tồn"/>
 <c:url var="listUrl" value="/stock/reservations">
     <c:param name="keyword" value="${filter.keyword}"/>
@@ -42,11 +46,13 @@
                     <h1 class="inv-header__title">Chi tiết giữ chỗ tồn</h1>
                     <p class="inv-header__subtitle">Danh sách các đơn đã được duyệt và đang giữ chỗ tồn kho. Chọn một đơn để xem trạng thái giữ chỗ theo từng dòng hàng.</p>
                 </div>
-                <div class="inv-header__actions">
-                    <a class="inv-button" id="reservation-back" href="<c:url value='/stock'/>">
-                        <span class="inv-icon inv-icon--chevron-left" aria-hidden="true"></span>Quay lại sổ tồn
-                    </a>
-                </div>
+                <c:if test="${hasStockLedger}">
+                    <div class="inv-header__actions">
+                        <a class="inv-button" id="reservation-back" href="<c:url value='/stock'/>">
+                            <span class="inv-icon inv-icon--chevron-left" aria-hidden="true"></span>Quay lại sổ tồn
+                        </a>
+                    </div>
+                </c:if>
             </header>
 
             <section class="inv-stats" aria-label="Tổng quan giữ chỗ">
