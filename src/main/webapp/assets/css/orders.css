@@ -224,6 +224,25 @@
 }
 
 /* S4-03: tồn khả dụng dưới ô Số lượng */
+/* Dòng chữ tồn (và nhãn giá) dưới ô làm ô cao hơn: canh mọi ô theo mép trên để các ô nhập nằm cùng một hàng;
+   ô chỉ có chữ lấy chiều cao dòng bằng ô nhập (32px) để chữ ngang tâm ô nhập */
+@media (min-width: 640px) {
+    .order-table__table tbody td {
+        vertical-align: top;
+    }
+
+    .order-line__index,
+    .order-line__amount,
+    .order-line__discount,
+    .order-line__total {
+        line-height: 32px;
+    }
+
+    .order-line__remove {
+        margin-top: 1px;
+    }
+}
+
 .order-line__qty-cell {
     display: flex;
     flex-direction: column;
@@ -243,10 +262,6 @@
 .order-line__stock[hidden],
 .order-line__stock-max[hidden] {
     display: none;
-}
-
-.order-line__stock--untracked {
-    color: var(--color-sales-muted);
 }
 
 .order-line__stock--short {

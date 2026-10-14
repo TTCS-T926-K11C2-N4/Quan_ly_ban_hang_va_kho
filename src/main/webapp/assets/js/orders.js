@@ -106,7 +106,7 @@
         return item;
     }
 
-    // Dòng lỗi giá/số lượng (line.stock = null) thì ẩn; SKU chưa có số tồn ở kho chỉ nhắc, không chặn
+    // Dòng lỗi giá/số lượng (line.stock = null) thì ẩn; kho không còn hàng (kể cả chưa từng nhập) thì báo hết hàng
     function showStock(row, line) {
         var box = row.querySelector(".order-line__stock");
         var text = box.querySelector(".order-line__stock-text");
@@ -118,10 +118,9 @@
         if (!stock) {
             return;
         }
-        box.classList.toggle("order-line__stock--untracked", !stock.tracked);
         box.classList.toggle("order-line__stock--short", stock.shortage);
-        if (!stock.tracked) {
-            text.textContent = "Chưa có số tồn ở kho";
+        if (stock.soldOut) {
+            text.textContent = "Hết hàng ở kho này";
         } else if (!stock.shortage) {
             text.textContent = "Khả dụng: " + stock.available;
         } else {
