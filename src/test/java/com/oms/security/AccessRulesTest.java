@@ -212,6 +212,21 @@ class AccessRulesTest {
         assertFalse(AccessRules.isAllowed("/discount-policies/save", permissionsOf("SALES_REP")));
     }
 
+    // S5-04: nhân viên kho, quản lý kho lập và ghi sổ phiếu nhập; kinh doanh, kế toán chỉ xem
+    @Test
+    void warehouseStaffCreateGoodsReceipts() {
+        for (String path : new String[] {"/goods-receipts/new", "/goods-receipts/edit"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("WH_MANAGER")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("SALES_REP")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+        }
+        for (String path : new String[] {"/goods-receipts", "/goods-receipts/view", "/goods-receipts/export"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("CUSTOMER")), path);
+        }
+    }
+
     // S3-02: ai xem được bảng giá thì xem được lịch sử thay đổi giá; lịch sử chỉ xem nên không có đường dẫn sửa/xoá
     @Test
     void priceHistoryIsViewOnlyForProductViewers() {

@@ -1,0 +1,420 @@
+/* Phiếu nhập kho (S5-04) theo Figma Page 4: danh sách phiếu, tạo/sửa phiếu nháp, xem phiếu đã ghi sổ.
+   Khung trang, thẻ, bảng, nút dùng chung ở inventory.css. */
+
+.receipt-stat {
+    min-height: 104px;
+}
+
+.receipt-stat .inv-stat__label {
+    font-size: 12px;
+}
+
+.receipt-stat .inv-stat__value {
+    margin-top: 8px;
+    font-size: 26px;
+}
+
+.receipt-stat .inv-stat__note {
+    font-size: 11px;
+}
+
+/* Bộ lọc 2 x 2: nhãn trên, ô bên dưới */
+.receipt-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 20px;
+    padding: 18px;
+}
+
+.receipt-filters__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-heading);
+}
+
+.receipt-filters .inv-control {
+    height: 38px;
+    font-size: 13px;
+}
+
+.receipt-filters__actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.receipt-filters__actions:empty {
+    display: none;
+}
+
+.receipt-filters__clear {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.receipt-filters__clear:hover {
+    text-decoration: underline;
+}
+
+.receipt-table td {
+    height: 58px;
+}
+
+.receipt-table__warehouse {
+    display: block;
+}
+
+.receipt-table__money {
+    font-weight: 700;
+}
+
+/* Form phiếu: thông tin phiếu 2 cột */
+.receipt-page {
+    padding-bottom: 0;
+}
+
+.receipt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.receipt-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+    margin: 0;
+}
+
+.receipt-info .inv-control {
+    height: 40px;
+}
+
+.receipt-info--readonly dt {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.receipt-info--readonly dd {
+    margin: 6px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--inv-heading);
+    overflow-wrap: anywhere;
+}
+
+.receipt-note__link {
+    color: inherit;
+    font-weight: 700;
+}
+
+/* Bảng dòng hàng có ô nhập ngay trên dòng */
+.receipt-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px 12px 20px;
+}
+
+.receipt-lines__error {
+    margin: 0 8px;
+}
+
+.receipt-table-edit {
+    width: 100%;
+    min-width: 1040px;
+    border-collapse: collapse;
+    font-size: 12px;
+    color: var(--inv-heading);
+}
+
+.receipt-table-edit th {
+    height: 36px;
+    padding: 0 6px;
+    background: var(--inv-soft);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-align: left;
+    text-transform: uppercase;
+    color: var(--inv-muted);
+    white-space: nowrap;
+}
+
+.receipt-table-edit th:first-child {
+    padding-left: 8px;
+    border-radius: 8px 0 0 8px;
+}
+
+.receipt-table-edit th:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.receipt-table-edit td {
+    padding: 9px 6px;
+    vertical-align: top;
+}
+
+.receipt-table-edit .is-number {
+    text-align: right;
+}
+
+.receipt-line {
+    border-bottom: 1px solid var(--inv-border);
+}
+
+.receipt-col-product {
+    width: 190px;
+}
+
+.receipt-col-unit {
+    width: 96px;
+}
+
+.receipt-col-qty,
+.receipt-col-factor {
+    width: 76px;
+}
+
+.receipt-col-base {
+    width: 104px;
+}
+
+.receipt-col-price {
+    width: 130px;
+}
+
+.receipt-col-amount {
+    width: 130px;
+}
+
+.receipt-col-location {
+    width: 122px;
+}
+
+.receipt-col-action {
+    width: 70px;
+    text-align: center;
+}
+
+.receipt-line__control.inv-control {
+    height: 34px;
+    padding: 0 10px;
+    border-color: var(--inv-control-border);
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+select.receipt-line__control.inv-control {
+    padding-right: 26px;
+    background-position: right 7px center;
+    background-size: 13px 13px;
+}
+
+.receipt-line__unit.inv-control,
+.receipt-line__factor.inv-control {
+    background-color: var(--inv-soft);
+    color: var(--inv-muted);
+}
+
+.receipt-line__control.is-invalid {
+    border-color: var(--inv-required);
+}
+
+.receipt-line__name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.receipt-line__sku,
+.receipt-line__base-label {
+    display: block;
+    margin-top: 4px;
+    font-size: 10.5px;
+    color: var(--inv-muted);
+}
+
+.receipt-line__error {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--inv-required);
+}
+
+.receipt-line__base {
+    display: block;
+    padding-top: 2px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e40af;
+}
+
+.receipt-line__amount {
+    padding-top: 17px !important;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.receipt-table-view td {
+    vertical-align: middle;
+}
+
+.receipt-table-view .receipt-line__amount {
+    padding-top: 9px !important;
+}
+
+.receipt-table-view tbody tr {
+    border-bottom: 1px solid var(--inv-border);
+}
+
+.receipt-line__remove {
+    width: 34px;
+}
+
+/* Dòng phụ ghi số lô, hạn sử dụng cho SKU quản lý lô */
+.receipt-line__lot td {
+    padding-top: 0;
+}
+
+.receipt-lot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #fffbeb;
+}
+
+.receipt-lot__badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #b45309;
+}
+
+.receipt-lot__field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--inv-text);
+}
+
+.receipt-lot__field .inv-control {
+    width: 170px;
+    background-color: var(--color-surface);
+}
+
+/* Ô tổng kết dưới bảng */
+.receipt-bottom {
+    display: flex;
+    padding: 0 8px;
+}
+
+.receipt-summary {
+    width: 326px;
+    margin: 0;
+    padding: 8px 14px 6px;
+    border: 1px solid var(--inv-border);
+    border-radius: 10px;
+}
+
+.receipt-summary__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    font-size: 12px;
+}
+
+.receipt-summary__row dt {
+    color: var(--inv-muted);
+}
+
+.receipt-summary__row dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--inv-heading);
+}
+
+.receipt-summary__row--total {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--inv-border);
+}
+
+.receipt-summary__row--total dt {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.receipt-summary__row--total dd {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.receipt-conversion {
+    margin: 0 8px;
+    padding: 12px 14px;
+}
+
+/* Thanh nút cuối trang: trạng thái phiếu bên trái, Hủy / Lưu nháp / Ghi sổ bên phải; luôn thấy khi cuộn */
+.receipt-actionbar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 -32px;
+    padding: 15px 32px;
+    border-top: 1px solid var(--inv-border);
+    background: var(--inv-soft);
+}
+
+.receipt-actionbar__status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.receipt-actionbar__buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.receipt-actionbar .inv-button {
+    height: 38px;
+}
+
+@media (max-width: 639px) {
+    .receipt-filters,
+    .receipt-info {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .receipt-actionbar {
+        flex-direction: column;
+        align-items: stretch;
+        margin: 0 -16px;
+        padding: 12px 16px;
+    }
+
+    .receipt-actionbar__buttons .inv-button {
+        flex: 1 1 0;
+    }
+
+    .receipt-summary {
+        width: 100%;
+    }
+}
