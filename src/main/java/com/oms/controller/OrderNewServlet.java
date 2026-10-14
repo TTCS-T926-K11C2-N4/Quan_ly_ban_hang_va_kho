@@ -9,6 +9,7 @@ import com.oms.model.OrderProduct;
 import com.oms.model.OrderQuote;
 import com.oms.model.Permission;
 import com.oms.service.CustomerService;
+import com.oms.service.OrderApprovalService;
 import com.oms.service.OrderLifecycleService;
 import com.oms.service.SalesOrderService;
 import com.oms.util.DateTimeUtil;
@@ -36,6 +37,7 @@ public class OrderNewServlet extends HttpServlet {
     private final CustomerService customerService = new CustomerService();
     private final SalesOrderService orderService = new SalesOrderService();
     private final OrderLifecycleService lifecycle = new OrderLifecycleService();
+    private final OrderApprovalService approvalService = new OrderApprovalService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -110,8 +112,11 @@ public class OrderNewServlet extends HttpServlet {
             }
             if (submit) {
                 // Gửi đơn xong mở trang chi tiết để theo dõi vòng đời đơn (S4-06)
+                // S4-05: đơn không vi phạm được duyệt luôn; đơn vượt hạn mức / dưới giá sàn chờ Quản lý kinh doanh
                 request.getSession().setAttribute(OrderViewServlet.FLASH_MESSAGE, "Đã tạo đơn hàng "
-                        + saved.getOrderNo() + " cho \"" + customer.getName() + "\" và chuyển sang chờ duyệt.");
+                        + saved.getOrderNo() + " cho \"" + customer.getName() + "\". " + (saved.isApproved()
+                        ? "Đơn không vi phạm hạn mức, giá sàn nên đã được duyệt và giữ chỗ tồn."
+                        : "Đơn vượt hạn mức hoặc có dòng dưới giá sàn nên đang chờ Quản lý kinh doanh duyệt."));
                 response.sendRedirect(request.getContextPath() + "/orders/view?id=" + saved.getId());
             } else {
                 request.getSession().setAttribute(FLASH_MESSAGE, "Đã lưu nháp đơn " + saved.getOrderNo()
@@ -155,6 +160,9 @@ public class OrderNewServlet extends HttpServlet {
                 ? SalesOrderService.overdueMessage(credit) : null);
         request.setAttribute("form", form);
         request.setAttribute("draft", draft);
+        // Đơn bị Quản lý trả lại sửa (S4-05): hiện ý kiến của lần trả lại gần nhất trên đơn nháp
+        request.setAttribute("returnComment", draft == null ? null
+                : approvalService.findLatestReturnComment(draft.getForm().getDraftId()));
         request.setAttribute("drafts", orderService.findVisibleDrafts(userId));
         request.setAttribute("recentOrders", lifecycle.findVisibleRecent(userId));
         request.setAttribute("errors", errors);

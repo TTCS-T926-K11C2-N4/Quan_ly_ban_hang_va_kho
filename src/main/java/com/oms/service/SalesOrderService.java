@@ -68,6 +68,7 @@ public class SalesOrderService {
     private final AuditLogDao auditLogDao = new AuditLogDao();
     private final CustomerCreditDao creditDao = new CustomerCreditDao();
     private final StockDao stockDao = new StockDao();
+    private final OrderApprovalService approvalService = new OrderApprovalService();
 
     public List<OrderProduct> getProducts() throws SQLException {
         return orderDao.findOrderableProducts();
@@ -245,13 +246,16 @@ public class SalesOrderService {
     }
 
     // Đơn vừa lưu: id để mở lại đơn nháp, mã đơn để báo cho người dùng
+    // approved: gửi đơn không vi phạm thì hệ thống duyệt luôn (S4-05); false là đơn nháp hoặc đơn chờ quản lý duyệt
     public static final class Saved {
         private final long id;
         private final String orderNo;
+        private final boolean approved;
 
-        Saved(long id, String orderNo) {
+        Saved(long id, String orderNo, boolean approved) {
             this.id = id;
             this.orderNo = orderNo;
+            this.approved = approved;
         }
 
         public long getId() {
@@ -260,6 +264,10 @@ public class SalesOrderService {
 
         public String getOrderNo() {
             return orderNo;
+        }
+
+        public boolean isApproved() {
+            return approved;
         }
     }
 
@@ -272,14 +280,13 @@ public class SalesOrderService {
         Pending pending = new Pending(form, customer, submit, quote, ipAddress,
                 warehouseId == null ? null : stockDao.findWarehouseName(warehouseId));
         if (draft != null) {
-            return updateDraft(draft, parseVersion(form.getVersion()), pending, actorUserId)
-                    ? new Saved(draft.getForm().getDraftId(), draft.getOrderNo()) : null;
+            return updateDraft(draft, parseVersion(form.getVersion()), pending, actorUserId);
         }
         String prefix = ORDER_NO_PREFIX + DateTimeUtil.today().format(ORDER_NO_DATE) + "-";
         for (int attempt = 1; ; attempt++) {
             String orderNo = prefix + String.format("%04d", orderDao.findMaxOrderNumber(prefix) + 1);
             try {
-                return new Saved(insert(orderNo, pending, actorUserId), orderNo);
+                return insert(orderNo, pending, actorUserId);
             } catch (SQLIntegrityConstraintViolationException e) {
                 // Hai người cùng tạo đơn một lúc lấy trùng số: thử lại với số kế tiếp
                 if (attempt == ORDER_NO_ATTEMPTS) {
@@ -355,19 +362,30 @@ public class SalesOrderService {
         }
     }
 
-    // AC2 của S4-02: khoá dòng đại lý rồi mới so tổng đơn + công nợ với hạn mức. Gọi trước khi ghi đơn,
+    // AC2 của S4-02: khoá dòng đại lý rồi mới cộng công nợ để so với hạn mức. Gọi trước khi ghi đơn,
     // để đơn nháp đang gửi chưa bị tính vào "đơn chưa xuất hoá đơn".
-    private boolean overCreditLimit(Connection connection, Pending pending) throws SQLException {
-        CustomerCredit credit = creditDao.lock(connection, pending.customer.getId(), DateTimeUtil.today());
-        return credit != null && credit.exceeds(pending.quote.getTotal());
+    private CustomerCredit lockCredit(Connection connection, Pending pending) throws SQLException {
+        return creditDao.lock(connection, pending.customer.getId(), DateTimeUtil.today());
     }
 
-    private long insert(String orderNo, Pending pending, long actorUserId)
+    // S4-05: đơn vừa gửi (đã ghi dòng hàng và giữ chỗ) vi phạm thì vào hàng chờ duyệt, không thì hệ thống duyệt luôn
+    private boolean afterSubmit(Connection connection, long orderId, String orderNo, Pending pending,
+                                CustomerCredit credit, long actorUserId) throws SQLException, StockShortageException {
+        try {
+            return approvalService.afterSubmit(connection, orderId, orderNo, pending.quote, credit, actorUserId,
+                    pending.ipAddress);
+        } catch (StockReservationService.InsufficientStockException e) {
+            throw new StockShortageException(new LinkedHashMap<>(Map.of("form", e.getMessage())));
+        }
+    }
+
+    private Saved insert(String orderNo, Pending pending, long actorUserId)
             throws SQLException, StockShortageException {
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
-                boolean overLimit = overCreditLimit(connection, pending);
+                CustomerCredit credit = lockCredit(connection, pending);
+                boolean overLimit = credit != null && credit.exceeds(pending.quote.getTotal());
                 Map<Long, OrderStock.Level> reserving = lockStock(connection, pending);
                 SalesOrderDao.Header header = pending.header(overLimit);
                 AuditEntry audit = new AuditEntry("ORDER_CREATE", null,
@@ -380,8 +398,10 @@ public class SalesOrderService {
                         header.isSubmitted() ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
                         header.isSubmitted() ? "Tạo đơn và gửi duyệt" : "Tạo đơn nháp", actorUserId);
                 insertAudit(connection, actorUserId, orderId, audit);
+                boolean approved = header.isSubmitted()
+                        && afterSubmit(connection, orderId, orderNo, pending, credit, actorUserId);
                 connection.commit();
-                return orderId;
+                return new Saved(orderId, orderNo, approved);
             } catch (SQLException | StockShortageException e) {
                 connection.rollback();
                 throw e;
@@ -389,13 +409,15 @@ public class SalesOrderService {
         }
     }
 
-    private boolean updateDraft(SalesOrderDao.Draft draft, long version, Pending pending, long actorUserId)
+    // null nếu đơn nháp vừa được sửa hoặc gửi ở nơi khác
+    private Saved updateDraft(SalesOrderDao.Draft draft, long version, Pending pending, long actorUserId)
             throws SQLException, StockShortageException {
         long orderId = draft.getForm().getDraftId();
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
-                boolean overLimit = overCreditLimit(connection, pending);
+                CustomerCredit credit = lockCredit(connection, pending);
+                boolean overLimit = credit != null && credit.exceeds(pending.quote.getTotal());
                 Map<Long, OrderStock.Level> reserving = lockStock(connection, pending);
                 SalesOrderDao.Header header = pending.header(overLimit);
                 AuditEntry audit = new AuditEntry(pending.submit ? "ORDER_SUBMIT" : "ORDER_UPDATE",
@@ -403,18 +425,19 @@ public class SalesOrderService {
                         pending.ipAddress);
                 if (!orderDao.updateDraft(connection, orderId, version, header, actorUserId)) {
                     connection.rollback();
-                    return false;
+                    return null;
                 }
-                orderDao.deleteItems(connection, orderId);
-                reserve(connection, pending, insertItems(connection, orderId, pending.quote, actorUserId), reserving,
+                reserve(connection, pending, syncItems(connection, orderId, pending.quote, actorUserId), reserving,
                         actorUserId);
                 if (header.isSubmitted()) {
                     orderDao.insertStatusHistory(connection, orderId, STATUS_DRAFT, STATUS_PENDING_APPROVAL,
                             "Gửi duyệt", actorUserId);
                 }
                 insertAudit(connection, actorUserId, orderId, audit);
+                boolean approved = header.isSubmitted()
+                        && afterSubmit(connection, orderId, draft.getOrderNo(), pending, credit, actorUserId);
                 connection.commit();
-                return true;
+                return new Saved(orderId, draft.getOrderNo(), approved);
             } catch (SQLException | StockShortageException e) {
                 connection.rollback();
                 throw e;
@@ -484,6 +507,29 @@ public class SalesOrderService {
 
     private static String moneyText(BigDecimal amount) {
         return amount == null ? null : amount.stripTrailingZeros().toPlainString();
+    }
+
+    // Ghi dòng hàng của đơn nháp đang sửa: dòng sẵn có cập nhật tại chỗ (giữ id vì đơn bị trả lại sửa, S4-05, còn
+    // lịch sử giữ chỗ trỏ tới dòng), dòng mới thì thêm, dòng thừa thì xoá. Trả về id các dòng theo thứ tự quote.
+    private List<Long> syncItems(Connection connection, long orderId, OrderQuote quote, long actorUserId)
+            throws SQLException {
+        List<Long> existing = orderDao.findItemIds(connection, orderId);
+        int keep = Math.min(existing.size(), quote.getLines().size());
+        // Xoá dòng thừa trước để số thứ tự dòng của dòng thêm mới không trùng (order_id, line_no)
+        for (Long itemId : existing.subList(keep, existing.size())) {
+            orderDao.deleteItem(connection, itemId);
+        }
+        List<Long> ids = new ArrayList<>();
+        for (int i = 0; i < quote.getLines().size(); i++) {
+            OrderQuote.Line line = quote.getLines().get(i);
+            if (i < keep) {
+                orderDao.updateItem(connection, existing.get(i), i + 1, line, actorUserId);
+                ids.add(existing.get(i));
+            } else {
+                ids.add(orderDao.insertItem(connection, orderId, i + 1, line, actorUserId));
+            }
+        }
+        return ids;
     }
 
     // id các dòng vừa ghi, cùng thứ tự với quote.getLines()
