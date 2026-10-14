@@ -57,11 +57,26 @@
             </c:if>
             <c:if test="${currentUser.can('ORDER_VIEW')}">
             <li>
-                <%-- Chưa có danh sách đơn (S4-07): người tạo được đơn vào thẳng màn Tạo đơn hàng (S3-09) --%>
-                <a class="app-menu__link${activeMenu == 'sales' ? ' app-menu__link--active' : ''}" id="menu-sales"
-                   href="<c:url value="${currentUser.can('ORDER_MANAGE') and not currentUser.customer ? '/orders/new' : '/sales'}"/>"${activeMenu == 'sales' ? ' aria-current="page"' : ''}>
+                <%-- Nhóm Bán hàng: Danh sách đơn hàng (S4-07) và Tạo đơn hàng (S3-09, cần quyền tạo đơn);
+                     trang đặt activeSubmenu: order-list | order-new --%>
+                <details class="app-menu__group"${activeMenu == 'sales' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'sales' ? ' app-menu__toggle--current' : ''}" id="menu-sales">
                     <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Bán hàng
-                </a>
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'order-list' ? ' app-submenu__link--active' : ''}" id="menu-order-list"
+                           href="<c:url value='/orders'/>"${activeSubmenu == 'order-list' ? ' aria-current="page"' : ''}>Danh sách đơn hàng</a>
+                    </li>
+                    <c:if test="${currentUser.can('ORDER_MANAGE') and not currentUser.customer}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'order-new' ? ' app-submenu__link--active' : ''}" id="menu-order-new"
+                           href="<c:url value='/orders/new'/>"${activeSubmenu == 'order-new' ? ' aria-current="page"' : ''}>Tạo đơn hàng</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
             </li>
             </c:if>
             <c:if test="${currentUser.can('ORDER_APPROVAL_VIEW')}">
