@@ -87,7 +87,7 @@ public class OrderQuoteServlet extends HttpServlet {
             return null;
         }
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("tracked", line.isTracked());
+        data.put("soldOut", line.isSoldOut());
         data.put("available", line.getAvailableText());
         data.put("shortage", line.isShortage());
         data.put("max", line.getMaxText());

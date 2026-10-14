@@ -249,7 +249,7 @@ class SalesOrderServiceTest {
                 new OrderStock.Level(new BigDecimal("100.000"), new BigDecimal("25.000")));
         OrderQuote fits = SalesOrderService.price(List.of(line("2", "3")), PRODUCTS, rules(List.of()));
         OrderStock.Line ok = SalesOrderService.checkStock(fits, levels, "Kho trung tâm").getLines().get(0);
-        assertTrue(ok.isTracked() && !ok.isShortage());
+        assertTrue(ok.isChecked() && !ok.isSoldOut() && !ok.isShortage());
         assertEquals("75 Lon (≈ 3 Thùng)", ok.getAvailableText());
 
         // 3 Thùng (72 Lon) + 10 Lon = 82 Lon > 75: cả hai dòng báo vượt; dòng Thùng còn tối đa 2 Thùng (65 Lon)
@@ -268,12 +268,16 @@ class SalesOrderServiceTest {
                 service.validate(form, customer(false), null, true, ADDRESSES, null, null, stock).get("lines.0"));
     }
 
-    // SKU chưa có dòng tồn ở kho (chưa nhập kho) thì chưa theo dõi tồn: không chặn
+    // SKU chưa có dòng tồn ở kho (chưa từng nhập kho) coi như tồn 0: hết hàng, gửi đơn bị chặn
     @Test
-    void untrackedStockIsNotBlocked() {
-        OrderQuote quote = SalesOrderService.price(List.of(line("2", "500")), PRODUCTS, rules(List.of()));
-        OrderStock.Line line = SalesOrderService.checkStock(quote, Map.of(), "Kho trung tâm").getLines().get(0);
-        assertTrue(line.isChecked() && !line.isTracked() && !line.isShortage());
+    void missingStockRowIsSoldOut() {
+        OrderQuote quote = SalesOrderService.price(List.of(line("2", "1")), PRODUCTS, rules(List.of()));
+        OrderStock stock = SalesOrderService.checkStock(quote, Map.of(), "Kho trung tâm");
+        OrderStock.Line line = stock.getLines().get(0);
+        assertTrue(line.isChecked() && line.isSoldOut() && line.isShortage());
+        OrderForm form = new OrderForm("5", "8", "2026-10-20", null, null, null, List.of());
+        assertEquals("Hết hàng: Kho trung tâm không còn tồn khả dụng của mặt hàng này.", new SalesOrderService()
+                .validate(form, customer(false), null, true, ADDRESSES, null, null, stock).get("lines.0"));
     }
 
     // S2-04: nhật ký đơn ghi phần đầu đơn và tổng tiền đã tính, gửi đơn thì trạng thái là Chờ duyệt

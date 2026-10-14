@@ -56,6 +56,7 @@ public class SalesOrderService {
     // Đơn giá sửa tay (S4-01): số nguyên VNĐ, có thể ngăn nghìn bằng dấu chấm, tối đa 13 chữ số như decimal(18,2)
     private static final Pattern MONEY_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{3}){1,4}|\\d{1,13}");
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+    private static final OrderStock.Level NO_STOCK = new OrderStock.Level(BigDecimal.ZERO, BigDecimal.ZERO);
     private static final String AUDIT_ENTITY = "ORDER";
     private static final String STATUS_DRAFT = "DRAFT";
     private static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
@@ -203,14 +204,11 @@ public class SalesOrderService {
                 lines.add(OrderStock.Line.unchecked());
                 continue;
             }
-            OrderStock.Level level = levels.get(line.getProduct().getId());
-            if (level == null) {
-                lines.add(OrderStock.Line.untracked());
-                continue;
-            }
+            // Chưa có dòng tồn ở kho (chưa từng nhập kho) thì coi như tồn 0
+            OrderStock.Level level = levels.getOrDefault(line.getProduct().getId(), NO_STOCK);
             BigDecimal total = requested.get(line.getProduct().getId());
             BigDecimal room = level.getAvailable().subtract(total.subtract(line.getQtyBase()));
-            lines.add(OrderStock.Line.tracked(level.getAvailable(), room, total.compareTo(level.getAvailable()) > 0,
+            lines.add(OrderStock.Line.of(level.getAvailable(), room, total.compareTo(level.getAvailable()) > 0,
                     line.getProduct(), line.getUnit()));
         }
         return new OrderStock(warehouseName, lines);
@@ -328,7 +326,7 @@ public class SalesOrderService {
     }
 
     // S4-03: gửi đơn thì khoá dòng tồn các SKU của đơn và kiểm lại; trả về tồn của các SKU sẽ được giữ chỗ
-    // (SKU chưa theo dõi tồn ở kho thì không giữ chỗ). Lưu nháp không đụng tới tồn.
+    // (gửi được nghĩa là mọi SKU đều có dòng tồn đủ hàng). Lưu nháp không đụng tới tồn.
     private Map<Long, OrderStock.Level> lockStock(Connection connection, Pending pending)
             throws SQLException, StockShortageException {
         Long warehouseId = pending.customer.getDefaultWarehouseId();
