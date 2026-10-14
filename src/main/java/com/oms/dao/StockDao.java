@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 // Tổng giữ chỗ ACTIVE của một (kho, SKU) luôn bằng stock_balances.qty_reserved_base; CHECK của bảng chặn giữ quá tồn.
 public class StockDao {
 
-    // Tồn của mọi SKU trong kho; SKU chưa có dòng stock_balances không có trong map (chưa theo dõi tồn)
+    // Tồn của mọi SKU trong kho; SKU chưa có dòng stock_balances (chưa từng nhập kho) không có trong map
     public Map<Long, OrderStock.Level> findLevels(long warehouseId) throws SQLException {
         try (Connection connection = DbConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(

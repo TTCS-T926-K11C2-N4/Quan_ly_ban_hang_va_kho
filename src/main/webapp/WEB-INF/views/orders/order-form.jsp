@@ -199,10 +199,10 @@
                                             <div class="order-line__qty-cell">
                                                 <input class="order-line__control order-line__qty" type="text" name="qty" inputmode="decimal" maxlength="16"
                                                        value="<c:out value='${line.qty}'/>" placeholder="0" aria-label="Số lượng dòng ${loop.index + 1}">
-                                                <p class="order-line__stock${stockShown and not lineStock.tracked ? ' order-line__stock--untracked' : ''}${stockShown and lineStock.shortage ? ' order-line__stock--short' : ''}"${stockShown ? '' : ' hidden'}>
+                                                <p class="order-line__stock${stockShown and lineStock.shortage ? ' order-line__stock--short' : ''}"${stockShown ? '' : ' hidden'}>
                                                     <span class="order-line__stock-text"><c:choose>
                                                         <c:when test="${not stockShown}"></c:when>
-                                                        <c:when test="${not lineStock.tracked}">Chưa có số tồn ở kho</c:when>
+                                                        <c:when test="${lineStock.soldOut}">Hết hàng ở kho này</c:when>
                                                         <c:when test="${lineStock.shortage}">Vượt tồn · khả dụng <c:out value="${lineStock.availableText}"/></c:when>
                                                         <c:otherwise>Khả dụng: <c:out value="${lineStock.availableText}"/></c:otherwise>
                                                     </c:choose></span>
