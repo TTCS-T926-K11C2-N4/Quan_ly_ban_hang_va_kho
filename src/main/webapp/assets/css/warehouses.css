@@ -1,0 +1,408 @@
+/* Danh sách kho & vị trí, Thêm/Sửa kho, Vị trí lưu trong kho (S5-03) theo Figma Page 4.
+   Khung trang, thẻ, bảng, nút dùng chung ở inventory.css. */
+
+/* Thanh lọc: ô tìm 310px, hai ô chọn 166px, số kho bên phải */
+.warehouse-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+}
+
+.warehouse-filters[hidden] {
+    display: none;
+}
+
+.warehouse-filters .inv-control {
+    height: 40px;
+    border-color: var(--inv-border);
+    font-size: 13px;
+}
+
+.warehouse-filters__keyword {
+    flex: 0 1 310px;
+}
+
+.warehouse-filters__select {
+    flex: 0 1 166px;
+}
+
+.warehouse-filters__clear {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.warehouse-filters__clear:hover {
+    text-decoration: underline;
+}
+
+.warehouse-filters__count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--inv-muted);
+}
+
+/* Bảng kho */
+.warehouse-table__check {
+    width: 49px;
+    padding-left: 17px !important;
+}
+
+.warehouse-table__address {
+    display: block;
+}
+
+.warehouse-table__actions {
+    justify-content: flex-end;
+}
+
+/* Form Thêm/Sửa kho (690px) và khung hướng dẫn (370px) */
+.warehouse-form-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 690px) minmax(0, 370px);
+    align-items: start;
+    gap: 24px;
+}
+
+.warehouse-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 24px 25px;
+}
+
+.warehouse-form__intro .inv-card__title {
+    font-size: 17px;
+}
+
+.warehouse-form__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 16px;
+}
+
+.warehouse-form__types {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.warehouse-form__types legend {
+    margin-bottom: 7px;
+    padding: 0;
+}
+
+/* Hai nút chọn loại kho dạng thẻ, thẻ đang chọn viền và nền xanh */
+.warehouse-type-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.warehouse-type-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 42px;
+    padding: 0 16px;
+    border: 1px solid var(--inv-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    font-size: 13px;
+    color: var(--inv-heading);
+    cursor: pointer;
+}
+
+.warehouse-type-option:has(:checked) {
+    border-color: var(--inv-navy);
+    background: #eff6ff;
+}
+
+.warehouse-type-option:has(:focus-visible) {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.warehouse-type-option__input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--inv-navy);
+}
+
+.warehouse-form__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 20px;
+    border-top: 1px solid var(--inv-border);
+}
+
+.warehouse-guide {
+    padding: 21px;
+}
+
+.warehouse-guide__title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 21px;
+    color: var(--inv-heading);
+}
+
+.warehouse-guide__list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 18px;
+    padding: 0 0 17px;
+    border-bottom: 1px solid var(--inv-border);
+    list-style: none;
+}
+
+.warehouse-guide__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.warehouse-guide__icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: var(--inv-navy);
+}
+
+.warehouse-guide__icon .inv-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.warehouse-guide__name {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    color: var(--inv-heading);
+}
+
+.warehouse-guide__desc {
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--inv-muted);
+}
+
+.warehouse-guide__note {
+    margin-top: 16px;
+    font-size: 13px;
+}
+
+/* Trang vị trí: thông tin kho, cây vị trí và form */
+.warehouse-info {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    margin: 0;
+    padding: 18px 20px 20px;
+}
+
+.warehouse-info__label {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.warehouse-info__value {
+    margin: 6px 0 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--inv-heading);
+    overflow-wrap: anywhere;
+}
+
+.warehouse-info__note {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--inv-muted);
+}
+
+.location-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+    align-items: start;
+    gap: 20px;
+}
+
+.location-layout--single {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.location-empty {
+    padding: 28px 20px;
+    font-size: 13px;
+    color: var(--inv-muted);
+}
+
+.location-tree,
+.location-tree__children {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.location-tree {
+    padding: 8px 12px 12px;
+}
+
+.location-tree > .location-tree__item + .location-tree__item {
+    border-top: 1px solid var(--inv-row-border);
+}
+
+/* Kệ thụt vào dưới khu, có đường dọc nối với khu */
+.location-tree__children {
+    margin: 0 0 8px 27px;
+    padding-left: 14px;
+    border-left: 1px dashed var(--inv-control-border);
+}
+
+.location-node {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 58px;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.location-node:target {
+    background: #eff6ff;
+}
+
+.location-node--inactive .location-node__title,
+.location-node--inactive .location-node__icon {
+    opacity: 0.55;
+}
+
+.location-node__icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--inv-soft);
+    color: var(--inv-muted);
+}
+
+.location-node__icon--zone {
+    background: #eff6ff;
+    color: var(--inv-navy);
+}
+
+.location-node__icon .inv-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.location-node__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.location-node__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.location-node__code {
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.location-node__name {
+    color: var(--inv-text);
+}
+
+.location-node__meta {
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--inv-muted);
+}
+
+.location-node__actions {
+    flex-shrink: 0;
+}
+
+.location-node__status {
+    display: contents;
+}
+
+.location-form__body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.location-form .warehouse-form__types,
+.location-form fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.location-form legend {
+    margin-bottom: 7px;
+    padding: 0;
+}
+
+.location-form__parent[hidden] {
+    display: none;
+}
+
+.location-form__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+@media (max-width: 1279px) {
+    .warehouse-form-layout,
+    .location-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .warehouse-info {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .warehouse-filters__keyword,
+    .warehouse-filters__select {
+        flex: 1 1 100%;
+    }
+
+    .warehouse-form {
+        padding: 20px 16px;
+    }
+
+    .warehouse-form__grid,
+    .warehouse-type-options,
+    .warehouse-info {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .location-node {
+        flex-wrap: wrap;
+    }
+}

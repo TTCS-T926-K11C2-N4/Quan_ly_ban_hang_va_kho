@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Trang include cần đặt breadcrumbSection và breadcrumbPage --%>
+<%-- Trang include cần đặt breadcrumbSection và breadcrumbPage; trang con (vd Tạo phiếu nhập) đặt thêm
+     breadcrumbParent và breadcrumbParentUrl để hiện cấp cha có link quay lại --%>
 <header class="app-topbar">
     <button class="app-topbar__menu-toggle" type="button" id="sidebar-toggle"
             aria-controls="app-sidebar" aria-expanded="false" aria-label="Mở menu">
@@ -11,6 +12,9 @@
     <nav class="app-breadcrumb" aria-label="Breadcrumb">
         <ol class="app-breadcrumb__list">
             <li><c:out value="${breadcrumbSection}"/></li>
+            <c:if test="${not empty breadcrumbParent}">
+                <li><a class="app-breadcrumb__link" href="<c:url value='${breadcrumbParentUrl}'/>"><c:out value="${breadcrumbParent}"/></a></li>
+            </c:if>
             <li aria-current="page"><c:out value="${breadcrumbPage}"/></li>
         </ol>
     </nav>

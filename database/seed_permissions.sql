@@ -13,6 +13,8 @@
 -- (AC của S3-05; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự nâng hạn mức cho đại lý của mình).
 -- Phân công / chuyển giao nhân viên kinh doanh phụ trách đại lý: quyền riêng CUSTOMER_ASSIGN cho Quản lý kinh doanh
 -- (AC của S3-06; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự đổi người phụ trách).
+-- Khai báo kho và vị trí lưu trong kho: quyền riêng WAREHOUSE_MANAGE cho Quản lý kho (vai trò của S5-03;
+-- Nhân viên kho có INVENTORY_MANAGE để nhập kho nhưng không tự thêm, sửa kho).
 -- ADMIN có mọi quyền còn lại (xem câu lệnh cuối file).
 --
 -- src/test/java/com/oms/security/AccessRulesTest.java đọc trực tiếp file này:
@@ -37,6 +39,7 @@ INSERT INTO `permissions` (`code`, `module`, `action`, `description`) VALUES
   ('ORDER_APPROVE', 'Duyệt đơn & giá đặc biệt', 'APPROVE', 'Duyệt đơn vượt hạn mức, giá dưới giá sàn'),
   ('INVENTORY_VIEW', 'Tồn kho & nhập kho', 'VIEW', 'Xem tồn kho và phiếu nhập'),
   ('INVENTORY_MANAGE', 'Tồn kho & nhập kho', 'MANAGE', 'Nhập kho, chuyển kho, kiểm kê'),
+  ('WAREHOUSE_MANAGE', 'Tồn kho & nhập kho', 'MANAGE', 'Thêm, sửa kho và vị trí lưu trong kho'),
   ('DELIVERY_VIEW', 'Phiếu xuất & giao hàng', 'VIEW', 'Xem phiếu xuất và giao hàng'),
   ('DELIVERY_MANAGE', 'Phiếu xuất & giao hàng', 'MANAGE', 'Soạn, xuất và giao hàng'),
   ('INVOICE_VIEW', 'Hoá đơn & công nợ', 'VIEW', 'Xem hoá đơn và công nợ'),
@@ -91,6 +94,7 @@ FROM (VALUES
   ROW('WH_MANAGER', 'ORDER_VIEW', 'ALL'),
   ROW('WH_MANAGER', 'INVENTORY_VIEW', 'ALL'),
   ROW('WH_MANAGER', 'INVENTORY_MANAGE', 'ALL'),
+  ROW('WH_MANAGER', 'WAREHOUSE_MANAGE', 'ALL'),
   ROW('WH_MANAGER', 'DELIVERY_VIEW', 'ALL'),
   ROW('WH_MANAGER', 'DELIVERY_MANAGE', 'ALL'),
   ROW('WH_MANAGER', 'RETURN_VIEW', 'ALL'),

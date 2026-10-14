@@ -115,10 +115,43 @@
                 </a>
             </li>
             <li>
-                <a class="app-menu__link${activeMenu == 'warehouse' ? ' app-menu__link--active' : ''}" id="menu-warehouse"
-                   href="<c:url value='/warehouse'/>"${activeMenu == 'warehouse' ? ' aria-current="page"' : ''}>
+                <%-- Nhóm Kho hàng (EP-05, thiết kế Sprint 5); trang đặt activeSubmenu:
+                     warehouses (S5-03) | goods-receipts (S5-04) | stock (S5-05) | reservations (S5-06).
+                     Mỗi mục chỉ hiện khi ứng dụng đã có Servlet của màn đó (tên đăng ký mặc định của @WebServlet là
+                     tên đầy đủ của lớp), để merge lẻ từng story không hiện mục dẫn tới trang chưa có --%>
+                <c:set var="servlets" value="${pageContext.servletContext.servletRegistrations}"/>
+                <details class="app-menu__group"${activeMenu == 'warehouse' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'warehouse' ? ' app-menu__toggle--current' : ''}" id="menu-warehouse">
                     <span class="app-menu__icon app-menu__icon--warehouse" aria-hidden="true"></span>Kho hàng
-                </a>
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <c:if test="${not empty servlets['com.oms.controller.WarehouseListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'warehouses' ? ' app-submenu__link--active' : ''}" id="menu-warehouses"
+                           href="<c:url value='/warehouses'/>"${activeSubmenu == 'warehouses' ? ' aria-current="page"' : ''}>Danh sách kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.GoodsReceiptListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'goods-receipts' ? ' app-submenu__link--active' : ''}" id="menu-goods-receipts"
+                           href="<c:url value='/goods-receipts'/>"${activeSubmenu == 'goods-receipts' ? ' aria-current="page"' : ''}>Phiếu nhập kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.StockLedgerServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'stock' ? ' app-submenu__link--active' : ''}" id="menu-stock"
+                           href="<c:url value='/stock'/>"${activeSubmenu == 'stock' ? ' aria-current="page"' : ''}>Sổ tồn kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.ReservationListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'reservations' ? ' app-submenu__link--active' : ''}" id="menu-reservations"
+                           href="<c:url value='/stock/reservations'/>"${activeSubmenu == 'reservations' ? ' aria-current="page"' : ''}>Giữ chỗ tồn</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
             </li>
             </c:if>
             <c:if test="${currentUser.can('REPORT_VIEW')}">

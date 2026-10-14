@@ -31,6 +31,8 @@ public final class AuditCatalog {
         ENTITIES.put("PRODUCT_CATEGORY", "Nhóm hàng");
         ENTITIES.put("UNIT", "Đơn vị tính");
         ENTITIES.put("SUPPLIER", "Nhà cung cấp");
+        ENTITIES.put("WAREHOUSE", "Kho hàng");
+        ENTITIES.put("WAREHOUSE_LOCATION", "Vị trí kho");
         ENTITIES.put("CUSTOMER", "Đại lý");
         ENTITIES.put("DELIVERY_ADDRESS", "Điểm giao hàng");
         ENTITIES.put("ORDER", "Đơn hàng");
@@ -71,6 +73,12 @@ public final class AuditCatalog {
         action("SUPPLIER_DELETE", "Xoá", GROUP_DELETE);
         action("SUPPLIER_DEACTIVATE", "Ngừng giao dịch", GROUP_STATUS);
         action("SUPPLIER_ACTIVATE", "Giao dịch lại", GROUP_STATUS);
+        action("WAREHOUSE_CREATE", "Thêm mới", GROUP_CREATE);
+        action("WAREHOUSE_UPDATE", "Sửa", GROUP_UPDATE);
+        action("WAREHOUSE_LOCATION_CREATE", "Thêm mới", GROUP_CREATE);
+        action("WAREHOUSE_LOCATION_UPDATE", "Sửa", GROUP_UPDATE);
+        action("WAREHOUSE_LOCATION_DEACTIVATE", "Ngừng dùng", GROUP_STATUS);
+        action("WAREHOUSE_LOCATION_ACTIVATE", "Dùng lại", GROUP_STATUS);
         action("CUSTOMER_CREATE", "Thêm mới", GROUP_CREATE);
         action("CUSTOMER_UPDATE", "Sửa hồ sơ", GROUP_UPDATE);
         action("CUSTOMER_DELETE", "Xoá", GROUP_DELETE);
