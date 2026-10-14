@@ -279,6 +279,22 @@ ol {
 .app-menu__icon--dashboard { --menu-icon: url("../img/icons/menu/dashboard.svg"); }
 .app-menu__icon--accounts { --menu-icon: url("../img/icons/menu/accounts.svg"); }
 .app-menu__icon--sales { --menu-icon: url("../img/icons/menu/sales.svg"); }
+.app-menu__icon--approvals { --menu-icon: url("../img/icons/menu/approvals.svg"); }
+
+/* Số đơn chờ duyệt cạnh mục "Duyệt đơn" (S4-05) */
+.app-menu__count {
+    min-width: 20px;
+    height: 20px;
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #ef4444;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 20px;
+    color: #ffffff;
+    text-align: center;
+}
 .app-menu__icon--products { --menu-icon: url("../img/icons/menu/products.svg"); }
 .app-menu__icon--warehouse { --menu-icon: url("../img/icons/menu/warehouse.svg"); }
 .app-menu__icon--suppliers { --menu-icon: url("../img/icons/menu/suppliers.svg"); }

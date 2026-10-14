@@ -64,6 +64,18 @@
                 </a>
             </li>
             </c:if>
+            <c:if test="${currentUser.can('ORDER_APPROVAL_VIEW')}">
+            <li>
+                <%-- Duyệt đơn vượt hạn mức / dưới giá sàn (S4-05); số đếm do ApprovalBadgeFilter đặt khi mở trang --%>
+                <a class="app-menu__link${activeMenu == 'approvals' ? ' app-menu__link--active' : ''}" id="menu-approvals"
+                   href="<c:url value='/approvals'/>"${activeMenu == 'approvals' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--approvals" aria-hidden="true"></span>Duyệt đơn
+                    <c:if test="${pendingApprovalCount > 0}">
+                        <span class="app-menu__count" aria-label="${pendingApprovalCount} đơn chờ duyệt">${pendingApprovalCount > 99 ? '99+' : pendingApprovalCount}</span>
+                    </c:if>
+                </a>
+            </li>
+            </c:if>
             <c:if test="${currentUser.can('PRODUCT_VIEW')}">
             <li>
                 <%-- Menu cha chỉ mở/đóng menu con (details/summary, không cần JS); đang ở trang thuộc Sản phẩm thì mở sẵn.
