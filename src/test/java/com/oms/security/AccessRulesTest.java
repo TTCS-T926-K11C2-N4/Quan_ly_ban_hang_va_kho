@@ -281,6 +281,16 @@ class AccessRulesTest {
         }
     }
 
+    // S5-05: sổ tồn kho cho mọi vai trò xem tồn kho, kể cả nhân viên kinh doanh (xem tồn khả dụng); đại lý thì không
+    @Test
+    void inventoryViewersCanOpenStockLedger() {
+        for (String role : new String[] {"SALES_REP", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT", "SALES_MANAGER", "ADMIN"}) {
+            assertTrue(AccessRules.isAllowed("/stock", permissionsOf(role)), role);
+            assertTrue(AccessRules.isAllowed("/stock/export", permissionsOf(role)), role);
+        }
+        assertFalse(AccessRules.isAllowed("/stock", permissionsOf("CUSTOMER")));
+    }
+
     // S3-07: chỉ Kế toán công nợ và Quản lý kinh doanh khoá/mở giao dịch đại lý
     @Test
     void onlyAccountantAndSalesManagerCanBlockCustomers() {
