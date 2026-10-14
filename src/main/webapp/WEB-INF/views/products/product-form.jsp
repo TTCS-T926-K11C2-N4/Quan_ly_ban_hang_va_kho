@@ -133,7 +133,7 @@
                             <p class="form-group__error" id="product-status-error"${empty errors.status ? ' hidden' : ''}><c:out value="${errors.status}"/></p>
                         </div>
 
-                        <div class="form-group form-group--full${not empty errors.image ? ' form-group--invalid' : ''}">
+                        <div class="form-group${not empty errors.image ? ' form-group--invalid' : ''}">
                             <span class="form-group__label" id="product-image-label">Ảnh sản phẩm</span>
                             <div class="product-image-field" id="product-image-drop">
                                 <img class="product-image-field__preview" id="product-image-preview" alt="" width="96" height="96"
@@ -153,7 +153,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group form-group--full${not empty errors.description ? ' form-group--invalid' : ''}">
+                        <div class="form-group${not empty errors.description ? ' form-group--invalid' : ''}">
                             <label class="form-group__label" for="product-description">Mô tả</label>
                             <textarea class="form-group__control form-group__control--textarea" id="product-description"
                                       name="description" maxlength="2000" placeholder="Thông tin thêm về sản phẩm"

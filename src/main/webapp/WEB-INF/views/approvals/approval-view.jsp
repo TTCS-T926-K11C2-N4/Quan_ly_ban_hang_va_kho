@@ -31,9 +31,21 @@
             <header class="page-header customer-list-header">
                 <div>
                     <h1 class="page-header__title">Duyệt đơn hàng</h1>
-                    <p class="page-header__subtitle">Xem lý do cần duyệt rồi chọn Duyệt, Từ chối hoặc Trả lại cho nhân viên sửa.</p>
+                    <p class="page-header__subtitle">
+                        <c:choose>
+                            <c:when test="${canDecide}">Xem lý do cần duyệt rồi chọn Duyệt, Từ chối hoặc Trả lại cho nhân viên sửa.</c:when>
+                            <c:when test="${order.status == 'PENDING_APPROVAL'}">Bạn chỉ có quyền xem. Quản lý kinh doanh mới duyệt được đơn.</c:when>
+                            <c:otherwise>Đơn đang ở trạng thái "${order.statusLabel}", không còn chờ duyệt.</c:otherwise>
+                        </c:choose>
+                    </p>
                 </div>
-                <div class="profile-actions">
+                <div class="profile-actions approval-toolbar">
+                    <c:if test="${canDecide}">
+                        <button class="approval-action approval-action--approve" type="button" data-open-dialog="approve-dialog">✓ Duyệt đơn</button>
+                        <button class="approval-action approval-action--reject" type="button" data-open-dialog="reject-dialog">✕ Từ chối</button>
+                        <button class="approval-action approval-action--return" type="button" data-open-dialog="return-dialog">↶ Trả lại sửa</button>
+                    </c:if>
+                    <a class="sales-button" href="<c:url value='/orders/view'><c:param name='id' value='${order.id}'/></c:url>">Chi tiết đơn</a>
                     <a class="sales-button" href="<c:url value='/approvals'/>">← Đơn chờ duyệt</a>
                 </div>
             </header>
@@ -138,8 +150,11 @@
                 </section>
 
                 <%-- AC4: lịch sử duyệt chỉ xem; CSDL chặn sửa / xoá (trigger trg_approval_requests_decide_once) --%>
-                <section class="sales-card approval-history" aria-labelledby="approval-history-title">
-                    <h3 class="order-card__title" id="approval-history-title">Lịch sử duyệt đơn</h3>
+                <details class="sales-card approval-history">
+                    <summary class="approval-history__summary">
+                        <span class="order-card__title" id="approval-history-title">Lịch sử duyệt đơn</span>
+                        <span class="approval-history__count">${history.size()} lần gửi duyệt</span>
+                    </summary>
                     <c:choose>
                         <c:when test="${empty history}">
                             <p class="sales-empty">Đơn này chưa từng gửi duyệt.</p>
@@ -178,25 +193,8 @@
                         </c:otherwise>
                     </c:choose>
                     <p class="approval-history__note">Lịch sử chỉ xem, không sửa hoặc xoá được.</p>
-                </section>
+                </details>
 
-                <section class="sales-card approval-actions" aria-labelledby="approval-actions-title">
-                    <h3 class="order-card__title" id="approval-actions-title">Hành động</h3>
-                    <c:choose>
-                        <c:when test="${canDecide}">
-                            <button class="approval-action approval-action--approve" type="button" data-open-dialog="approve-dialog">✓ Duyệt đơn</button>
-                            <button class="approval-action approval-action--reject" type="button" data-open-dialog="reject-dialog">✕ Từ chối đơn</button>
-                            <button class="approval-action approval-action--return" type="button" data-open-dialog="return-dialog">↶ Trả lại sửa</button>
-                        </c:when>
-                        <c:when test="${order.status == 'PENDING_APPROVAL'}">
-                            <p class="sales-empty">Bạn chỉ có quyền xem. Quản lý kinh doanh mới duyệt được đơn.</p>
-                        </c:when>
-                        <c:otherwise>
-                            <p class="sales-empty">Đơn đang ở trạng thái "${order.statusLabel}", không còn chờ duyệt.</p>
-                        </c:otherwise>
-                    </c:choose>
-                    <a class="approval-action approval-action--back" href="<c:url value='/orders/view'><c:param name='id' value='${order.id}'/></c:url>">Xem chi tiết đơn</a>
-                </section>
             </div>
 
             <c:if test="${canDecide}">

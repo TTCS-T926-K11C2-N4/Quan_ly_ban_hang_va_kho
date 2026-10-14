@@ -93,20 +93,82 @@
     color: var(--color-sales-muted);
 }
 
-/* Màn duyệt một đơn: trên là thông tin + hàng hoá, dưới là lịch sử duyệt + hành động */
+/* Màn duyệt một đơn: trái là thông tin + lý do, phải là hàng hoá, lịch sử duyệt (thu gọn) trải hết bề ngang */
 .approval-grid {
     display: grid;
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 16px;
-    margin-top: 16px;
+    gap: 12px;
+    margin-top: 12px;
     align-items: start;
 }
 
 .approval-grid__main {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     min-width: 0;
+}
+
+.approval-grid__items {
+    margin-top: 0;
+}
+
+.approval-grid > .approval-history {
+    grid-column: 1 / -1;
+    margin-top: 0;
+}
+
+.approval-grid .order-card,
+.approval-grid .order-items-card {
+    margin-top: 0;
+}
+
+/* Nút Duyệt / Từ chối / Trả lại ở hàng tiêu đề, luôn thấy mà không phải cuộn */
+.approval-toolbar {
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.approval-toolbar .approval-action {
+    display: inline-flex;
+    height: 34px;
+    padding: 0 14px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.approval-history__summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.approval-history__summary::-webkit-details-marker {
+    display: none;
+}
+
+.approval-history__summary::after {
+    content: "Mở ra";
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.approval-history[open] .approval-history__summary::after {
+    content: "Thu gọn";
+}
+
+.approval-history__count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.approval-history[open] .approval-history__summary {
+    margin-bottom: 8px;
 }
 
 .approval-amount {
@@ -163,12 +225,6 @@
     margin-top: 10px;
     font-size: 11px;
     color: var(--color-sales-muted);
-}
-
-.approval-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 }
 
 .approval-action {

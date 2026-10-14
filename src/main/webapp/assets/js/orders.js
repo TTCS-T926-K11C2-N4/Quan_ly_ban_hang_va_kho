@@ -150,7 +150,7 @@
             return;
         }
         creditBox.classList.toggle("order-credit--over", credit.overLimit);
-        setText("credit-terms", "Số ngày nợ tối đa: " + credit.maxDebtDays + " ngày");
+        setText("credit-terms", credit.maxDebtDays + " ngày");
         setText("credit-limit", credit.granted ? credit.limit : "Chưa cấp hạn mức");
         setText("credit-ledger", credit.ledger);
         setText("credit-open", credit.openOrders);

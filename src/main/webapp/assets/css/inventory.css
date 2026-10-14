@@ -16,8 +16,8 @@
 
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 28px 32px 32px;
+    gap: 12px;
+    padding: 18px 28px 24px;
     background: var(--inv-soft);
     color: var(--inv-text);
 }
@@ -203,8 +203,8 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    min-height: 102px;
-    padding: 18px 19px;
+    min-height: 74px;
+    padding: 12px 16px;
     border: 1px solid var(--inv-border);
     border-radius: 12px;
     background: var(--color-surface);
@@ -243,8 +243,8 @@
 .inv-stat--stacked {
     position: relative;
     display: block;
-    min-height: 116px;
-    padding: 20px 17px 18px;
+    min-height: 84px;
+    padding: 12px 16px 10px;
 }
 
 .inv-stat--stacked .inv-stat__icon {
@@ -293,7 +293,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 14px 20px;
+    padding: 10px 18px;
     border-bottom: 1px solid var(--inv-border);
 }
 
@@ -312,7 +312,7 @@
 }
 
 .inv-card__body {
-    padding: 20px;
+    padding: 14px 18px;
 }
 
 .inv-card__meta {
@@ -438,7 +438,7 @@ select.inv-control {
 }
 
 .inv-table th {
-    height: 45px;
+    height: 38px;
     padding: 0 12px;
     border-bottom: 1px solid var(--inv-border);
     background: var(--inv-soft);
@@ -451,8 +451,8 @@ select.inv-control {
 }
 
 .inv-table td {
-    height: 70px;
-    padding: 10px 12px;
+    height: 54px;
+    padding: 6px 12px;
     border-bottom: 1px solid var(--inv-row-border);
     vertical-align: middle;
 }

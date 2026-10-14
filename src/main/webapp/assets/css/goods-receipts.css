@@ -59,7 +59,7 @@
 }
 
 .receipt-table td {
-    height: 58px;
+    height: 48px;
 }
 
 .receipt-table__warehouse {
@@ -374,8 +374,8 @@ select.receipt-line__control.inv-control {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    margin: 0 -32px;
-    padding: 15px 32px;
+    margin: 0 -28px;
+    padding: 10px 28px;
     border-top: 1px solid var(--inv-border);
     background: var(--inv-soft);
 }
