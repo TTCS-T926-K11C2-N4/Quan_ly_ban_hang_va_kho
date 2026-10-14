@@ -3,6 +3,7 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="sales"/>
+<c:set var="activeSubmenu" value="order-new"/>
 <c:set var="breadcrumbSection" value="Bán hàng"/>
 <c:set var="breadcrumbPage" value="Tạo đơn hàng"/>
 <%-- Đang mở lại đơn nháp của đại lý bị khoá: vẫn sửa/gửi được nhưng có cảnh báo (AC3 của S3-07) --%>

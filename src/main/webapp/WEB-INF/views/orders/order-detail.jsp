@@ -3,6 +3,7 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="sales"/>
+<c:set var="activeSubmenu" value="order-list"/>
 <c:set var="breadcrumbSection" value="Bán hàng"/>
 <c:set var="breadcrumbPage" value="Chi tiết đơn hàng"/>
 <!DOCTYPE html>
@@ -31,7 +32,7 @@
                     <p class="page-header__subtitle">Theo dõi đơn đang ở khâu nào trong vòng đời và huỷ đơn khi chưa xuất kho.</p>
                 </div>
                 <div class="profile-actions">
-                    <a class="sales-button" href="<c:url value='/orders/new'/>">← Bán hàng</a>
+                    <a class="sales-button" href="<c:url value='/orders'/>">← Danh sách đơn</a>
                     <c:if test="${canCancel}">
                         <button class="sales-button profile-actions__delete" type="button" id="open-cancel-order">Huỷ đơn</button>
                     </c:if>

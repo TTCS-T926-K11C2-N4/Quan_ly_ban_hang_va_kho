@@ -1498,3 +1498,151 @@
         box-shadow: 0 -8px 14px -10px rgba(15, 23, 42, 0.18);
     }
 }
+
+/* ===== Danh sách đơn hàng (S4-07): dùng khung lọc / bảng / phân trang của danh sách đại lý ===== */
+/* Trang dùng khung accounts-page nên khai báo lại các biến màu của sales-page */
+.order-list {
+    --color-sales-text: #334155;
+    --color-sales-muted: #64748b;
+    --color-sales-subtle: #94a3b8;
+    --color-sales-control-border: #cbd5e1;
+    --color-sales-soft: #f8fafc;
+}
+
+.order-filters__fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.7fr) auto;
+}
+
+.order-filters__fields--rep {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.7fr) auto;
+}
+
+.order-filters__dates {
+    min-width: 0;
+}
+
+.order-filters__date-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-sales-muted);
+}
+
+.order-filters__date-row .account-filters__control {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 8px;
+}
+
+.order-list__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--color-account-row-line);
+}
+
+.order-list__summary {
+    font-size: 13px;
+    color: var(--color-sales-text);
+}
+
+.order-list__total {
+    color: var(--color-navy);
+    font-variant-numeric: tabular-nums;
+}
+
+.order-list__sep {
+    margin: 0 4px;
+    color: var(--color-sales-subtle);
+}
+
+.order-list__note {
+    margin-left: 4px;
+    font-size: 11px;
+    color: var(--color-sales-muted);
+}
+
+.order-list__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.order-list__control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.order-list__control .select {
+    width: 170px;
+}
+
+.order-list-table__money {
+    padding-right: 20px;
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.order-list-table__sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--color-sales-muted);
+}
+
+.order-list-table__sub--warn {
+    font-weight: 600;
+    color: #b45309;
+}
+
+.order-list-table__action {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.order-list-table__open {
+    display: inline-flex;
+    padding: 5px 12px;
+    border: 1px solid var(--color-sales-control-border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-navy);
+    text-decoration: none;
+}
+
+.order-list-table__open:hover {
+    background: var(--color-sales-soft);
+}
+
+.order-list-table__open:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (max-width: 1279px) {
+    .order-filters__fields,
+    .order-filters__fields--rep {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .order-filters__fields,
+    .order-filters__fields--rep {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .order-list__control .select {
+        width: 140px;
+    }
+}
