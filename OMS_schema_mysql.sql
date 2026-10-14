@@ -1570,6 +1570,8 @@ CREATE TRIGGER trg_ar_ledger_entries_no_update BEFORE UPDATE ON `ar_ledger_entri
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ar_ledger_entries chỉ cho INSERT (append-only), không được sửa/xoá';
 CREATE TRIGGER trg_ar_ledger_entries_no_delete BEFORE DELETE ON `ar_ledger_entries` FOR EACH ROW
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ar_ledger_entries chỉ cho INSERT (append-only), không được sửa/xoá';
+CREATE TRIGGER trg_approval_requests_no_delete BEFORE DELETE ON `approval_requests` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'approval_requests là lịch sử duyệt, không được xoá';
 
 -- ---------------------------------------------------------------------
 -- TRIGGER: bảng giá ACTIVE không được chồng khoảng ngày hiệu lực trong cùng 1 nhóm khách hàng
@@ -1598,6 +1600,17 @@ BEGIN
       AND COALESCE(NEW.valid_to, '9999-12-31') >= p.valid_from
   ) THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Bảng giá ACTIVE bị chồng ngày hiệu lực với bảng giá khác cùng nhóm khách hàng';
+  END IF;
+END$$
+
+-- Lịch sử duyệt (S4-05): mỗi yêu cầu duyệt chỉ được ghi quyết định một lần (PENDING -> quyết định), rồi khoá lại
+CREATE TRIGGER trg_approval_requests_decide_once BEFORE UPDATE ON `approval_requests` FOR EACH ROW
+BEGIN
+  IF OLD.status <> 'PENDING' OR NEW.status = 'PENDING'
+     OR NEW.order_id <> OLD.order_id OR NEW.approval_type <> OLD.approval_type
+     OR NOT (NEW.violations <=> OLD.violations) OR NEW.requested_by <> OLD.requested_by
+     OR NEW.requested_at <> OLD.requested_at THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'approval_requests: chỉ được ghi quyết định một lần cho yêu cầu đang chờ duyệt';
   END IF;
 END$$
 

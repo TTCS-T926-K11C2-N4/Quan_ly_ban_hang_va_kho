@@ -17,6 +17,11 @@ public final class JsonUtil {
                 .collect(Collectors.joining(",", "{", "}"));
     }
 
+    // Mảng JSON, vd cột violations của approval_requests
+    public static String array(Collection<?> items) {
+        return value(items);
+    }
+
     private static String value(Object value) {
         if (value == null) {
             return "null";

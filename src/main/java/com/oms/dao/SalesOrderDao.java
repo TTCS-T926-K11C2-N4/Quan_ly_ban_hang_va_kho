@@ -5,6 +5,7 @@ import com.oms.model.OrderDetail;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderProduct;
 import com.oms.model.OrderQuote;
+import com.oms.model.OrderStatus;
 import com.oms.model.PricingRules;
 import com.oms.util.DbConnection;
 
@@ -185,10 +186,47 @@ public class SalesOrderDao {
         }
     }
 
-    public void deleteItems(Connection connection, long orderId) throws SQLException {
+    // Id các dòng hàng hiện có của đơn, theo số thứ tự dòng
+    public List<Long> findItemIds(Connection connection, long orderId) throws SQLException {
+        List<Long> ids = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(
-                "DELETE FROM sales_order_items WHERE order_id = ?")) {
+                "SELECT id FROM sales_order_items WHERE order_id = ? ORDER BY line_no")) {
             statement.setLong(1, orderId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    ids.add(resultSet.getLong(1));
+                }
+            }
+        }
+        return ids;
+    }
+
+    // Bỏ một dòng khỏi đơn nháp. Đơn bị trả lại sửa (S4-05) có thể còn dòng giữ chỗ đã nhả trỏ tới dòng này:
+    // xoá theo chỉ những dòng giữ chỗ đó (nháp không còn giữ chỗ ACTIVE) để xoá được dòng hàng
+    public void deleteItem(Connection connection, long itemId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "DELETE FROM stock_reservations WHERE order_item_id = ? AND status = 'RELEASED'")) {
+            statement.setLong(1, itemId);
+            statement.executeUpdate();
+        }
+        try (PreparedStatement statement = connection.prepareStatement(
+                "DELETE FROM sales_order_items WHERE id = ?")) {
+            statement.setLong(1, itemId);
+            statement.executeUpdate();
+        }
+    }
+
+    // Ghi đè dòng hàng sẵn có (giữ nguyên id để lịch sử giữ chỗ của dòng vẫn trỏ đúng)
+    public void updateItem(Connection connection, long itemId, int lineNo, OrderQuote.Line line, long actorUserId)
+            throws SQLException {
+        String sql = "UPDATE sales_order_items SET line_no = ?, product_id = ?, unit_id = ?, unit_factor = ?, qty = ?,"
+                + " qty_base = ?, unit_price = ?, floor_price = ?, price_list_item_id = ?, discount_policy_id = ?,"
+                + " is_manual_price = ?, is_below_floor = ?, discount_amount = ?, line_total = ?,"
+                + " updated_at = UTC_TIMESTAMP(), updated_by = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            int next = bindItem(statement, 1, lineNo, line);
+            statement.setLong(next++, actorUserId);
+            statement.setLong(next, itemId);
             statement.executeUpdate();
         }
     }
@@ -203,27 +241,54 @@ public class SalesOrderDao {
                 + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, orderId);
-            statement.setInt(2, lineNo);
-            statement.setLong(3, line.getProduct().getId());
-            statement.setLong(4, line.getUnit().getId());
-            statement.setBigDecimal(5, line.getUnit().getFactor());
-            statement.setBigDecimal(6, line.getQty());
-            statement.setBigDecimal(7, line.getQtyBase());
-            statement.setBigDecimal(8, line.getUnitPrice());
-            statement.setBigDecimal(9, line.getFloorPrice());
-            setNullableLong(statement, 10, line.getPriceListItemId());
-            setNullableLong(statement, 11, line.getDiscountPolicyId());
-            statement.setBoolean(12, line.isManualPrice());
-            statement.setBoolean(13, line.isBelowFloor());
-            statement.setBigDecimal(14, line.getDiscount());
-            statement.setBigDecimal(15, line.getTotal());
-            statement.setLong(16, actorUserId);
-            statement.setLong(17, actorUserId);
+            int next = bindItem(statement, 2, lineNo, line);
+            statement.setLong(next++, actorUserId);
+            statement.setLong(next, actorUserId);
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 keys.next();
                 return keys.getLong(1);
             }
+        }
+    }
+
+    private static int bindItem(PreparedStatement statement, int start, int lineNo, OrderQuote.Line line)
+            throws SQLException {
+        int index = start;
+        statement.setInt(index++, lineNo);
+        statement.setLong(index++, line.getProduct().getId());
+        statement.setLong(index++, line.getUnit().getId());
+        statement.setBigDecimal(index++, line.getUnit().getFactor());
+        statement.setBigDecimal(index++, line.getQty());
+        statement.setBigDecimal(index++, line.getQtyBase());
+        statement.setBigDecimal(index++, line.getUnitPrice());
+        statement.setBigDecimal(index++, line.getFloorPrice());
+        setNullableLong(statement, index++, line.getPriceListItemId());
+        setNullableLong(statement, index++, line.getDiscountPolicyId());
+        statement.setBoolean(index++, line.isManualPrice());
+        statement.setBoolean(index++, line.isBelowFloor());
+        statement.setBigDecimal(index++, line.getDiscount());
+        statement.setBigDecimal(index++, line.getTotal());
+        return index;
+    }
+
+    // Đổi trạng thái đơn đang chờ duyệt (S4-05). version = null khi gọi ngay trong transaction gửi đơn (tự duyệt);
+    // duyệt thì ghi approved_at. false nếu đơn vừa đổi trạng thái hoặc được sửa ở nơi khác.
+    public boolean changeStatus(Connection connection, long id, Long version, String fromStatus, String toStatus,
+                                long actorUserId) throws SQLException {
+        String sql = "UPDATE sales_orders SET status = ?,"
+                + (OrderStatus.APPROVED.equals(toStatus) ? " approved_at = UTC_TIMESTAMP()," : "")
+                + " version = version + 1, updated_at = UTC_TIMESTAMP(), updated_by = ?"
+                + " WHERE id = ? AND status = ?" + (version == null ? "" : " AND version = ?");
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, toStatus);
+            statement.setLong(2, actorUserId);
+            statement.setLong(3, id);
+            statement.setString(4, fromStatus);
+            if (version != null) {
+                statement.setLong(5, version);
+            }
+            return statement.executeUpdate() == 1;
         }
     }
 

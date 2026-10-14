@@ -14,6 +14,9 @@ public final class Permission {
     public static final String ORDER_MANAGE = "ORDER_MANAGE";
     // Xem chi tiết đơn (S4-06): Nhân viên kinh doanh chỉ đơn của đại lý mình phụ trách; kho, kế toán xem mọi đơn
     public static final String ORDER_VIEW = "ORDER_VIEW";
+    // Duyệt đơn vượt hạn mức / dưới giá sàn (S4-05): Quản lý kinh doanh, Admin duyệt; Kế toán chỉ xem hàng chờ
+    public static final String ORDER_APPROVAL_VIEW = "ORDER_APPROVAL_VIEW";
+    public static final String ORDER_APPROVE = "ORDER_APPROVE";
     // Chỉ Quản lý kinh doanh có, kể cả Admin cũng không (seed_permissions.sql)
     public static final String COST_PRICE_VIEW = "COST_PRICE_VIEW";
     // Nhà cung cấp (S2-09) dùng chung quyền kho: nhân viên kho, quản lý kho, Admin quản lý

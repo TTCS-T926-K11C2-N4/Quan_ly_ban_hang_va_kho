@@ -1,8 +1,10 @@
 package com.oms.service;
 
+import com.oms.dao.ApprovalDao;
 import com.oms.dao.AuditLogDao;
 import com.oms.dao.PermissionDao;
 import com.oms.dao.SalesOrderDao;
+import com.oms.model.ApprovalRequest;
 import com.oms.model.DraftOrder;
 import com.oms.model.OrderDetail;
 import com.oms.model.OrderStatus;
@@ -30,6 +32,7 @@ public class OrderLifecycleService {
     private final CustomerService customerService = new CustomerService();
     private final PermissionDao permissionDao = new PermissionDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
+    private final ApprovalDao approvalDao = new ApprovalDao();
 
     // null nếu không có đơn này hoặc người dùng không được xem đại lý của đơn (trả 404 như nhau)
     public OrderDetail findVisible(long userId, long orderId) throws SQLException {
@@ -78,6 +81,11 @@ public class OrderLifecycleService {
                     return false;
                 }
                 int released = orderDao.releaseReservations(connection, order.getId(), RELEASE_REASON);
+                // Đơn đang chờ duyệt (S4-05): đóng yêu cầu duyệt cùng lúc để lịch sử duyệt không treo ở "Chờ"
+                if (OrderStatus.PENDING_APPROVAL.equals(order.getStatus())) {
+                    approvalDao.decide(connection, order.getId(), ApprovalRequest.REJECTED,
+                            "Huỷ đơn trước khi duyệt: " + reason, actorUserId);
+                }
                 orderDao.insertStatusHistory(connection, order.getId(), order.getStatus(), OrderStatus.CANCELLED,
                         reason, actorUserId);
                 Map<String, Object> newValues = values(order.getOrderNo(), OrderStatus.CANCELLED);

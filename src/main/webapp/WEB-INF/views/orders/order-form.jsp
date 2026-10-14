@@ -48,6 +48,12 @@
             <c:if test="${not empty errors and empty errors.form}">
                 <div class="sales-flash sales-flash--error" role="alert">Đơn hàng chưa được lưu. Vui lòng kiểm tra các ô báo lỗi bên dưới.</div>
             </c:if>
+            <%-- S4-05: đơn bị Quản lý kinh doanh trả lại sửa: ý kiến của lần trả lại gần nhất --%>
+            <c:if test="${not empty returnComment}">
+                <div class="sales-flash sales-flash--warning" id="return-comment" role="status" data-toast="off">
+                    <strong>Quản lý trả lại đơn để sửa.</strong> <c:out value="${returnComment}"/>
+                </div>
+            </c:if>
             <div class="sales-flash sales-flash--warning" id="blocked-warning" role="status" data-toast="off"${draftOfBlocked ? '' : ' hidden'}>
                 <strong>Đại lý đang bị khoá giao dịch.</strong>
                 <span id="blocked-warning-text"><c:if test="${draftOfBlocked}">Lý do: <c:out value="${selectedCustomer.blockReason}"/>. Đơn nháp này vẫn được xử lý tiếp, nhưng không tạo được đơn mới cho đại lý.</c:if></span>
