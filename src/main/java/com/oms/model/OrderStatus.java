@@ -48,6 +48,15 @@ public final class OrderStatus {
         return DESCRIPTIONS.getOrDefault(status, "");
     }
 
+    public static boolean isKnown(String status) {
+        return LABELS.containsKey(status);
+    }
+
+    // Mọi trạng thái theo thứ tự dùng cho ô lọc: các bước chính rồi hai nhánh rẽ
+    public static List<String> codes() {
+        return Stream.concat(STEPS.stream(), Stream.of(REJECTED, CANCELLED)).toList();
+    }
+
     public static boolean isCancellable(String status) {
         return CANCELLABLE.contains(status);
     }
