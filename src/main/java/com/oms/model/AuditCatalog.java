@@ -113,6 +113,7 @@ public final class AuditCatalog {
         action("ORDER_UPDATE", "Sửa đơn nháp", GROUP_UPDATE);
         action("ORDER_SUBMIT", "Gửi duyệt", GROUP_STATUS);
         action("ORDER_CANCEL", "Huỷ đơn", GROUP_STATUS);
+        action("ORDER_RESERVATION_EXPIRE", "Hết hạn giữ chỗ", GROUP_STATUS);
     }
 
     private AuditCatalog() {

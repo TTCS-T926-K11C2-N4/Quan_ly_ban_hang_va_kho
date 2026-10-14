@@ -378,6 +378,16 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/change-password", Set.of()));
     }
 
+    // S5-06: nhân viên kinh doanh xem được đơn đang giữ chỗ (lọc đơn của mình ở service); đại lý thì không
+    @Test
+    void salesRepsCanViewReservations() {
+        for (String path : new String[] {"/stock/reservations", "/stock/reservations/view"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_REP")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("CUSTOMER")), path);
+        }
+    }
+
     // S3-09: Nhân viên, Quản lý kinh doanh tạo đơn; kho và kế toán không tạo đơn
     @Test
     void salesRolesCanCreateOrders() {
