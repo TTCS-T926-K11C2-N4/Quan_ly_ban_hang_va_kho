@@ -33,6 +33,8 @@ public final class Permission {
     // Sửa hạn mức công nợ (S3-05), khoá/mở giao dịch đại lý (S3-07): chỉ Kế toán công nợ và Quản lý kinh doanh,
     // Admin cũng không có
     public static final String CREDIT_MANAGE = "CREDIT_MANAGE";
+    // Chốt phiếu kiểm kê, điều chỉnh tồn về số đếm (S5-08): chỉ Quản lý kho, kể cả Admin cũng không (seed_permissions.sql)
+    public static final String STOCKTAKE_FINALIZE = "STOCKTAKE_FINALIZE";
 
     private Permission() {
     }

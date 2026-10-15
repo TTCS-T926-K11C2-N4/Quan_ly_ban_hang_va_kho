@@ -115,6 +115,12 @@ public final class AccessRules {
             // Giữ chỗ tồn (S5-06): ai xem tồn kho cũng xem được; nhân viên kinh doanh chỉ thấy đơn của đại lý mình
             // (lọc theo phạm vi ORDER_VIEW trong StockReservationService)
             Map.entry("/stock/reservations", Permission.INVENTORY_VIEW),
+            Map.entry("/stocktakes", Permission.INVENTORY_VIEW),
+            Map.entry("/stocktakes/view", Permission.INVENTORY_VIEW),
+            Map.entry("/stocktakes/new", Permission.INVENTORY_MANAGE),
+            Map.entry("/stocktakes/count", Permission.INVENTORY_MANAGE),
+            Map.entry("/stocktakes/cancel", Permission.INVENTORY_MANAGE),
+            Map.entry("/stocktakes/finalize", Permission.STOCKTAKE_FINALIZE),
             Map.entry("/stock/reservations/view", Permission.INVENTORY_VIEW),
             Map.entry("/products/status", Permission.PRODUCT_MANAGE));
 
