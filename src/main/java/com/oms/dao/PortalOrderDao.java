@@ -82,6 +82,100 @@ public class PortalOrderDao {
         }
     }
 
+    // Dòng của đơn cũ để đặt lại (S5-02): chỉ sản phẩm, đơn vị, số lượng; null nếu đơn không thuộc đại lý
+    public Reorderable findReorderable(long customerId, long orderId) throws SQLException {
+        String headerSql = "SELECT delivery_address_id FROM sales_orders WHERE id = ? AND customer_id = ?"
+                + " AND status <> 'DRAFT'";
+        String itemSql = "SELECT i.line_no, i.product_id, p.sku, p.name, i.unit_id, i.qty FROM sales_order_items i"
+                + " JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.line_no";
+        try (Connection connection = DbConnection.getConnection()) {
+            long addressId;
+            try (PreparedStatement statement = connection.prepareStatement(headerSql)) {
+                statement.setLong(1, orderId);
+                statement.setLong(2, customerId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) {
+                        return null;
+                    }
+                    addressId = resultSet.getLong(1);
+                }
+            }
+            List<Reorderable.Line> lines = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(itemSql)) {
+                statement.setLong(1, orderId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        lines.add(new Reorderable.Line(resultSet.getInt(1), resultSet.getLong(2),
+                                resultSet.getString(3), resultSet.getString(4), resultSet.getLong(5),
+                                resultSet.getBigDecimal(6)));
+                    }
+                }
+            }
+            return new Reorderable(addressId, lines);
+        }
+    }
+
+    // Đơn cũ nhìn như nguồn để đặt lại
+    public static class Reorderable {
+        private final long deliveryAddressId;
+        private final List<Line> lines;
+
+        Reorderable(long deliveryAddressId, List<Line> lines) {
+            this.deliveryAddressId = deliveryAddressId;
+            this.lines = lines;
+        }
+
+        public long getDeliveryAddressId() {
+            return deliveryAddressId;
+        }
+
+        public List<Line> getLines() {
+            return lines;
+        }
+
+        public static class Line {
+            private final int lineNo;
+            private final long productId;
+            private final String sku;
+            private final String name;
+            private final long unitId;
+            private final BigDecimal qty;
+
+            Line(int lineNo, long productId, String sku, String name, long unitId, BigDecimal qty) {
+                this.lineNo = lineNo;
+                this.productId = productId;
+                this.sku = sku;
+                this.name = name;
+                this.unitId = unitId;
+                this.qty = qty;
+            }
+
+            public int getLineNo() {
+                return lineNo;
+            }
+
+            public long getProductId() {
+                return productId;
+            }
+
+            public String getSku() {
+                return sku;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public long getUnitId() {
+                return unitId;
+            }
+
+            public BigDecimal getQty() {
+                return qty;
+            }
+        }
+    }
+
     private static List<PortalOrder.Item> readItems(Connection connection, String sql, long orderId,
                                                     boolean shipped) throws SQLException {
         List<PortalOrder.Item> items = new ArrayList<>();
