@@ -223,6 +223,26 @@
                 </details>
             </li>
             </c:if>
+            <%-- Hoá đơn & công nợ (EP-07, Sprint 7): trang đặt activeMenu = finance, activeSubmenu: invoices --%>
+            <c:if test="${currentUser.can('INVOICE_VIEW') and not currentUser.customer}">
+            <li>
+                <c:set var="financeServlets" value="${pageContext.servletContext.servletRegistrations}"/>
+                <details class="app-menu__group"${activeMenu == 'finance' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'finance' ? ' app-menu__toggle--current' : ''}" id="menu-finance">
+                    <span class="app-menu__icon app-menu__icon--reports" aria-hidden="true"></span>Hoá đơn &amp; công nợ
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <c:if test="${not empty financeServlets['com.oms.controller.InvoiceListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'invoices' ? ' app-submenu__link--active' : ''}" id="menu-invoices"
+                           href="<c:url value='/invoices'/>"${activeSubmenu == 'invoices' ? ' aria-current="page"' : ''}>Hoá đơn bán hàng</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
+            </li>
+            </c:if>
             <c:if test="${currentUser.can('REPORT_VIEW')}">
             <li>
                 <a class="app-menu__link${activeMenu == 'reports' ? ' app-menu__link--active' : ''}" id="menu-reports"
