@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,5 +39,29 @@ class PortalOrderTest {
     void orderIsShortWhenAnyLineIsShort() {
         assertTrue(order(item("10", "10", true), item("5", "4", true)).isShortDelivery());
         assertFalse(order(item("10", "10", true)).isShortDelivery());
+    }
+
+    // S6-09: số thực giao lấy từ phiếu đã giao; chưa giao xong thì dùng số đã xuất
+    @Test
+    void actualQuantityPrefersDeliveredOverShipped() {
+        PortalOrder.Item delivered = new PortalOrder.Item(1, "SP001", "Nước", "Thùng", new BigDecimal("10"),
+                new BigDecimal("10"), true, new BigDecimal("1"), BigDecimal.ZERO, new BigDecimal("1"),
+                new BigDecimal("8"));
+        assertTrue(delivered.isDeliveredKnown());
+        assertTrue(delivered.isShortDelivered());
+        assertEquals(0, new BigDecimal("8").compareTo(delivered.getQtyActual()));
+        assertFalse(item("10", "10", true).isDeliveredKnown());
+    }
+
+    // S6-09: mốc hiện tại là mốc cuối cùng đã đạt
+    @Test
+    void currentStepIsLastReachedMilestone() {
+        java.time.LocalDateTime at = java.time.LocalDateTime.of(2026, 10, 15, 3, 0);
+        PortalOrder order = new PortalOrder(1, "DH-1", "SHIPPED", null, null, BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, null, "Kho", List.of(), List.of(new PortalOrder.Milestone("Đã duyệt", at),
+                new PortalOrder.Milestone("Đang soạn hàng", at), new PortalOrder.Milestone("Đã xuất kho", at),
+                new PortalOrder.Milestone("Đang giao", null), new PortalOrder.Milestone("Đã giao", null)));
+        assertEquals(2, order.getCurrentStep());
+        assertFalse(order.getTimeline().get(3).isReached());
     }
 }
