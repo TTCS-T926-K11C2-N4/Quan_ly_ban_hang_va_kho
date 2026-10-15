@@ -89,6 +89,13 @@
                 </section>
             </c:if>
 
+            <c:if test="${canManage}">
+                <form class="invoice-reminder" action="<c:url value='/invoices/reminders'/>" method="post">
+                    <button class="inv-button" type="submit" id="invoice-reminders">Gửi nhắc hạn thanh toán ngay</button>
+                    <span class="inv-card__subtitle">Hệ thống tự nhắc mỗi ngày lúc 08:00: trước hạn 3 ngày và khi quá hạn.</span>
+                </form>
+            </c:if>
+
             <section class="inv-card" aria-labelledby="invoice-table-title">
                 <div class="inv-card__head">
                     <h2 class="inv-card__title" id="invoice-table-title">Hoá đơn đã phát hành</h2>

@@ -26,11 +26,11 @@
                value="<c:out value='${param.keyword}'/>" placeholder="Tìm kiếm..." maxlength="100">
     </form>
 
-    <button class="app-topbar__notification" type="button" id="notification-button"
-            aria-label="Thông báo${unreadNotificationCount > 0 ? ' (có thông báo mới)' : ''}">
+    <a class="app-topbar__notification" href="<c:url value='/notifications'/>" id="notification-button"
+       aria-label="Thông báo${unreadNotificationCount > 0 ? ' (có thông báo mới)' : ''}">
         <img src="<c:url value='/assets/img/icons/bell.svg'/>" alt="" width="24" height="24">
         <c:if test="${unreadNotificationCount > 0}">
             <span class="app-topbar__notification-dot" aria-hidden="true"></span>
         </c:if>
-    </button>
+    </a>
 </header>
