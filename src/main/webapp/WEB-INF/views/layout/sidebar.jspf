@@ -279,6 +279,12 @@
                            href="<c:url value='/statements'/>"${activeSubmenu == 'statements' ? ' aria-current="page"' : ''}>Đối chiếu công nợ</a>
                     </li>
                     </c:if>
+                    <c:if test="${currentUser.can('INVOICE_VIEW') and not empty financeServlets['com.oms.controller.CreditNoteListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'credit-notes' ? ' app-submenu__link--active' : ''}" id="menu-credit-notes"
+                           href="<c:url value='/credit-notes'/>"${activeSubmenu == 'credit-notes' ? ' aria-current="page"' : ''}>Chứng từ giảm trừ</a>
+                    </li>
+                    </c:if>
                     <c:if test="${currentUser.can('PAYMENT_COLLECT') and not empty financeServlets['com.oms.controller.CollectionServlet']}">
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'collections' ? ' app-submenu__link--active' : ''}" id="menu-collections"

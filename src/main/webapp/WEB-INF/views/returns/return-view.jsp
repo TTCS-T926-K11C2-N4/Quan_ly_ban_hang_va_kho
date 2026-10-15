@@ -39,6 +39,15 @@
                             <button class="inv-button inv-button--primary" type="submit" id="return-receive">Xác nhận đã nhận hàng</button>
                         </form>
                     </c:if>
+                    <c:if test="${salesReturn.status == 'RECEIVED' and not empty creditNoteId}">
+                        <a class="inv-button" id="return-credit-note" href="<c:url value='/credit-notes/view'><c:param name='id' value='${creditNoteId}'/></c:url>">Xem chứng từ giảm trừ</a>
+                    </c:if>
+                    <c:if test="${salesReturn.status == 'RECEIVED' and empty creditNoteId and canIssueCredit}">
+                        <form action="<c:url value='/credit-notes/issue'/>" method="post">
+                            <input type="hidden" name="return" value="${salesReturn.id}">
+                            <button class="inv-button inv-button--primary" type="submit" id="return-issue-credit">Lập chứng từ giảm trừ công nợ</button>
+                        </form>
+                    </c:if>
                     <c:if test="${salesReturn.pending}">
                         <form action="<c:url value='/returns/cancel'/>" method="post">
                             <input type="hidden" name="id" value="${salesReturn.id}">
