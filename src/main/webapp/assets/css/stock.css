@@ -141,3 +141,70 @@
         padding: 12px 12px 0;
     }
 }
+
+/* S5-09: hàng sắp hết nổi bật, cột tồn tối thiểu và hộp đặt tồn tối thiểu */
+.stock-table__row--low td {
+    background: #fffbeb;
+}
+
+.stock-table__row--low td:first-child {
+    box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+.stock-table__row--out td:first-child {
+    box-shadow: inset 3px 0 0 #dc2626;
+}
+
+.stock-table__min-empty {
+    color: var(--inv-muted);
+    font-size: 12px;
+}
+
+.stock-table__min-edit {
+    margin-left: 6px;
+}
+
+.stock-dialog {
+    width: min(440px, calc(100vw - 32px));
+    padding: 20px;
+    border: 1px solid var(--inv-border);
+    border-radius: 12px;
+}
+
+.stock-dialog::backdrop {
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.stock-dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stock-dialog__title {
+    margin: 0;
+    font-size: 18px;
+}
+
+.stock-dialog__sub {
+    margin: 0;
+    color: var(--inv-muted);
+}
+
+.stock-dialog__hint {
+    margin: 6px 0 0;
+    color: var(--inv-muted);
+    font-size: 12px;
+}
+
+.stock-dialog__error {
+    margin: 6px 0 0;
+    color: #dc2626;
+    font-size: 13px;
+}
+
+.stock-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}

@@ -54,6 +54,13 @@
                 </div>
             </header>
 
+            <c:if test="${not empty flashMessage}">
+                <div class="account-flash inv-flash" id="stock-message" role="status"><c:out value="${flashMessage}"/></div>
+            </c:if>
+            <c:if test="${not empty flashError}">
+                <div class="account-flash inv-flash inv-flash--error" role="alert"><c:out value="${flashError}"/></div>
+            </c:if>
+
             <section class="inv-stats" aria-label="Tổng quan tồn kho">
                 <article class="inv-stat inv-stat--stacked">
                     <p class="inv-stat__label">Tổng SKU đang quản lý</p>
@@ -150,6 +157,7 @@
                                 <th scope="col" class="is-number">Tồn thực tế</th>
                                 <th scope="col" class="is-number">Đang giữ chỗ</th>
                                 <th scope="col" class="is-number">Tồn khả dụng</th>
+                                <th scope="col" class="is-number">Tồn tối thiểu</th>
                                 <th scope="col">Đơn vị cơ sở</th>
                                 <th scope="col">Trạng thái</th>
                                 <th scope="col">Nhóm hàng</th>
@@ -163,7 +171,7 @@
                                     <c:param name="warehouse" value="${stock.warehouseId}"/>
                                     <c:param name="status" value="ALL"/>
                                 </c:url>
-                                <tr class="${stock.level == 'OUT' ? 'stock-table__row--out' : ''}">
+                                <tr class="${stock.level == 'OUT' ? 'stock-table__row--out' : stock.level == 'LOW' ? 'stock-table__row--low' : ''}">
                                     <td>
                                         <span class="inv-table__main"><c:out value="${stock.productName}"/></span>
                                         <span class="inv-table__sub">SKU: <c:out value="${stock.sku}"/></span>
@@ -175,6 +183,21 @@
                                     <td class="is-number stock-table__qty"><fmt:formatNumber value="${stock.onHand}" maxFractionDigits="3"/></td>
                                     <td class="is-number stock-table__qty"><fmt:formatNumber value="${stock.reserved}" maxFractionDigits="3"/></td>
                                     <td class="is-number stock-table__qty stock-table__available--${stock.level.tone}"><fmt:formatNumber value="${stock.available}" maxFractionDigits="3"/></td>
+                                    <td class="is-number stock-table__qty stock-table__min">
+                                        <c:choose>
+                                            <c:when test="${stock.minStock.signum() > 0}"><fmt:formatNumber value="${stock.minStock}" maxFractionDigits="3"/></c:when>
+                                            <c:otherwise><span class="stock-table__min-empty">Chưa đặt</span></c:otherwise>
+                                        </c:choose>
+                                        <c:if test="${canManage}">
+                                            <button class="inv-icon-button stock-table__min-edit" type="button" title="Đặt tồn tối thiểu"
+                                                    aria-label="Đặt tồn tối thiểu <c:out value='${stock.sku}'/> tại <c:out value='${stock.warehouseCode}'/>"
+                                                    data-product="${stock.productId}" data-warehouse="${stock.warehouseId}"
+                                                    data-sku="<c:out value='${stock.sku}'/>" data-name="<c:out value='${stock.productName}'/>"
+                                                    data-warehouse-name="<c:out value='${stock.warehouseName}'/>"
+                                                    data-min="${stock.minStock.stripTrailingZeros().toPlainString()}"
+                                                    data-unit="<c:out value='${stock.baseUnitName}'/>">✎</button>
+                                        </c:if>
+                                    </td>
                                     <td><c:out value="${stock.baseUnitName}"/></td>
                                     <td><span class="inv-pill inv-pill--${stock.level.tone}">${stock.level.label}</span></td>
                                     <td><c:out value="${stock.categoryName}"/></td>
@@ -190,7 +213,7 @@
                             </c:forEach>
                             <c:if test="${empty stockPage.items}">
                                 <tr>
-                                    <td class="inv-table__empty" colspan="${canViewReservations ? 9 : 8}">
+                                    <td class="inv-table__empty" colspan="${canViewReservations ? 10 : 9}">
                                         <c:choose>
                                             <c:when test="${filter.filtered}">Không có SKU nào khớp bộ lọc. Thử bỏ bớt điều kiện lọc.</c:when>
                                             <c:otherwise>Chưa có tồn kho. Tồn được ghi khi ghi sổ phiếu nhập kho.</c:otherwise>
@@ -244,9 +267,37 @@
                     </nav>
                 </div>
             </section>
+
+            <%-- S5-09: đặt tồn tối thiểu của một SKU tại một kho (đơn vị cơ sở); 0 = tắt cảnh báo --%>
+            <c:if test="${canManage}">
+                <dialog class="stock-dialog" id="min-stock-dialog" aria-labelledby="min-stock-title">
+                    <form method="post" action="<c:url value='/stock/min-stock'/>" novalidate>
+                        <input type="hidden" name="product" id="min-stock-product">
+                        <input type="hidden" name="warehouse" id="min-stock-warehouse">
+                        <input type="hidden" name="r_keyword" value="<c:out value='${filter.keyword}'/>">
+                        <input type="hidden" name="r_warehouseFilter" value="${filter.warehouseId}">
+                        <input type="hidden" name="r_category" value="${filter.categoryId}">
+                        <input type="hidden" name="r_level" value="${filter.level.code}">
+                        <input type="hidden" name="r_page" value="${currentPage}">
+                        <h2 class="stock-dialog__title" id="min-stock-title">Đặt tồn tối thiểu</h2>
+                        <p class="stock-dialog__sub" id="min-stock-target"></p>
+                        <div class="inv-field">
+                            <label class="stock-filters__label" for="min-stock-qty">Tồn tối thiểu (<span id="min-stock-unit">đơn vị cơ sở</span>)</label>
+                            <input class="inv-control" type="text" id="min-stock-qty" name="minQty" inputmode="decimal" maxlength="17" autocomplete="off" required>
+                            <p class="stock-dialog__hint">Khi tồn khả dụng còn bằng hoặc dưới mức này, SKU được đánh dấu "Sắp hết". Nhập 0 để tắt cảnh báo.</p>
+                            <p class="stock-dialog__error" id="min-stock-error" role="alert" hidden></p>
+                        </div>
+                        <div class="stock-dialog__actions">
+                            <button class="inv-button" type="button" id="min-stock-cancel">Huỷ</button>
+                            <button class="inv-button inv-button--primary" type="submit" id="min-stock-save">Lưu</button>
+                        </div>
+                    </form>
+                </dialog>
+            </c:if>
         </main>
     </div>
 
     <script src="<c:url value='/assets/js/app.js'/>"></script>
+    <c:if test="${canManage}"><script src="<c:url value='/assets/js/stock.js'/>"></script></c:if>
 </body>
 </html>

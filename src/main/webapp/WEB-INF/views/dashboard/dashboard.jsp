@@ -98,6 +98,45 @@
                 </article>
             </section>
 
+            <%-- S5-09: hàng chạm mức tồn tối thiểu theo từng kho; xem đủ ở sổ tồn --%>
+            <c:if test="${currentUser.can('INVENTORY_VIEW')}">
+                <section class="panel" aria-labelledby="low-stock-title" id="low-stock-panel">
+                    <header class="panel__header">
+                        <h2 class="panel__title" id="low-stock-title">Hàng dưới mức tồn tối thiểu</h2>
+                        <a class="panel__link" id="low-stock-link" href="<c:url value='/stock'><c:param name='level' value='LOW'/></c:url>">Xem sổ tồn<c:if test="${lowStockTotal > 0}"> (${lowStockTotal})</c:if></a>
+                    </header>
+                    <c:choose>
+                        <c:when test="${empty lowStockRows}">
+                            <p class="summary-card__note">Không có SKU nào chạm mức tồn tối thiểu.</p>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="table-scroll">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Sản phẩm</th>
+                                            <th scope="col">Kho</th>
+                                            <th scope="col">Khả dụng</th>
+                                            <th scope="col">Tối thiểu</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach var="row" items="${lowStockRows}">
+                                            <tr>
+                                                <td><c:out value="${row.sku}"/> · <c:out value="${row.productName}"/></td>
+                                                <td><c:out value="${row.warehouseName}"/></td>
+                                                <td><strong><fmt:formatNumber value="${row.available}" maxFractionDigits="3"/></strong> <c:out value="${row.baseUnitName}"/></td>
+                                                <td><fmt:formatNumber value="${row.minStock}" maxFractionDigits="3"/></td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </section>
+            </c:if>
+
             <div class="dashboard-grid">
                 <section class="panel panel--orders" aria-labelledby="recent-orders-title">
                     <header class="panel__header">
