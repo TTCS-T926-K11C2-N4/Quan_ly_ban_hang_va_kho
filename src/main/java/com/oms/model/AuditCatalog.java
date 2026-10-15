@@ -25,6 +25,7 @@ public final class AuditCatalog {
         ENTITIES.put("INVENTORY", "Tồn kho");
         ENTITIES.put("GOODS_RECEIPT", "Phiếu nhập kho");
         ENTITIES.put("PICK_LIST", "Phiếu soạn hàng");
+        ENTITIES.put("DELIVERY_NOTE", "Phiếu xuất kho");
         ENTITIES.put("PRICE", "Bảng giá");
         ENTITIES.put("DISCOUNT_POLICY", "Chính sách chiết khấu");
         ENTITIES.put("CREDIT_LIMIT", "Hạn mức công nợ");
@@ -77,6 +78,7 @@ public final class AuditCatalog {
         action("PICK_LIST_PROGRESS", "Ghi nhận soạn hàng", GROUP_UPDATE);
         action("PICK_LIST_COMPLETE", "Hoàn tất soạn", GROUP_STATUS);
         action("PICK_LIST_CANCEL", "Huỷ phiếu soạn", GROUP_STATUS);
+        action("DELIVERY_NOTE_ISSUE", "Xác nhận xuất kho", GROUP_CREATE);
         action("SUPPLIER_CREATE", "Thêm mới", GROUP_CREATE);
         action("SUPPLIER_UPDATE", "Sửa", GROUP_UPDATE);
         action("SUPPLIER_DELETE", "Xoá", GROUP_DELETE);
