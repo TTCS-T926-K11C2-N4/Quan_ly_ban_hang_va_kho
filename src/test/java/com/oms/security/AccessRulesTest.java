@@ -57,6 +57,20 @@ class AccessRulesTest {
                 rolePermissions.keySet());
     }
 
+    // S6-03: ai xem giao hàng cũng xem phiếu soạn; chỉ nhân viên kho, quản lý kho, Admin lập phiếu và ghi nhận soạn
+    @Test
+    void onlyWarehouseRolesCanPick() {
+        for (String path : new String[] {"/pick-lists/new", "/pick-lists/pick", "/pick-lists/cancel"}) {
+            rolePermissions.forEach((role, permissions) -> assertEquals(
+                    "WAREHOUSE".equals(role) || "WH_MANAGER".equals(role) || "ADMIN".equals(role),
+                    AccessRules.isAllowed(path, permissions), role + " " + path));
+        }
+        for (String role : new String[] {"SALES_REP", "ACCOUNTANT", "SALES_MANAGER", "WAREHOUSE"}) {
+            assertTrue(AccessRules.isAllowed("/pick-lists", permissionsOf(role)), role);
+            assertTrue(AccessRules.isAllowed("/pick-lists/view", permissionsOf(role)), role);
+        }
+    }
+
     @Test
     void salesRepCannotManageUsersOrChangeStock() {
         Set<String> salesRep = permissionsOf("SALES_REP");
