@@ -1,0 +1,624 @@
+/* Phiếu soạn hàng (S6-03) theo Figma Sprint 6: danh sách phiếu soạn (đơn chờ soạn, phiếu soạn, đơn còn nợ hàng)
+   và màn soạn hàng của một phiếu (thiết kế điện thoại 360px, ở màn rộng hiện như các trang thường).
+   Khung trang, thẻ, bảng, nút dùng chung ở inventory.css. */
+
+.pick-icon--printer { --inv-icon: url("../img/icons/delivery/printer.svg"); }
+.pick-icon--check { --inv-icon: url("../img/icons/delivery/check.svg"); }
+
+/* ----- Bộ lọc: ô tìm kiếm + Bộ lọc + Tạo phiếu soạn, dưới là 4 ô chọn ----- */
+.pick-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 20px 18px;
+}
+
+.pick-filters__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 135px 216px;
+    align-items: end;
+    gap: 16px;
+}
+
+.pick-filters__top:not(:has(.pick-filters__create)) {
+    grid-template-columns: minmax(0, 1fr) 135px;
+}
+
+.pick-filters__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-text);
+}
+
+.pick-filters__search .inv-control {
+    height: 44px;
+}
+
+.pick-filters__apply,
+.pick-filters__create {
+    justify-content: center;
+    height: 44px;
+}
+
+.pick-filters__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.pick-filters__grid .inv-control {
+    height: 40px;
+    font-size: 13px;
+}
+
+.pick-filters__clear {
+    align-self: flex-start;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-navy);
+}
+
+/* ----- Bảng đơn chờ soạn / phiếu soạn / đơn còn nợ hàng ----- */
+.pick-lists {
+    padding: 0;
+    overflow: hidden;
+}
+
+.pick-section + .pick-section {
+    border-top: 1px solid var(--inv-border);
+}
+
+.pick-section__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px 12px;
+}
+
+.pick-section__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.pick-section__count {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.pick-section__hint {
+    max-width: 420px;
+    font-size: 12px;
+    text-align: right;
+    color: var(--inv-muted);
+}
+
+.pick-section__hint--warning {
+    color: #b45309;
+}
+
+.pick-table td {
+    height: 48px;
+}
+
+.pick-table__check {
+    width: 44px;
+    padding-right: 0;
+    text-align: center;
+}
+
+.pick-table__action {
+    width: 52px;
+    text-align: right;
+}
+
+.pick-table__orders {
+    font-weight: 600;
+    color: var(--inv-heading);
+}
+
+.pick-table__late {
+    color: #dc2626;
+}
+
+.pick-table__qty {
+    font-weight: 700;
+}
+
+.pick-table tbody tr.is-selected td {
+    background: #eff6ff;
+}
+
+/* Nhãn trạng thái phiếu soạn */
+.pick-pill--open { border-color: #fde68a; background: #fffbeb; color: #b45309; }
+.pick-pill--picking { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
+.pick-pill--done { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
+.pick-pill--issued { border-color: #c7d2fe; background: #eef2ff; color: #3730a3; }
+.pick-pill--cancelled { border-color: var(--inv-border); background: var(--inv-soft); color: var(--inv-muted); }
+.pick-pill--backorder { border-color: #fed7aa; background: #fff7ed; color: #c2410c; }
+
+/* ----- Màn soạn hàng ----- */
+.pick-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 1.4fr);
+    align-items: center;
+    gap: 20px;
+    padding: 18px 20px;
+}
+
+.pick-summary__id {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pick-summary__label,
+.pick-summary__meta dt {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.pick-summary__code {
+    margin-top: 4px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.pick-summary__meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 20px;
+    margin: 0;
+}
+
+.pick-summary__meta dd {
+    margin: 3px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-heading);
+}
+
+.pick-progress__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+}
+
+.pick-progress__label {
+    color: var(--inv-muted);
+}
+
+.pick-progress__text strong {
+    font-size: 16px;
+    color: var(--inv-heading);
+}
+
+.pick-progress__bar {
+    height: 8px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+.pick-progress__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #16a34a;
+    transition: width 0.2s ease;
+}
+
+.pick-progress__short {
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #b45309;
+}
+
+.pick-orders {
+    padding: 0;
+    overflow: hidden;
+}
+
+.pick-orders__note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: #15803d;
+    text-decoration: none;
+}
+
+.pick-orders__note:hover {
+    text-decoration: underline;
+}
+
+.pick-orders__muted {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.pick-lines {
+    padding: 0;
+    overflow: hidden;
+}
+
+.pick-lines__columns,
+.pick-line {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) 120px 150px;
+    column-gap: 16px;
+    align-items: center;
+}
+
+.pick-lines__columns {
+    padding: 0 20px;
+    height: 38px;
+    border-top: 1px solid var(--inv-border);
+    border-bottom: 1px solid var(--inv-border);
+    background: var(--inv-soft);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--inv-muted);
+}
+
+.pick-lines__columns-qty {
+    text-align: right;
+}
+
+.pick-lines__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pick-line {
+    row-gap: 8px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--inv-row-border);
+}
+
+.pick-line:last-child {
+    border-bottom: 0;
+}
+
+.pick-line.is-picked {
+    background: #f7fdf9;
+}
+
+.pick-line.is-invalid {
+    background: #fef2f2;
+}
+
+.pick-line__check {
+    display: flex;
+    justify-content: center;
+}
+
+.pick-line__checkbox {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.pick-line__check-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 2px solid var(--inv-control-border);
+    border-radius: 50%;
+    background: var(--color-surface);
+    color: transparent;
+    cursor: pointer;
+}
+
+.pick-line__check-button .inv-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.pick-line__checkbox:checked + .pick-line__check-button,
+.pick-line__check-button.is-on {
+    border-color: #16a34a;
+    background: #16a34a;
+    color: #ffffff;
+}
+
+.pick-line__checkbox:focus-visible + .pick-line__check-button {
+    outline: 2px solid var(--inv-navy);
+    outline-offset: 2px;
+}
+
+.pick-line__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--inv-heading);
+}
+
+.pick-line__sub {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.pick-line__location {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    padding: 3px 9px;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    background: #eff6ff;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.pick-line__location .inv-icon {
+    width: 13px;
+    height: 13px;
+}
+
+.pick-line__qty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    text-align: right;
+}
+
+.pick-line__qty-label {
+    display: none;
+    font-size: 11px;
+    color: var(--inv-muted);
+}
+
+.pick-line__required,
+.pick-line__picked {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.pick-line__unit {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--inv-muted);
+}
+
+.pick-line__input {
+    width: 110px;
+    height: 40px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.pick-line__reason,
+.pick-line__reason-text,
+.pick-line__error {
+    grid-column: 2 / -1;
+}
+
+.pick-line__reason {
+    display: grid;
+    grid-template-columns: auto minmax(0, 320px);
+    align-items: center;
+    justify-content: end;
+    gap: 10px;
+}
+
+.pick-line__reason.is-hidden {
+    display: none;
+}
+
+.pick-line__reason-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #b45309;
+}
+
+.pick-line__reason .inv-control {
+    height: 38px;
+    font-size: 13px;
+}
+
+.pick-line__reason-text {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+    color: #b45309;
+}
+
+.pick-line__error {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+    color: #dc2626;
+}
+
+.pick-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--inv-border);
+    background: var(--color-surface);
+}
+
+.pick-actions__spacer {
+    flex: 1 1 auto;
+}
+
+.pick-actions__danger {
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.pick-actions__danger:hover {
+    background: #fef2f2;
+}
+
+.pick-actions__complete {
+    min-width: 150px;
+    justify-content: center;
+}
+
+@media (max-width: 1023px) {
+    .pick-filters__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pick-summary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 639px) {
+    .pick-filters__top,
+    .pick-filters__top:not(:has(.pick-filters__create)) {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .pick-filters__search {
+        grid-column: 1 / -1;
+    }
+
+    .pick-filters__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pick-section__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pick-section__hint {
+        text-align: left;
+    }
+
+    .pick-summary__meta {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    /* Điện thoại: mỗi dòng là một thẻ - nút đánh dấu bên trái, tên hàng + vị trí, dưới là SL cần / SL lấy */
+    .pick-lines__columns {
+        display: none;
+    }
+
+    .pick-line {
+        grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
+        column-gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .pick-line__check {
+        grid-row: 1 / span 2;
+        align-self: start;
+    }
+
+    .pick-line__info {
+        grid-column: 2 / -1;
+    }
+
+    .pick-line__qty {
+        align-self: end;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .pick-line__qty-label {
+        display: block;
+    }
+
+    .pick-line__input {
+        width: 100%;
+        text-align: left;
+    }
+
+    .pick-line__reason {
+        grid-template-columns: minmax(0, 1fr);
+        justify-content: stretch;
+    }
+
+    .pick-line__reason-text,
+    .pick-line__error {
+        text-align: left;
+    }
+
+    /* Thanh nút dính đáy màn hình để bấm Hoàn tất bằng một tay */
+    .pick-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .pick-actions__spacer {
+        display: none;
+    }
+
+    .pick-actions .inv-button {
+        flex: 1 1 0;
+        justify-content: center;
+    }
+
+    .pick-actions__complete {
+        flex-basis: 100%;
+        order: 3;
+    }
+}
+
+/* In phiếu soạn: chỉ giữ thông tin phiếu, đơn và danh sách hàng */
+@media print {
+    .app-sidebar,
+    .app-topbar,
+    .inv-header__actions,
+    .pick-actions,
+    .account-flash {
+        display: none !important;
+    }
+
+    .app-shell {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .inv-page {
+        padding: 0;
+        background: #ffffff;
+    }
+
+    .inv-card {
+        box-shadow: none;
+        break-inside: avoid;
+    }
+
+    .pick-line {
+        break-inside: avoid;
+    }
+
+    .pick-line__input {
+        border: 0;
+        background: transparent;
+    }
+
+    .pick-line__reason.is-hidden {
+        display: none;
+    }
+}
