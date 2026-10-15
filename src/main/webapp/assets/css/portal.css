@@ -1,0 +1,91 @@
+/* Cổng đại lý (S5-01): danh sách và chi tiết đơn hàng của đại lý, dùng được trên điện thoại */
+.portal-orders__card {
+    padding: 16px;
+}
+
+.portal-orders__title {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.portal-orders__address,
+.portal-orders__note {
+    margin: 0 0 12px;
+}
+
+.portal-orders__table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.portal-orders__table th,
+.portal-orders__table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--color-sales-border, #e2e8f0);
+    text-align: left;
+    vertical-align: top;
+}
+
+.portal-orders__num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.portal-orders__link {
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.portal-orders__sku {
+    display: block;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.portal-orders__row--short td {
+    background: #fffbeb;
+}
+
+.portal-orders__short {
+    color: #b45309;
+}
+
+/* Điện thoại: mỗi dòng là một thẻ, nhãn cột lấy từ data-label */
+@media (max-width: 640px) {
+    .portal-orders__table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .portal-orders__table,
+    .portal-orders__table tbody,
+    .portal-orders__table tr,
+    .portal-orders__table td {
+        display: block;
+        width: 100%;
+    }
+
+    .portal-orders__table tr {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--color-sales-border, #e2e8f0);
+    }
+
+    .portal-orders__table td {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 4px 0;
+        border: 0;
+        text-align: right;
+    }
+
+    .portal-orders__table td::before {
+        content: attr(data-label);
+        color: #64748b;
+        font-weight: 500;
+        text-align: left;
+    }
+}

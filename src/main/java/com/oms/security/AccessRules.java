@@ -95,6 +95,8 @@ public final class AccessRules {
             Map.entry("/orders/new", Permission.ORDER_MANAGE),
             Map.entry("/orders/customer-data", Permission.ORDER_MANAGE),
             Map.entry("/orders/quote", Permission.ORDER_MANAGE),
+            Map.entry("/portal/orders", Permission.ORDER_VIEW),
+            Map.entry("/portal/orders/view", Permission.ORDER_VIEW),
             Map.entry("/orders/view", Permission.ORDER_VIEW),
             Map.entry("/orders/cancel", Permission.ORDER_MANAGE),
             Map.entry("/orders/copy", Permission.ORDER_MANAGE),
