@@ -128,6 +128,12 @@ public final class AccessRules {
             Map.entry("/payments/void", Permission.INVOICE_MANAGE),
             Map.entry("/payments/receipt", AUTHENTICATED),
             // Biên bản đối chiếu công nợ (S7-06): lập và gửi cần INVOICE_MANAGE (kiểm tra trong Servlet POST)
+            // Trả hàng (S8-01): quyền chi tiết (lập, nhận hàng, phạm vi) kiểm tra trong ReturnService.access
+            Map.entry("/returns", AUTHENTICATED),
+            Map.entry("/returns/new", AUTHENTICATED),
+            Map.entry("/returns/view", AUTHENTICATED),
+            Map.entry("/returns/receive", AUTHENTICATED),
+            Map.entry("/returns/cancel", AUTHENTICATED),
             Map.entry("/statements", Permission.INVOICE_VIEW),
             Map.entry("/statements/view", Permission.INVOICE_VIEW),
             Map.entry("/statements/print", Permission.INVOICE_VIEW),
