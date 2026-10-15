@@ -144,6 +144,8 @@ public final class AccessRules {
             Map.entry("/pick-lists/view", Permission.DELIVERY_VIEW),
             Map.entry("/pick-lists/new", Permission.DELIVERY_MANAGE),
             Map.entry("/pick-lists/pick", Permission.DELIVERY_MANAGE),
+            // Đổi lô xuất của dòng soạn kèm lý do (S6-04)
+            Map.entry("/pick-lists/lot", Permission.DELIVERY_MANAGE),
             Map.entry("/pick-lists/cancel", Permission.DELIVERY_MANAGE),
             // Xác nhận xuất kho & giao thiếu (S6-05): ai xem giao hàng cũng xem phiếu xuất; nhân viên kho, quản lý kho xác nhận
             Map.entry("/delivery-notes/view", Permission.DELIVERY_VIEW),
