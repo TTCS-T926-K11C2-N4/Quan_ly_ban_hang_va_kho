@@ -95,7 +95,8 @@
                         <tbody>
                             <c:forEach var="payment" items="${payments}">
                                 <tr>
-                                    <td><span class="inv-table__main"><c:out value="${payment.receiptNo}"/></span><span class="inv-table__sub"><c:out value="${payment.statusLabel}"/></span></td>
+                                    <td><span class="inv-table__main"><c:out value="${payment.receiptNo}"/></span><span class="inv-table__sub"><c:out value="${payment.statusLabel}"/></span>
+                                        <a class="inv-table__sub" target="_blank" rel="noopener" href="<c:url value='/payments/print'><c:param name='id' value='${payment.id}'/></c:url>">In phiếu thu</a></td>
                                     <td><c:out value="${payment.customerName}"/></td>
                                     <td><c:out value="${payment.paymentDateText}"/></td>
                                     <td><c:out value="${payment.methodLabel}"/></td>
