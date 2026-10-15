@@ -39,6 +39,7 @@ public class InvoiceService {
     private final InvoiceDao invoiceDao = new InvoiceDao();
     private final PermissionDao permissionDao = new PermissionDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
+    private final CreditFlagService creditFlagService = new CreditFlagService();
 
     // error != null: lỗi nghiệp vụ (hoặc "NOT_FOUND"); ngược lại id hoá đơn và số hoá đơn
     public static final class Outcome {
@@ -199,6 +200,7 @@ public class InvoiceService {
         invoiceDao.insertLedgerEntry(connection, customerId, total, invoiceId, today, "Hoá đơn " + invoiceNo,
                 actorUserId);
         PaymentDao.adjustBalance(connection, customerId, total);
+        creditFlagService.evaluate(connection, customerId, actorUserId, ipAddress);
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("invoiceNo", invoiceNo);
         values.put("customerId", customerId);

@@ -49,6 +49,7 @@ public class ApprovalRequest {
 
         public static final String OVER_CREDIT_LIMIT = "OVER_CREDIT_LIMIT";
         public static final String BELOW_FLOOR_PRICE = "BELOW_FLOOR_PRICE";
+        public static final String OVERDUE_DEBT = "OVERDUE_DEBT";
 
         private final String type;
         private final BigDecimal exceededBy;
@@ -79,6 +80,10 @@ public class ApprovalRequest {
 
         public boolean isBelowFloorPrice() {
             return BELOW_FLOOR_PRICE.equals(type);
+        }
+
+        public boolean isOverdueDebt() {
+            return OVERDUE_DEBT.equals(type);
         }
 
         public String getType() {
@@ -124,6 +129,11 @@ public class ApprovalRequest {
 
     public Violation getCreditViolation() {
         return violations.stream().filter(Violation::isOverCreditLimit).findFirst().orElse(null);
+    }
+
+    // S7-04: đại lý đang có nợ quá hạn nên đơn mới phải chờ duyệt
+    public boolean isOverdueDebt() {
+        return violations.stream().anyMatch(Violation::isOverdueDebt);
     }
 
     public List<Violation> getFloorViolations() {

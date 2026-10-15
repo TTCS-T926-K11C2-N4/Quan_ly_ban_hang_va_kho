@@ -89,7 +89,8 @@ public class ApprovalDao {
         String sql = "SELECT o.id, o.order_no, c.name, c.code, rep.full_name, o.total_amount, ar.requested_at,"
                 + " (SELECT MAX(jt.exceeded_by) FROM " + VIOLATIONS_TABLE + " WHERE jt.type = 'OVER_CREDIT_LIMIT')"
                 + " AS exceeded_by,"
-                + " (SELECT COUNT(*) FROM " + VIOLATIONS_TABLE + " WHERE jt.type = 'BELOW_FLOOR_PRICE') AS below_floor"
+                + " (SELECT COUNT(*) FROM " + VIOLATIONS_TABLE + " WHERE jt.type = 'BELOW_FLOOR_PRICE') AS below_floor,"
+                + " (SELECT COUNT(*) FROM " + VIOLATIONS_TABLE + " WHERE jt.type = 'OVERDUE_DEBT') AS overdue_debt"
                 + " FROM approval_requests ar JOIN sales_orders o ON o.id = ar.order_id"
                 + " JOIN customers c ON c.id = o.customer_id LEFT JOIN users rep ON rep.id = o.sales_rep_id"
                 + " WHERE ar.status = 'PENDING' AND o.status = 'PENDING_APPROVAL'"
@@ -108,7 +109,7 @@ public class ApprovalDao {
                     rows.add(new ApprovalQueueRow(resultSet.getLong(1), resultSet.getString(2),
                             resultSet.getString(3), resultSet.getString(4), resultSet.getString(5),
                             resultSet.getBigDecimal(6), resultSet.getObject(7, LocalDateTime.class),
-                            resultSet.getBigDecimal(8), resultSet.getInt(9)));
+                            resultSet.getBigDecimal(8), resultSet.getInt(9), resultSet.getInt(10) > 0));
                 }
             }
         }

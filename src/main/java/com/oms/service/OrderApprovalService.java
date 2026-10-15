@@ -198,7 +198,12 @@ public class OrderApprovalService {
         List<Map<String, Object>> violations = new ArrayList<>();
         if (credit != null && credit.exceeds(quote.getTotal())) {
             Map<String, Object> over = new LinkedHashMap<>();
-            over.put("type", ApprovalRequest.Violation.OVER_CREDIT_LIMIT);
+            boolean overdueOnly = credit.requiresApprovalByFlag() && credit.getExceededBy(quote.getTotal()).signum() == 0;
+            over.put("type", overdueOnly ? ApprovalRequest.Violation.OVERDUE_DEBT
+                    : ApprovalRequest.Violation.OVER_CREDIT_LIMIT);
+            if (overdueOnly) {
+                over.put("overdue_amount", plain(credit.getOverdueAmount()));
+            }
             over.put("exceeded_by", plain(credit.getExceededBy(quote.getTotal())));
             over.put("credit_limit", plain(credit.getCreditLimit()));
             over.put("used", plain(credit.getUsed()));
