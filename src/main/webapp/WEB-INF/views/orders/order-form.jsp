@@ -66,6 +66,7 @@
 
             <form class="sales-card order-form" id="order-form" method="post" action="<c:url value='/orders/new'/>" novalidate
                   data-quote-url="<c:url value='/orders/quote'/>" data-customer-url="<c:url value='/orders/customer-data'/>"
+                  data-history-url="<c:url value='/orders/history'/>"
                   data-draft-customer="${draft.customerId}">
                 <c:if test="${not empty draft}">
                     <input type="hidden" name="draftId" value="${draft.form.draftId}">
@@ -148,6 +149,33 @@
                                 <c:when test="${not empty credit}">Sau đơn này còn <strong><fmt:formatNumber value="${credit.getAvailableAfter(quote.total)}" maxFractionDigits="0"/> ₫</strong>.</c:when>
                             </c:choose>
                         </p>
+                    </div>
+                </section>
+
+                <%-- S4-04: hàng đại lý hay mua trong 3 tháng gần nhất; orders.js nạp khi chọn đại lý --%>
+                <section class="order-history" id="order-history" aria-labelledby="order-history-title" hidden>
+                    <div class="order-history__row">
+                        <h3 class="order-history__title" id="order-history-title">Lịch sử mua hàng 3 tháng gần nhất</h3>
+                        <span class="order-history__count" id="order-history-count"></span>
+                        <div class="order-history__actions">
+                            <button class="sales-button sales-button--soft sales-button--small" type="button" id="order-history-last" hidden></button>
+                            <button class="sales-button sales-button--small" type="button" id="order-history-toggle" aria-expanded="false" aria-controls="order-history-body">Xem chi tiết</button>
+                        </div>
+                    </div>
+                    <div class="order-history__body" id="order-history-body" hidden>
+                        <p class="sales-empty" id="order-history-empty" hidden>Đại lý chưa mua hàng nào trong 3 tháng gần nhất.</p>
+                        <table class="order-history__table" id="order-history-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Mặt hàng</th>
+                                    <th scope="col">Số đơn</th>
+                                    <th scope="col">SL bình quân</th>
+                                    <th scope="col">Mua gần nhất</th>
+                                    <th scope="col"><span class="visually-hidden">Thêm vào đơn</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-history-rows"></tbody>
+                        </table>
                     </div>
                 </section>
 
