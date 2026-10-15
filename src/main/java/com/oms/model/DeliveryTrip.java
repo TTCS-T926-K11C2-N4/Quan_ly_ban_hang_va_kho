@@ -4,6 +4,7 @@ import com.oms.util.DateTimeUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -150,6 +151,30 @@ public class DeliveryTrip {
         return stops;
     }
 
+    // Chuyến đang giao mà đã quá giờ dự kiến về (S6-07)
+    public boolean isOverdue() {
+        return isOverdueAt(LocalDateTime.now(ZoneOffset.UTC));
+    }
+
+    boolean isOverdueAt(LocalDateTime nowUtc) {
+        return RUNNING.equals(status) && expectedReturnAt != null && nowUtc.isAfter(expectedReturnAt);
+    }
+
+    // Tiền hàng của các điểm chưa có kết quả giao (đang nằm trên đường)
+    public BigDecimal getOnRoadValue() {
+        return stops.stream().filter(stop -> !stop.isDone()).map(Stop::getValue).reduce(BigDecimal.ZERO,
+                BigDecimal::add);
+    }
+
+    // Các điểm giao không thành công: hàng vẫn thuộc trách nhiệm của chuyến cho tới khi chuyến hoàn thành (S6-07)
+    public List<Stop> getFailedStops() {
+        return stops.stream().filter(Stop::isFailed).toList();
+    }
+
+    public BigDecimal getFailedValue() {
+        return getFailedStops().stream().map(Stop::getValue).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     // Một điểm giao của chuyến: phiếu xuất, đơn, đại lý, địa chỉ và người nhận
     public static class Stop {
         private final long noteId;
@@ -201,6 +226,10 @@ public class DeliveryTrip {
         // Đã có kết quả giao (thành công hoặc không thành công)
         public boolean isDone() {
             return DeliveryNoteStatus.DELIVERED.equals(noteStatus) || DeliveryNoteStatus.FAILED.equals(noteStatus);
+        }
+
+        public boolean isFailed() {
+            return DeliveryNoteStatus.FAILED.equals(noteStatus);
         }
 
         public long getOrderId() {

@@ -85,6 +85,21 @@ public class DeliveryTripService {
                 .filter(trip -> canUseWarehouse(userId, trip.getWarehouseId())).toList();
     }
 
+    // Chuyến đang giao kèm điểm giao để theo dõi (S6-07), chuyến quá giờ dự kiến lên đầu rồi theo giờ xuất phát
+    public List<DeliveryTrip> findRunning(long userId) throws SQLException {
+        List<DeliveryTrip> running = new java.util.ArrayList<>();
+        for (DeliveryTrip trip : tripDao.findTrips(null, DeliveryTrip.RUNNING, LIST_LIMIT)) {
+            if (canUseWarehouse(userId, trip.getWarehouseId())) {
+                DeliveryTrip detail = tripDao.findDetail(trip.getId());
+                if (detail != null) {
+                    running.add(detail);
+                }
+            }
+        }
+        running.sort(java.util.Comparator.comparing(DeliveryTrip::isOverdue).reversed());
+        return running;
+    }
+
     public DeliveryTrip find(long id) throws SQLException {
         return tripDao.findDetail(id);
     }

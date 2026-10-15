@@ -152,6 +152,7 @@ public final class AccessRules {
             Map.entry("/trips", Permission.DELIVERY_VIEW),
             Map.entry("/trips/view", Permission.DELIVERY_VIEW),
             Map.entry("/trips/print", Permission.DELIVERY_VIEW),
+            Map.entry("/trips/monitor", Permission.DELIVERY_VIEW),
             Map.entry("/trips/new", Permission.DELIVERY_MANAGE),
             Map.entry("/trips/add", Permission.DELIVERY_MANAGE),
             Map.entry("/trips/remove", Permission.DELIVERY_MANAGE),
