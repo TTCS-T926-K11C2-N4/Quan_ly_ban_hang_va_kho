@@ -1709,3 +1709,24 @@
 .order-history__name {
     font-weight: 500;
 }
+
+/* S4-10: khung xác nhận đơn do đại lý tự đặt */
+.order-confirm {
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border-color: #fde68a;
+    background: #fffbeb;
+}
+
+.order-confirm__form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.order-confirm__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}

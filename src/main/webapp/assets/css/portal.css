@@ -89,3 +89,94 @@
         text-align: left;
     }
 }
+
+/* S4-10: giỏ hàng đại lý, mỗi dòng gọn trên điện thoại */
+.portal-cart__head {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.portal-cart__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.portal-cart__line {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.2fr) 36px;
+    align-items: center;
+    gap: 8px;
+}
+
+.portal-cart__line--invalid {
+    padding: 6px;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    background: #fef2f2;
+}
+
+.portal-cart__amount {
+    text-align: right;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.portal-cart__remove {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--color-sales-border, #e2e8f0);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.portal-cart__error {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: #b91c1c;
+    font-size: 13px;
+}
+
+.portal-cart__notices {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.portal-cart__summary {
+    margin: 16px 0;
+}
+
+.portal-cart__credit {
+    margin: 8px 0 0;
+}
+
+.portal-cart__credit--over {
+    color: #b45309;
+}
+
+.portal-cart__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+    .portal-cart__line {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px;
+    }
+
+    .portal-cart__product {
+        grid-column: 1 / -1;
+    }
+
+    .portal-cart__actions .sales-button {
+        flex: 1 1 100%;
+    }
+}
