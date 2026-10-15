@@ -22,6 +22,7 @@ public final class Permission {
     // Hoá đơn và công nợ (S7): Kế toán công nợ lập và thu tiền, Quản lý kinh doanh xem; Đại lý chỉ xem của mình (OWN)
     public static final String INVOICE_VIEW = "INVOICE_VIEW";
     public static final String INVOICE_MANAGE = "INVOICE_MANAGE";
+    public static final String PAYMENT_COLLECT = "PAYMENT_COLLECT";
     // Nhà cung cấp (S2-09) dùng chung quyền kho: nhân viên kho, quản lý kho, Admin quản lý
     public static final String INVENTORY_VIEW = "INVENTORY_VIEW";
     public static final String INVENTORY_MANAGE = "INVENTORY_MANAGE";

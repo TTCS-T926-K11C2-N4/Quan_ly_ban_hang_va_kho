@@ -30,10 +30,12 @@ public class Payment {
     private final String note;
     private final LocalDateTime createdAt;
     private final List<Allocation> allocations;
+    private final boolean receiptAttached;
 
     public Payment(long id, String receiptNo, long customerId, String customerCode, String customerName,
                    BigDecimal amount, String method, LocalDate paymentDate, String collectedByName, String status,
-                   String note, LocalDateTime createdAt, List<Allocation> allocations) {
+                   String note, LocalDateTime createdAt, List<Allocation> allocations, boolean receiptAttached) {
+        this.receiptAttached = receiptAttached;
         this.id = id;
         this.receiptNo = receiptNo;
         this.customerId = customerId;
@@ -48,6 +50,8 @@ public class Payment {
         this.createdAt = createdAt;
         this.allocations = allocations;
     }
+
+    public static final String PENDING_HANDOVER = "PENDING_HANDOVER";
 
     public static boolean isMethod(String value) {
         return value != null && METHODS.containsKey(value);
@@ -87,6 +91,15 @@ public class Payment {
 
     public String getCollectedByName() {
         return collectedByName;
+    }
+
+    // Khoản thu theo tuyến chờ kế toán xác nhận đã nhận tiền (S7-05)
+    public boolean isPending() {
+        return PENDING_HANDOVER.equals(status);
+    }
+
+    public boolean isReceiptAttached() {
+        return receiptAttached;
     }
 
     public String getStatusLabel() {
