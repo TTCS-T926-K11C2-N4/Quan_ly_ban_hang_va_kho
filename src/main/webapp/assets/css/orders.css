@@ -1646,3 +1646,66 @@
         width: 140px;
     }
 }
+
+/* S4-04: lịch sử mua hàng 3 tháng của đại lý, gọn một dải, bấm "Xem chi tiết" mới mở bảng */
+.order-history {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 8px;
+    background: var(--color-sales-soft);
+}
+
+.order-history[hidden],
+.order-history__body[hidden],
+.order-history__table[hidden] {
+    display: none;
+}
+
+.order-history__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
+.order-history__title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.order-history__count {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.order-history__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.order-history__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.order-history__table th,
+.order-history__table td {
+    padding: 6px 8px;
+    border-top: 1px solid var(--color-sales-border);
+    text-align: left;
+}
+
+.order-history__table th {
+    font-weight: 600;
+}
+
+.order-history__name {
+    font-weight: 500;
+}

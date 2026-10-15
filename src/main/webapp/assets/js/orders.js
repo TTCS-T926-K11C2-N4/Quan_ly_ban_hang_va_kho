@@ -3,6 +3,7 @@
 // S4-01: ô Đơn giá để trống là giá bảng giá (hiện mờ), gõ giá khác là sửa tay; giá thực bán dưới giá sàn thì báo cần duyệt.
 // S4-02: khối công nợ dưới ô Đại lý tính lại theo tổng đơn; vượt hạn mức thì cần duyệt, nợ quá hạn thì khoá nút lưu.
 // S4-03: dưới ô Số lượng hiện tồn khả dụng ở kho phục vụ đại lý; vượt tồn thì báo đỏ, có nút điền nhanh số tối đa.
+// S4-04: hộp lịch sử mua hàng 3 tháng của đại lý, thêm nhanh từng mặt hàng hoặc cả lần mua trước vào đơn.
 (function () {
     var form = document.getElementById("order-form");
     if (!form) {
@@ -176,6 +177,142 @@
         row.querySelector(".order-line__product").focus();
     }
 
+    // S4-04: thêm một dòng hàng đã mua (bỏ qua nếu đơn đã có đúng hàng + đơn vị đó). Trả về true nếu đã thêm.
+    function addHistoryLine(item, qty) {
+        var exists = Array.prototype.some.call(rows(), function (row) {
+            return row.querySelector(".order-line__product-id").value === String(item.productId)
+                && row.querySelector(".order-line__unit").value === String(item.unitId);
+        });
+        if (exists) {
+            return false;
+        }
+        var last = rows()[rows().length - 1];
+        var blank = last && !last.querySelector(".order-line__product").value.trim()
+            && !last.querySelector(".order-line__qty").value.trim();
+        if (!blank) {
+            tbody.appendChild(template.content.cloneNode(true));
+            last = rows()[rows().length - 1];
+        }
+        last.querySelector(".order-line__product").value = item.text;
+        last.querySelector(".order-line__product-id").value = item.productId;
+        fillUnits(last, String(item.productId));
+        last.querySelector(".order-line__unit").value = String(item.unitId);
+        last.querySelector(".order-line__qty").value = qty;
+        clearPrice(last);
+        renumber();
+        scheduleQuote();
+        return true;
+    }
+
+    // Số lượng gợi ý khi thêm một mặt hàng: bình quân làm tròn, tối thiểu 1
+    function suggestedQty(avg) {
+        return String(Math.max(1, Math.round(parseFloat(avg) || 1)));
+    }
+
+    var history = {
+        box: document.getElementById("order-history"),
+        count: document.getElementById("order-history-count"),
+        body: document.getElementById("order-history-body"),
+        toggle: document.getElementById("order-history-toggle"),
+        last: document.getElementById("order-history-last"),
+        empty: document.getElementById("order-history-empty"),
+        table: document.getElementById("order-history-table"),
+        rows: document.getElementById("order-history-rows"),
+        data: null
+    };
+
+    function cell(text, className) {
+        var td = document.createElement("td");
+        td.textContent = text;
+        if (className) {
+            td.className = className;
+        }
+        return td;
+    }
+
+    function showHistory(data) {
+        history.data = data;
+        history.box.hidden = !data;
+        history.rows.innerHTML = "";
+        if (!data) {
+            return;
+        }
+        var hasItems = data.items.length > 0;
+        history.count.textContent = hasItems ? data.items.length + " mặt hàng" : "Chưa có lần mua nào";
+        history.empty.hidden = hasItems;
+        history.table.hidden = !hasItems;
+        history.toggle.hidden = false;
+        history.last.hidden = !hasItems;
+        if (hasItems) {
+            history.last.textContent = "Thêm hàng lần mua trước (" + data.lastOrderNo + ", " + data.lastOrderDate + ")";
+        }
+        data.items.forEach(function (item, index) {
+            var tr = document.createElement("tr");
+            tr.appendChild(cell(item.text, "order-history__name"));
+            tr.appendChild(cell(item.orders));
+            tr.appendChild(cell(item.avgQty + " " + item.unitName));
+            tr.appendChild(cell(item.lastDate));
+            var action = document.createElement("td");
+            var add = document.createElement("button");
+            add.type = "button";
+            add.className = "sales-button sales-button--small order-history__add";
+            add.setAttribute("data-index", String(index));
+            add.textContent = "+ Thêm";
+            action.appendChild(add);
+            tr.appendChild(action);
+            history.rows.appendChild(tr);
+        });
+    }
+
+    function loadHistory() {
+        showHistory(null);
+        if (!customerSelect.value) {
+            return;
+        }
+        var url = form.getAttribute("data-history-url") + "?customerId=" + encodeURIComponent(customerSelect.value);
+        fetch(url, {headers: {"Accept": "application/json"}, credentials: "same-origin"})
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error("history " + response.status);
+                }
+                return response.json();
+            })
+            .then(showHistory)
+            .catch(function () {
+                // Lịch sử chỉ là gợi ý: lỗi thì để ẩn, không chặn việc gõ đơn
+            });
+    }
+
+    history.toggle.addEventListener("click", function () {
+        var open = history.body.hidden;
+        history.body.hidden = !open;
+        history.toggle.setAttribute("aria-expanded", String(open));
+        history.toggle.textContent = open ? "Thu gọn" : "Xem chi tiết";
+    });
+
+    history.rows.addEventListener("click", function (event) {
+        var button = event.target.closest(".order-history__add");
+        if (!button || !history.data) {
+            return;
+        }
+        var item = history.data.items[Number(button.getAttribute("data-index"))];
+        var added = addHistoryLine(item, suggestedQty(item.avgQty));
+        button.textContent = added ? "Đã thêm" : "Đã có trong đơn";
+        button.disabled = true;
+    });
+
+    history.last.addEventListener("click", function () {
+        var added = 0;
+        history.data.lastLines.forEach(function (line) {
+            if (addHistoryLine(line, line.qty)) {
+                added++;
+            }
+        });
+        history.last.textContent = added > 0
+            ? "Đã thêm " + added + " dòng từ " + history.data.lastOrderNo
+            : "Các hàng của " + history.data.lastOrderNo + " đã có trong đơn";
+    });
+
     // Tính tiền: gom các lần gõ liên tiếp thành một lần gọi server
     var quoteTimer = null;
     var quoteRequest = 0;
@@ -268,6 +405,7 @@
         placeholder.textContent = "Chọn điểm giao";
         addressSelect.appendChild(placeholder);
         showBlocked(false, "", null);
+        loadHistory();
         if (!customerSelect.value) {
             showCredit(null);
             alertsBox.hidden = true;
@@ -367,6 +505,11 @@
             dialog.close();
         }
     });
+
+    // Mở lại đơn nháp đã có đại lý: nạp luôn lịch sử mua hàng
+    if (customerSelect.value) {
+        loadHistory();
+    }
 
     // Đơn mới chưa có dòng nào: thêm sẵn một dòng trống để gõ ngay
     if (rows().length === 0) {
