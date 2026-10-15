@@ -38,6 +38,9 @@
             <c:if test="${not empty flashMessage}">
                 <div class="sales-flash" id="portal-order-message" role="status"><c:out value="${flashMessage}"/></div>
             </c:if>
+            <c:if test="${not empty flashError}">
+                <div class="sales-flash sales-flash--error" id="portal-order-error" role="alert"><c:out value="${flashError}"/></div>
+            </c:if>
             <c:if test="${order.shortDelivery}">
                 <div class="sales-flash sales-flash--warning" id="portal-short-delivery" role="status">
                     Đơn này giao thiếu một số mặt hàng, xem cột "Thực giao" bên dưới. Liên hệ nhân viên phụ trách nếu cần bổ sung.
@@ -47,9 +50,13 @@
             <section class="sales-card portal-orders__card" aria-labelledby="portal-items-title">
                 <h2 class="portal-orders__title" id="portal-items-title">Hàng hoá (${order.items.size()})</h2>
                 <p class="portal-orders__address"><strong>Giao tới:</strong> <c:out value="${order.deliveryAddress}"/></p>
+                <c:set var="canReorder" value="${currentUser.can('ORDER_MANAGE') and order.status != 'CANCELLED' and order.status != 'REJECTED'}"/>
+                <form method="post" action="<c:url value='/portal/orders/reorder'/>" id="portal-reorder-form">
+                <input type="hidden" name="id" value="${order.id}">
                 <table class="portal-orders__table" id="portal-order-items">
                     <thead>
                         <tr>
+                            <c:if test="${canReorder}"><th scope="col"><span class="visually-hidden">Chọn đặt lại</span></th></c:if>
                             <th scope="col">STT</th>
                             <th scope="col">Sản phẩm</th>
                             <th scope="col" class="portal-orders__num">Đặt</th>
@@ -62,6 +69,9 @@
                     <tbody>
                         <c:forEach var="item" items="${order.items}">
                             <tr class="${item.shortDelivered ? 'portal-orders__row--short' : ''}">
+                                <c:if test="${canReorder}">
+                                    <td data-label="Chọn đặt lại"><input type="checkbox" name="line" value="${item.lineNo}" aria-label="Chọn dòng ${item.lineNo} để đặt lại"></td>
+                                </c:if>
                                 <td data-label="STT">${item.lineNo}</td>
                                 <td data-label="Sản phẩm"><c:out value="${item.productName}"/><span class="portal-orders__sku"><c:out value="${item.sku}"/></span></td>
                                 <td data-label="Đặt" class="portal-orders__num"><fmt:formatNumber value="${item.qty}" maxFractionDigits="3"/> <c:out value="${item.unitName}"/></td>
@@ -78,6 +88,13 @@
                         </c:forEach>
                     </tbody>
                 </table>
+                <c:if test="${canReorder}">
+                    <div class="portal-orders__reorder">
+                        <button class="sales-button" type="submit" id="portal-reorder-selected">Đặt lại các dòng đã chọn</button>
+                        <button class="sales-button sales-button--primary" type="submit" name="all" value="1" id="portal-reorder-all">Đặt lại cả đơn</button>
+                    </div>
+                </c:if>
+                </form>
                 <dl class="order-totals">
                     <div><dt>Tiền hàng</dt><dd><fmt:formatNumber value="${order.subtotal}" maxFractionDigits="0"/> ₫</dd></div>
                     <div><dt>Chiết khấu</dt><dd>${order.discount.signum() == 0 ? '' : '−'}<fmt:formatNumber value="${order.discount}" maxFractionDigits="0"/> ₫</dd></div>
