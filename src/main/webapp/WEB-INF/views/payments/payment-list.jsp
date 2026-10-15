@@ -37,6 +37,62 @@
                 <div class="account-flash inv-flash" id="payment-message" role="status"><c:out value="${flashMessage}"/></div>
             </c:if>
 
+            <c:if test="${not empty flashError}">
+                <div class="account-flash account-flash--error inv-flash inv-flash--error" id="payment-error" role="alert"><c:out value="${flashError}"/></div>
+            </c:if>
+
+            <c:if test="${not empty pendingPayments}">
+                <section class="inv-card" aria-labelledby="payment-pending-title">
+                    <div class="inv-card__head">
+                        <div>
+                            <h2 class="inv-card__title" id="payment-pending-title">Khoản thu chờ nộp về công ty</h2>
+                            <p class="inv-card__subtitle">Nhân viên đã thu tại cửa hàng; xác nhận khi đã nhận đủ tiền để đối trừ công nợ.</p>
+                        </div>
+                        <p class="inv-card__meta"><strong>${pendingPayments.size()}</strong> khoản</p>
+                    </div>
+                    <div class="inv-table-scroll">
+                        <table class="inv-table" id="payment-pending">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Số phiếu</th>
+                                    <th scope="col">Đại lý</th>
+                                    <th scope="col">Ngày thu</th>
+                                    <th scope="col">Người thu</th>
+                                    <th scope="col">Biên lai</th>
+                                    <th scope="col" class="is-number">Số tiền</th>
+                                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="pending" items="${pendingPayments}">
+                                    <tr>
+                                        <td><span class="inv-table__main"><c:out value="${pending.receiptNo}"/></span><span class="inv-table__sub"><c:out value="${pending.methodLabel}"/></span></td>
+                                        <td><c:out value="${pending.customerName}"/></td>
+                                        <td><c:out value="${pending.paymentDateText}"/></td>
+                                        <td><c:out value="${pending.collectedByName}"/></td>
+                                        <td><c:if test="${pending.receiptAttached}"><a href="<c:url value='/payments/receipt'><c:param name='id' value='${pending.id}'/></c:url>" target="_blank" rel="noopener">Xem ảnh</a></c:if></td>
+                                        <td class="is-number"><strong><fmt:formatNumber value="${pending.amount}" maxFractionDigits="0"/> ₫</strong></td>
+                                        <td>
+                                            <c:if test="${canManage}">
+                                                <form class="invoice-pending-action" action="<c:url value='/payments/confirm'/>" method="post">
+                                                    <input type="hidden" name="id" value="${pending.id}">
+                                                    <button class="inv-button inv-button--primary" type="submit">Xác nhận đã nhận tiền</button>
+                                                </form>
+                                                <form class="invoice-pending-action" action="<c:url value='/payments/void'/>" method="post">
+                                                    <input type="hidden" name="id" value="${pending.id}">
+                                                    <input class="inv-control" type="text" name="reason" maxlength="1000" placeholder="Lý do huỷ" aria-label="Lý do huỷ" required>
+                                                    <button class="inv-button" type="submit">Huỷ khoản thu</button>
+                                                </form>
+                                            </c:if>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </c:if>
+
             <section class="inv-card" aria-labelledby="payment-debtors-title">
                 <div class="inv-card__head">
                     <h2 class="inv-card__title" id="payment-debtors-title">Đại lý còn nợ hoá đơn</h2>

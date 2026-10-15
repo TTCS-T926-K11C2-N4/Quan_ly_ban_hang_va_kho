@@ -127,3 +127,21 @@
     color: #64748b;
     font-size: 12px;
 }
+
+.invoice-pending-action {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.collection-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px 16px;
+    margin-top: 12px;
+}
+
+.collection-form__wide {
+    grid-column: 1 / -1;
+}
