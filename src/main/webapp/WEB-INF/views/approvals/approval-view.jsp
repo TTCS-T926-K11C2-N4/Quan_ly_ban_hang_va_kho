@@ -83,6 +83,9 @@
                         <section class="approval-alert" aria-labelledby="approval-alert-title">
                             <h3 class="approval-alert__title" id="approval-alert-title">Lý do cần duyệt</h3>
                             <ul class="approval-alert__list">
+                                <c:if test="${not empty pending and pending.overdueDebt}">
+                                    <li><strong>Đại lý đang có nợ quá hạn thanh toán.</strong> Theo cấu hình, đơn mới của đại lý bị gắn cờ phải được duyệt.</li>
+                                </c:if>
                                 <c:if test="${not empty creditViolation}">
                                     <li><strong>Vượt hạn mức công nợ <fmt:formatNumber value="${creditViolation.exceededBy}" maxFractionDigits="0"/> ₫.</strong>
                                         Hạn mức <fmt:formatNumber value="${creditViolation.creditLimit}" maxFractionDigits="0"/> ₫, công nợ và đơn chưa xuất hoá đơn lúc gửi <fmt:formatNumber value="${creditViolation.used}" maxFractionDigits="0"/> ₫.</li>
