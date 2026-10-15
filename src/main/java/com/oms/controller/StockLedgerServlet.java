@@ -1,6 +1,7 @@
 package com.oms.controller;
 
 import com.oms.dao.WarehouseDao;
+import com.oms.model.Permission;
 import com.oms.model.StockLedgerFilter;
 import com.oms.model.StockLevel;
 import com.oms.service.StockLedgerService;
@@ -39,6 +40,10 @@ public class StockLedgerServlet extends HttpServlet {
         }
         request.setAttribute("filter", filter);
         request.setAttribute("levels", StockLevel.values());
+        request.setAttribute("canManage", CurrentUser.get(request).can(Permission.INVENTORY_MANAGE));
+        request.setAttribute("currentPage", parsePage(request));
+        Flash.moveToRequest(request, StockMinUpdateServlet.FLASH_MESSAGE, "flashMessage");
+        Flash.moveToRequest(request, StockMinUpdateServlet.FLASH_ERROR, "flashError");
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 
