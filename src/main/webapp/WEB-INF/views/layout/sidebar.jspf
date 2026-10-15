@@ -143,7 +143,8 @@
             </li>
             <li>
                 <%-- Nhóm Kho hàng (EP-05, thiết kế Sprint 5); trang đặt activeSubmenu:
-                     warehouses (S5-03) | goods-receipts (S5-04) | stock (S5-05) | reservations (S5-06).
+                     warehouses (S5-03) | goods-receipts (S5-04) | stock (S5-05) | reservations (S5-06) |
+                     pick-lists (S6-03).
                      Mỗi mục chỉ hiện khi ứng dụng đã có Servlet của màn đó (tên đăng ký mặc định của @WebServlet là
                      tên đầy đủ của lớp), để merge lẻ từng story không hiện mục dẫn tới trang chưa có --%>
                 <c:set var="servlets" value="${pageContext.servletContext.servletRegistrations}"/>
@@ -175,6 +176,13 @@
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'reservations' ? ' app-submenu__link--active' : ''}" id="menu-reservations"
                            href="<c:url value='/stock/reservations'/>"${activeSubmenu == 'reservations' ? ' aria-current="page"' : ''}>Giữ chỗ tồn</a>
+                    </li>
+                    </c:if>
+                    <%-- Sprint 6: phiếu soạn hàng (S6-03); cần thêm quyền xem giao hàng --%>
+                    <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.PickListListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'pick-lists' ? ' app-submenu__link--active' : ''}" id="menu-pick-lists"
+                           href="<c:url value='/pick-lists'/>"${activeSubmenu == 'pick-lists' ? ' aria-current="page"' : ''}>Phiếu soạn hàng</a>
                     </li>
                     </c:if>
                 </ul>
