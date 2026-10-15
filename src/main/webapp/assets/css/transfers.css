@@ -1,0 +1,78 @@
+/* Chuyển kho nội bộ (S5-07): dùng khung inv-* của kho, chỉ thêm phần riêng của phiếu chuyển */
+.transfer-new {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
+}
+
+.transfer-new .inv-field {
+    min-width: 200px;
+}
+
+.transfer-new__note {
+    flex: 1 1 280px;
+}
+
+.transfer-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.transfer-status--warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.transfer-status--success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.transfer-status--danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.transfer-note {
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    background: #fffbeb;
+}
+
+.transfer-note--done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.transfer-text {
+    margin: 0 0 16px;
+}
+
+.transfer-items__qty {
+    width: 120px;
+    text-align: right;
+}
+
+.transfer-items__row--short td {
+    background: #fffbeb;
+}
+
+.transfer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.transfer-actions form {
+    margin: 0;
+}

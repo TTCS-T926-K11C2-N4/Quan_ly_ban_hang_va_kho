@@ -165,6 +165,12 @@
                            href="<c:url value='/goods-receipts'/>"${activeSubmenu == 'goods-receipts' ? ' aria-current="page"' : ''}>Phiếu nhập kho</a>
                     </li>
                     </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.TransferListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'transfers' ? ' app-submenu__link--active' : ''}" id="menu-transfers"
+                           href="<c:url value='/transfers'/>"${activeSubmenu == 'transfers' ? ' aria-current="page"' : ''}>Chuyển kho</a>
+                    </li>
+                    </c:if>
                     <c:if test="${not empty servlets['com.oms.controller.StockLedgerServlet']}">
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'stock' ? ' app-submenu__link--active' : ''}" id="menu-stock"
