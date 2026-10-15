@@ -126,6 +126,9 @@ public final class AccessRules {
             // Đại lý xem công nợ và hoá đơn của chính mình (S7-07)
             Map.entry("/portal/debts", Permission.INVOICE_VIEW),
             Map.entry("/portal/invoices/print", Permission.INVOICE_VIEW),
+            // Nhắc hạn thanh toán và thông báo trong ứng dụng (S7-08)
+            Map.entry("/invoices/reminders", Permission.INVOICE_MANAGE),
+            Map.entry("/notifications", AUTHENTICATED),
             Map.entry("/orders/confirm", Permission.ORDER_MANAGE),
             Map.entry("/orders/copy", Permission.ORDER_MANAGE),
             Map.entry("/approvals", Permission.ORDER_APPROVAL_VIEW),
