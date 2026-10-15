@@ -120,6 +120,9 @@ public final class AccessRules {
             Map.entry("/payments", Permission.INVOICE_VIEW),
             Map.entry("/payments/new", Permission.INVOICE_MANAGE),
             Map.entry("/payments/print", Permission.INVOICE_VIEW),
+            // Sổ công nợ theo đại lý và tuổi nợ (S7-03)
+            Map.entry("/debts", Permission.INVOICE_VIEW),
+            Map.entry("/debts/export", Permission.INVOICE_VIEW),
             Map.entry("/orders/confirm", Permission.ORDER_MANAGE),
             Map.entry("/orders/copy", Permission.ORDER_MANAGE),
             Map.entry("/approvals", Permission.ORDER_APPROVAL_VIEW),
