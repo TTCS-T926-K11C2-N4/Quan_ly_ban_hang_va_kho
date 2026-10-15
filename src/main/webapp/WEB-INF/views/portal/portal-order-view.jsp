@@ -47,6 +47,20 @@
                 </div>
             </c:if>
 
+            <%-- S6-09: các mốc giao hàng để đại lý bố trí người nhận đúng lúc xe tới --%>
+            <section class="sales-card portal-orders__card portal-timeline" id="portal-timeline" aria-labelledby="portal-timeline-title">
+                <h2 class="portal-orders__title" id="portal-timeline-title">Tiến trình giao hàng</h2>
+                <ol class="portal-steps">
+                    <c:forEach var="step" items="${order.timeline}" varStatus="loop">
+                        <li class="portal-step${step.reached ? ' portal-step--done' : ''}${loop.index == order.currentStep ? ' portal-step--current' : ''}"${loop.index == order.currentStep ? ' aria-current="step"' : ''}>
+                            <span class="portal-step__dot" aria-hidden="true">${step.reached ? '✓' : loop.index + 1}</span>
+                            <span class="portal-step__label"><c:out value="${step.label}"/></span>
+                            <span class="portal-step__time"><c:out value="${empty step.atText ? 'Chưa tới' : step.atText}"/></span>
+                        </li>
+                    </c:forEach>
+                </ol>
+            </section>
+
             <section class="sales-card portal-orders__card" aria-labelledby="portal-items-title">
                 <h2 class="portal-orders__title" id="portal-items-title">Hàng hoá (${order.items.size()})</h2>
                 <p class="portal-orders__address"><strong>Giao tới:</strong> <c:out value="${order.deliveryAddress}"/></p>
@@ -78,7 +92,7 @@
                                 <td data-label="Thực giao" class="portal-orders__num">
                                     <c:choose>
                                         <c:when test="${not item.shippedKnown}">—</c:when>
-                                        <c:otherwise><fmt:formatNumber value="${item.qtyShipped}" maxFractionDigits="3"/> <c:out value="${item.unitName}"/><c:if test="${item.shortDelivered}"> <strong class="portal-orders__short">(thiếu)</strong></c:if></c:otherwise>
+                                        <c:otherwise><fmt:formatNumber value="${item.qtyActual}" maxFractionDigits="3"/> <c:out value="${item.unitName}"/><c:if test="${item.shortDelivered}"> <strong class="portal-orders__short">(thiếu)</strong></c:if><c:if test="${not item.deliveredKnown}"><span class="portal-orders__sku">đã xuất, chưa giao xong</span></c:if></c:otherwise>
                                     </c:choose>
                                 </td>
                                 <td data-label="Đơn giá" class="portal-orders__num"><fmt:formatNumber value="${item.unitPrice}" maxFractionDigits="0"/> ₫</td>
