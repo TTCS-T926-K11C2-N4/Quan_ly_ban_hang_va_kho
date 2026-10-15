@@ -640,7 +640,8 @@ CREATE TABLE `sales_order_items` (
   `is_below_floor` boolean NOT NULL DEFAULT false,
   `discount_amount` decimal(18,2) NOT NULL DEFAULT 0,
   `line_total` decimal(18,2) NOT NULL DEFAULT 0,
-  `qty_shipped_base` decimal(18,3) NOT NULL DEFAULT 0 COMMENT 'Cộng dồn khi xuất kho; còn thiếu = qty_base - qty_shipped_base (hàng còn nợ)',
+  `qty_shipped_base` decimal(18,3) NOT NULL DEFAULT 0 COMMENT 'Cộng dồn khi xuất kho; còn thiếu = qty_base - qty_shipped_base - qty_closed_base (hàng còn nợ)',
+  `qty_closed_base` decimal(18,3) NOT NULL DEFAULT 0 COMMENT 'Phần thiếu đã đóng khi xuất kho, không giao bổ sung (S6-05)',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_by` bigint,
   CONSTRAINT fk_sales_order_items_created_by FOREIGN KEY (`created_by`) REFERENCES `users`(`id`),
@@ -652,6 +653,7 @@ CREATE TABLE `sales_order_items` (
   CONSTRAINT ck_sales_order_items_1 CHECK (qty > 0 AND qty_base > 0),
   CONSTRAINT ck_sales_order_items_2 CHECK (unit_price >= 0),
   CONSTRAINT ck_sales_order_items_3 CHECK (qty_shipped_base >= 0 AND qty_shipped_base <= qty_base),
+  CONSTRAINT ck_sales_order_items_4 CHECK (qty_closed_base >= 0 AND qty_shipped_base + qty_closed_base <= qty_base),
   KEY ix_order_items_product (`product_id`),
   KEY ix_sales_order_items_product_id (`product_id`),
   KEY ix_sales_order_items_unit_id (`unit_id`),
@@ -1108,6 +1110,10 @@ CREATE TABLE `delivery_notes` (
   `recipient_name` varchar(150),
   `delivered_at` datetime,
   `failure_reason` text,
+  `shortage_action` varchar(20) CHECK (`shortage_action` IN ('BACKORDER','CLOSE')) COMMENT 'Xử lý phần thiếu: BACKORDER giao bổ sung sau | CLOSE đóng phần thiếu; NULL nếu xuất đủ',
+  `backorder_due_at` datetime COMMENT 'Lịch giao bổ sung (UTC)',
+  `shortage_note` text COMMENT 'Ghi chú xử lý phần thiếu',
+  `delivery_remark` text COMMENT 'Ghi chú lúc giao hàng / ghi chú bổ sung khi giao không thành công (S6-08)',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_by` bigint,
   CONSTRAINT fk_delivery_notes_created_by FOREIGN KEY (`created_by`) REFERENCES `users`(`id`),
@@ -1115,6 +1121,8 @@ CREATE TABLE `delivery_notes` (
   `updated_by` bigint,
   CONSTRAINT fk_delivery_notes_updated_by FOREIGN KEY (`updated_by`) REFERENCES `users`(`id`),
   PRIMARY KEY (`id`),
+  UNIQUE KEY ux_delivery_notes_pick_order (`pick_list_id`, `order_id`),
+  CONSTRAINT ck_delivery_notes_1 CHECK (shortage_action IS NULL OR shortage_action <> 'BACKORDER' OR backorder_due_at IS NOT NULL),
   KEY ix_delivery_order (`order_id`),
   KEY ix_delivery_notes_order_id (`order_id`),
   KEY ix_delivery_notes_warehouse_id (`warehouse_id`),
@@ -1142,6 +1150,22 @@ CREATE TABLE `delivery_note_items` (
   KEY ix_delivery_note_items_product_id (`product_id`),
   KEY ix_delivery_note_items_lot_id (`lot_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Dòng phiếu xuất: số xuất vs số thực giao. Hoá đơn sinh từ số thực giao (S7-01).';
+
+CREATE TABLE `delivery_note_shortages` (
+  `id` bigint AUTO_INCREMENT,
+  `delivery_note_id` bigint NOT NULL,
+  CONSTRAINT fk_delivery_note_shortages_delivery_note_id FOREIGN KEY (`delivery_note_id`) REFERENCES `delivery_notes`(`id`),
+  `order_item_id` bigint NOT NULL,
+  CONSTRAINT fk_delivery_note_shortages_order_item_id FOREIGN KEY (`order_item_id`) REFERENCES `sales_order_items`(`id`),
+  `qty_required_base` decimal(18,3) NOT NULL,
+  `qty_issued_base` decimal(18,3) NOT NULL,
+  `short_reason` text NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY ux_delivery_note_shortages_note_item (`delivery_note_id`, `order_item_id`),
+  CONSTRAINT ck_delivery_note_shortages_1 CHECK (qty_issued_base >= 0 AND qty_issued_base < qty_required_base),
+  KEY ix_delivery_note_shortages_order_item_id (`order_item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Dòng xuất thiếu của phiếu xuất kèm lý do bắt buộc (S6-05).';
 
 CREATE TABLE `delivery_proofs` (
   `id` bigint AUTO_INCREMENT,

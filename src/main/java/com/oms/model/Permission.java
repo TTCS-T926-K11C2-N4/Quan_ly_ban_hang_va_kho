@@ -24,6 +24,10 @@ public final class Permission {
     public static final String INVENTORY_MANAGE = "INVENTORY_MANAGE";
     // Thêm, sửa kho và vị trí lưu trong kho (S5-03): Quản lý kho và Admin; Nhân viên kho chỉ xem
     public static final String WAREHOUSE_MANAGE = "WAREHOUSE_MANAGE";
+    // Phiếu soạn, xuất kho, giao hàng (S6-03, S6-05, S6-08): nhân viên kho, quản lý kho, Admin soạn - xuất - giao;
+    // kế toán, quản lý kinh doanh xem; nhân viên kinh doanh chỉ xem đơn của đại lý mình phụ trách (data_scope ASSIGNED)
+    public static final String DELIVERY_VIEW = "DELIVERY_VIEW";
+    public static final String DELIVERY_MANAGE = "DELIVERY_MANAGE";
     // Đại lý: Nhân viên kinh doanh chỉ thấy đại lý mình phụ trách (data_scope ASSIGNED)
     public static final String CUSTOMER_VIEW = "CUSTOMER_VIEW";
     // Sửa thông tin đại lý, điểm giao hàng (S3-04): Nhân viên kinh doanh chỉ với đại lý mình phụ trách

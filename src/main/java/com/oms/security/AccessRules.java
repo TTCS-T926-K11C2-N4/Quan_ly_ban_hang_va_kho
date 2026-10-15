@@ -116,6 +116,12 @@ public final class AccessRules {
             // (lọc theo phạm vi ORDER_VIEW trong StockReservationService)
             Map.entry("/stock/reservations", Permission.INVENTORY_VIEW),
             Map.entry("/stock/reservations/view", Permission.INVENTORY_VIEW),
+            // Phiếu soạn hàng (S6-03): ai xem giao hàng cũng xem phiếu; nhân viên kho, quản lý kho lập phiếu và ghi nhận soạn
+            Map.entry("/pick-lists", Permission.DELIVERY_VIEW),
+            Map.entry("/pick-lists/view", Permission.DELIVERY_VIEW),
+            Map.entry("/pick-lists/new", Permission.DELIVERY_MANAGE),
+            Map.entry("/pick-lists/pick", Permission.DELIVERY_MANAGE),
+            Map.entry("/pick-lists/cancel", Permission.DELIVERY_MANAGE),
             Map.entry("/products/status", Permission.PRODUCT_MANAGE));
 
     private AccessRules() {
