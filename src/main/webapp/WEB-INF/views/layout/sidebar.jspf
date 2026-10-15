@@ -180,6 +180,12 @@
                            href="<c:url value='/stock'/>"${activeSubmenu == 'stock' ? ' aria-current="page"' : ''}>Sổ tồn kho</a>
                     </li>
                     </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.StocktakeListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'stocktakes' ? ' app-submenu__link--active' : ''}" id="menu-stocktakes"
+                           href="<c:url value='/stocktakes'/>"${activeSubmenu == 'stocktakes' ? ' aria-current="page"' : ''}>Kiểm kê kho</a>
+                    </li>
+                    </c:if>
                     <c:if test="${not empty servlets['com.oms.controller.ReservationListServlet']}">
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'reservations' ? ' app-submenu__link--active' : ''}" id="menu-reservations"

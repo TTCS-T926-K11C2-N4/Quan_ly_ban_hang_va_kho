@@ -36,7 +36,7 @@ class AccessRulesTest {
             rolePermissions.computeIfAbsent(row.group(1), role -> new HashSet<>()).add(row.group(2));
         }
 
-        // ADMIN: mọi quyền trừ COST_PRICE_VIEW và CREDIT_MANAGE (câu INSERT cuối file seed)
+        // ADMIN: mọi quyền trừ COST_PRICE_VIEW, CREDIT_MANAGE và STOCKTAKE_FINALIZE (câu INSERT cuối file seed)
         Set<String> allPermissions = new HashSet<>();
         Matcher permission = Pattern.compile("(?m)^\\s*\\('([A-Z_]+)', '").matcher(sql);
         while (permission.find()) {
@@ -44,6 +44,7 @@ class AccessRulesTest {
         }
         allPermissions.remove("COST_PRICE_VIEW");
         allPermissions.remove("CREDIT_MANAGE");
+        allPermissions.remove("STOCKTAKE_FINALIZE");
         rolePermissions.put("ADMIN", allPermissions);
     }
 
@@ -448,5 +449,16 @@ class AccessRulesTest {
         }
         assertFalse(AccessRules.isPublic("/dashboard"));
         assertFalse(AccessRules.isPublic("/accounts"));
+    }
+
+    // AC4 của S5-08: chỉ Quản lý kho được chốt phiếu kiểm kê; nhân viên kho đếm được nhưng không chốt, Admin cũng không
+    @Test
+    void onlyWarehouseManagerCanFinalizeStocktake() {
+        assertTrue(AccessRules.isAllowed("/stocktakes/finalize", permissionsOf("WH_MANAGER")));
+        assertFalse(AccessRules.isAllowed("/stocktakes/finalize", permissionsOf("WAREHOUSE")));
+        assertFalse(AccessRules.isAllowed("/stocktakes/finalize", permissionsOf("ADMIN")));
+        assertFalse(AccessRules.isAllowed("/stocktakes/finalize", permissionsOf("SALES_MANAGER")));
+        assertTrue(AccessRules.isAllowed("/stocktakes/count", permissionsOf("WAREHOUSE")));
+        assertFalse(AccessRules.isAllowed("/stocktakes/new", permissionsOf("SALES_REP")));
     }
 }

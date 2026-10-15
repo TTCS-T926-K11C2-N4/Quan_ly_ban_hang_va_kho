@@ -127,6 +127,10 @@ public final class AuditCatalog {
         action("ORDER_APPROVE", "Duyệt đơn", GROUP_STATUS);
         action("ORDER_REJECT", "Từ chối đơn", GROUP_STATUS);
         action("ORDER_RETURN", "Trả lại sửa", GROUP_STATUS);
+        action("STOCKTAKE_CREATE", "Tạo phiếu kiểm kê", GROUP_CREATE);
+        action("STOCKTAKE_COUNT", "Nhập số đếm kiểm kê", GROUP_UPDATE);
+        action("STOCKTAKE_FINALIZE", "Chốt kiểm kê", GROUP_STATUS);
+        action("STOCKTAKE_CANCEL", "Huỷ phiếu kiểm kê", GROUP_STATUS);
         action("ORDER_RESERVATION_EXPIRE", "Hết hạn giữ chỗ", GROUP_STATUS);
     }
 

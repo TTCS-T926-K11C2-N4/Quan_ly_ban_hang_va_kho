@@ -13,6 +13,7 @@
 -- (AC của S3-05; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự nâng hạn mức cho đại lý của mình).
 -- Phân công / chuyển giao nhân viên kinh doanh phụ trách đại lý: quyền riêng CUSTOMER_ASSIGN cho Quản lý kinh doanh
 -- (AC của S3-06; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự đổi người phụ trách).
+-- Chốt phiếu kiểm kê (S5-08): quyền riêng STOCKTAKE_FINALIZE, chỉ Quản lý kho (AC "Chỉ Quản lý kho được chốt"; Admin cũng không).
 -- Khai báo kho và vị trí lưu trong kho: quyền riêng WAREHOUSE_MANAGE cho Quản lý kho (vai trò của S5-03;
 -- Nhân viên kho có INVENTORY_MANAGE để nhập kho nhưng không tự thêm, sửa kho).
 -- ADMIN có mọi quyền còn lại (xem câu lệnh cuối file).
@@ -40,6 +41,7 @@ INSERT INTO `permissions` (`code`, `module`, `action`, `description`) VALUES
   ('INVENTORY_VIEW', 'Tồn kho & nhập kho', 'VIEW', 'Xem tồn kho và phiếu nhập'),
   ('INVENTORY_MANAGE', 'Tồn kho & nhập kho', 'MANAGE', 'Nhập kho, chuyển kho, kiểm kê'),
   ('WAREHOUSE_MANAGE', 'Tồn kho & nhập kho', 'MANAGE', 'Thêm, sửa kho và vị trí lưu trong kho'),
+  ('STOCKTAKE_FINALIZE', 'Tồn kho & nhập kho', 'APPROVE', 'Chốt phiếu kiểm kê, điều chỉnh tồn về số đếm'),
   ('DELIVERY_VIEW', 'Phiếu xuất & giao hàng', 'VIEW', 'Xem phiếu xuất và giao hàng'),
   ('DELIVERY_MANAGE', 'Phiếu xuất & giao hàng', 'MANAGE', 'Soạn, xuất và giao hàng'),
   ('INVOICE_VIEW', 'Hoá đơn & công nợ', 'VIEW', 'Xem hoá đơn và công nợ'),
@@ -95,6 +97,7 @@ FROM (VALUES
   ROW('WH_MANAGER', 'INVENTORY_VIEW', 'ALL'),
   ROW('WH_MANAGER', 'INVENTORY_MANAGE', 'ALL'),
   ROW('WH_MANAGER', 'WAREHOUSE_MANAGE', 'ALL'),
+  ROW('WH_MANAGER', 'STOCKTAKE_FINALIZE', 'ALL'),
   ROW('WH_MANAGER', 'DELIVERY_VIEW', 'ALL'),
   ROW('WH_MANAGER', 'DELIVERY_MANAGE', 'ALL'),
   ROW('WH_MANAGER', 'RETURN_VIEW', 'ALL'),
@@ -140,7 +143,7 @@ JOIN `permissions` p ON p.`code` = m.permission_code;
 INSERT INTO `role_permissions` (`role_id`, `permission_id`, `data_scope`)
 SELECT r.`id`, p.`id`, 'ALL'
 FROM `roles` r
-JOIN `permissions` p ON p.`code` NOT IN ('COST_PRICE_VIEW', 'CREDIT_MANAGE')
+JOIN `permissions` p ON p.`code` NOT IN ('COST_PRICE_VIEW', 'CREDIT_MANAGE', 'STOCKTAKE_FINALIZE')
 WHERE r.`code` = 'ADMIN';
 
 COMMIT;
