@@ -154,7 +154,8 @@ public class SalesOrderDao {
                 + " source, status, requested_delivery_date, subtotal_amount, discount_amount, total_amount, note,"
                 + " needs_approval, submitted_at, created_at, created_by, updated_at, updated_by,"
                 + " copied_from_order_id)"
-                + " VALUES (?, ?, ?, ?, ?, 'SALES_REP', ?, ?, ?, ?, ?, ?, ?, " + submittedAt(header)
+                + " VALUES (?, ?, ?, ?, ?, '" + (header.portal ? "PORTAL" : "SALES_REP") + "', ?, ?, ?, ?, ?, ?, ?, "
+                + submittedAt(header)
                 + ", UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, orderNo);
@@ -624,10 +625,11 @@ public class SalesOrderDao {
         final String note;
         final boolean needsApproval;
         final Long copiedFromOrderId;
+        final boolean portal;
 
         public Header(long customerId, long deliveryAddressId, long warehouseId, Long salesRepId, boolean submitted,
                       LocalDate requestedDate, BigDecimal subtotal, BigDecimal discount, BigDecimal total,
-                      String note, boolean needsApproval, Long copiedFromOrderId) {
+                      String note, boolean needsApproval, Long copiedFromOrderId, boolean portal) {
             this.customerId = customerId;
             this.deliveryAddressId = deliveryAddressId;
             this.warehouseId = warehouseId;
@@ -640,6 +642,7 @@ public class SalesOrderDao {
             this.note = note;
             this.needsApproval = needsApproval;
             this.copiedFromOrderId = copiedFromOrderId;
+            this.portal = portal;
         }
 
         public boolean isSubmitted() {

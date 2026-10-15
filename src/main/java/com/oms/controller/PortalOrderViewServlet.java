@@ -17,6 +17,7 @@ import java.sql.SQLException;
 public class PortalOrderViewServlet extends HttpServlet {
 
     private static final String VIEW = "/WEB-INF/views/portal/portal-order-view.jsp";
+    static final String FLASH_MESSAGE = "portalOrderFlashMessage";
 
     private final PortalOrderService portalOrderService = new PortalOrderService();
 
@@ -35,6 +36,7 @@ public class PortalOrderViewServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
+            Flash.moveToRequest(request, FLASH_MESSAGE, "flashMessage");
             request.setAttribute("order", order);
             request.getRequestDispatcher(VIEW).forward(request, response);
         } catch (SQLException e) {

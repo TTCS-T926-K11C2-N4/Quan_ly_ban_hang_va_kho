@@ -1,0 +1,160 @@
+package com.oms.service;
+
+import com.oms.dao.CustomerDao;
+import com.oms.dao.PortalOrderDao;
+import com.oms.model.Customer;
+import com.oms.model.CustomerCredit;
+import com.oms.model.DeliveryAddress;
+import com.oms.model.OrderForm;
+import com.oms.model.OrderProduct;
+import com.oms.model.OrderQuote;
+import com.oms.model.OrderStock;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+// Đại lý tự đặt hàng trên cổng (S4-10). Đại lý lấy từ tài khoản đăng nhập; chỉ thấy sản phẩm và giá của nhóm khách
+// hàng của mình; không sửa được giá. Xem trước tổng tiền và công nợ còn lại, gửi đơn thì luôn ở Chờ duyệt để nhân viên
+// phụ trách xác nhận (không tự duyệt). Dùng chung kiểm tra khoá đại lý, nợ quá hạn, tồn khả dụng với màn tạo đơn.
+public class PortalCheckoutService {
+
+    private final PortalOrderDao portalOrderDao = new PortalOrderDao();
+    private final CustomerDao customerDao = new CustomerDao();
+    private final SalesOrderService orderService = new SalesOrderService();
+
+    // Giỏ hàng đã tính: sản phẩm chọn được, điểm giao, tiền, công nợ, lỗi (rỗng nếu hợp lệ)
+    public static final class Cart {
+        private final Customer customer;
+        private final List<OrderProduct> products;
+        private final List<DeliveryAddress> addresses;
+        private final OrderForm form;
+        private final OrderQuote quote;
+        private final CustomerCredit credit;
+        private final Map<String, String> errors;
+
+        Cart(Customer customer, List<OrderProduct> products, List<DeliveryAddress> addresses, OrderForm form,
+             OrderQuote quote, CustomerCredit credit, Map<String, String> errors) {
+            this.customer = customer;
+            this.products = products;
+            this.addresses = addresses;
+            this.form = form;
+            this.quote = quote;
+            this.credit = credit;
+            this.errors = errors;
+        }
+
+        public Customer getCustomer() {
+            return customer;
+        }
+
+        public List<OrderProduct> getProducts() {
+            return products;
+        }
+
+        public List<DeliveryAddress> getAddresses() {
+            return addresses;
+        }
+
+        public OrderForm getForm() {
+            return form;
+        }
+
+        public OrderQuote getQuote() {
+            return quote;
+        }
+
+        public CustomerCredit getCredit() {
+            return credit;
+        }
+
+        public Map<String, String> getErrors() {
+            return errors;
+        }
+
+        public boolean isOverCreditLimit() {
+            return credit != null && quote != null && credit.exceeds(quote.getTotal());
+        }
+    }
+
+    // Kết quả gửi đơn: saved != null là đã gửi; ngược lại cart mang lỗi để hiện lại
+    public static final class Result {
+        private final SalesOrderService.Saved saved;
+        private final Cart cart;
+
+        Result(SalesOrderService.Saved saved, Cart cart) {
+            this.saved = saved;
+            this.cart = cart;
+        }
+
+        public SalesOrderService.Saved getSaved() {
+            return saved;
+        }
+
+        public Cart getCart() {
+            return cart;
+        }
+    }
+
+    // null nếu tài khoản chưa gắn đại lý
+    public Customer findCustomer(long userId) throws SQLException {
+        Long customerId = portalOrderDao.findCustomerId(userId);
+        return customerId == null ? null : customerDao.findById(customerId);
+    }
+
+    public List<DeliveryAddress> findAddresses(Customer customer) throws SQLException {
+        return orderService.getDeliveryAddresses(customer.getId());
+    }
+
+    // Làm sạch form của đại lý: đại lý theo tài khoản, không giá sửa tay, không đơn nháp
+    static OrderForm sanitize(OrderForm form, Customer customer) {
+        List<OrderForm.Line> lines = new ArrayList<>();
+        for (OrderForm.Line line : form.getLines()) {
+            lines.add(new OrderForm.Line(line.getProductId(), line.getProductText(), line.getUnitId(), line.getQty(),
+                    null));
+        }
+        return new OrderForm(String.valueOf(customer.getId()), form.getDeliveryAddressId(), form.getRequestedDate(),
+                form.getNote(), null, null, lines);
+    }
+
+    // validate: true khi người dùng bấm gửi đơn (kiểm tra đầy đủ); false khi chỉ xem trước (chỉ lỗi từng dòng)
+    public Cart prepare(Customer customer, OrderForm rawForm, boolean validate) throws SQLException {
+        OrderForm form = sanitize(rawForm, customer);
+        List<OrderProduct> products = orderService.getProductsPricedFor(customer);
+        List<DeliveryAddress> addresses = orderService.getDeliveryAddresses(customer.getId());
+        OrderQuote quote = orderService.quote(customer, form.getLines(), products);
+        CustomerCredit credit = orderService.credit(customer);
+        OrderStock stock = validate ? orderService.stock(customer, quote) : null;
+        Map<String, String> errors = new LinkedHashMap<>();
+        if (validate) {
+            errors.putAll(orderService.validate(form, customer, null, true, addresses, quote, credit, stock));
+        } else {
+            for (int i = 0; i < quote.getLines().size(); i++) {
+                String error = quote.getLines().get(i).getError();
+                if (error != null) {
+                    errors.put("lines." + i, error);
+                }
+            }
+        }
+        return new Cart(customer, products, addresses, form, quote, credit, errors);
+    }
+
+    // Gửi đơn: luôn Chờ duyệt. Lỗi thì trả cart kèm lỗi.
+    public Result submit(Customer customer, OrderForm rawForm, long userId, String ipAddress) throws SQLException {
+        Cart cart = prepare(customer, rawForm, true);
+        if (!cart.getErrors().isEmpty()) {
+            return new Result(null, cart);
+        }
+        try {
+            SalesOrderService.Saved saved = orderService.savePortal(cart.getForm(), customer, cart.getQuote(), userId,
+                    ipAddress);
+            return new Result(saved, cart);
+        } catch (SalesOrderService.StockShortageException e) {
+            Map<String, String> errors = new LinkedHashMap<>(e.getErrors());
+            return new Result(null, new Cart(customer, cart.getProducts(), cart.getAddresses(), cart.getForm(),
+                    cart.getQuote(), cart.getCredit(), errors));
+        }
+    }
+}

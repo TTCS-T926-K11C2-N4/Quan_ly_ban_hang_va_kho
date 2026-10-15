@@ -101,6 +101,11 @@ public class OrderApprovalService {
         return approvalDao.findHistory(orderId);
     }
 
+    // Đơn đang chờ nhân viên phụ trách xác nhận (đơn từ cổng đại lý)
+    public boolean isAwaitingRepConfirmation(long orderId) throws SQLException {
+        return ApprovalDao.REP_CONFIRMATION.equals(approvalDao.findPendingType(orderId));
+    }
+
     public String findLatestReturnComment(long orderId) throws SQLException {
         return approvalDao.findLatestReturnComment(orderId);
     }
@@ -157,7 +162,19 @@ public class OrderApprovalService {
     boolean afterSubmit(Connection connection, long orderId, String orderNo, OrderQuote quote, CustomerCredit credit,
                         long actorUserId, String ipAddress)
             throws SQLException, StockReservationService.InsufficientStockException {
+        return afterSubmit(connection, orderId, orderNo, quote, credit, actorUserId, ipAddress, false);
+    }
+
+    // portal: đơn do đại lý tự đặt (S4-10) luôn ở Chờ duyệt dù không vi phạm, chờ nhân viên phụ trách xác nhận
+    boolean afterSubmit(Connection connection, long orderId, String orderNo, OrderQuote quote, CustomerCredit credit,
+                        long actorUserId, String ipAddress, boolean portal)
+            throws SQLException, StockReservationService.InsufficientStockException {
         List<Map<String, Object>> violations = violations(quote, credit);
+        if (portal) {
+            approvalDao.insertRequest(connection, orderId, ApprovalDao.REP_CONFIRMATION,
+                    JsonUtil.array(violations), actorUserId);
+            return false;
+        }
         if (!violations.isEmpty()) {
             approvalDao.insertRequest(connection, orderId, JsonUtil.array(violations), actorUserId);
             return false;

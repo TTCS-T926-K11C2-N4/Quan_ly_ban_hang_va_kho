@@ -24,15 +24,37 @@ public class ApprovalDao {
             + " line_no INT PATH '$.line_no', sku VARCHAR(50) PATH '$.sku', unit_price DECIMAL(18,2) PATH '$.unit_price',"
             + " net_price DECIMAL(18,2) PATH '$.net_price', floor_price DECIMAL(18,2) PATH '$.floor_price')) jt";
 
+    public static final String MANAGER_EXCEPTION = "MANAGER_EXCEPTION";
+    // Đơn do đại lý tự đặt trên cổng (S4-10): nhân viên phụ trách xác nhận
+    public static final String REP_CONFIRMATION = "REP_CONFIRMATION";
+
     public void insertRequest(Connection connection, long orderId, String violationsJson, long requestedBy)
             throws SQLException {
+        insertRequest(connection, orderId, MANAGER_EXCEPTION, violationsJson, requestedBy);
+    }
+
+    public void insertRequest(Connection connection, long orderId, String approvalType, String violationsJson,
+                              long requestedBy) throws SQLException {
         String sql = "INSERT INTO approval_requests (order_id, approval_type, violations, status, requested_by,"
-                + " requested_at) VALUES (?, 'MANAGER_EXCEPTION', ?, 'PENDING', ?, UTC_TIMESTAMP())";
+                + " requested_at) VALUES (?, ?, ?, 'PENDING', ?, UTC_TIMESTAMP())";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, orderId);
-            statement.setString(2, violationsJson);
-            statement.setLong(3, requestedBy);
+            statement.setString(2, approvalType);
+            statement.setString(3, violationsJson);
+            statement.setLong(4, requestedBy);
             statement.executeUpdate();
+        }
+    }
+
+    // Loại yêu cầu duyệt đang chờ của đơn; null nếu đơn không có yêu cầu chờ
+    public String findPendingType(long orderId) throws SQLException {
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT approval_type FROM approval_requests WHERE order_id = ? AND status = 'PENDING'")) {
+            statement.setLong(1, orderId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getString(1) : null;
+            }
         }
     }
 
