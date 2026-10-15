@@ -36,6 +36,7 @@
                     <c:if test="${canCancel}">
                         <button class="sales-button profile-actions__delete" type="button" id="open-cancel-order">Huỷ đơn</button>
                     </c:if>
+                    <a class="sales-button" id="print-order-link" href="<c:url value='/orders/print'><c:param name='id' value='${order.id}'/></c:url>" target="_blank" rel="noopener">In / Xuất PDF</a>
                 </div>
             </header>
 
