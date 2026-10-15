@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 // Đại lý tự đặt hàng trên cổng (S4-10). Đại lý lấy từ tài khoản đăng nhập; chỉ thấy sản phẩm và giá của nhóm khách
 // hàng của mình; không sửa được giá. Xem trước tổng tiền và công nợ còn lại, gửi đơn thì luôn ở Chờ duyệt để nhân viên
@@ -106,6 +109,63 @@ public class PortalCheckoutService {
 
     public List<DeliveryAddress> findAddresses(Customer customer) throws SQLException {
         return orderService.getDeliveryAddresses(customer.getId());
+    }
+
+    // Giỏ điền sẵn từ đơn cũ (S5-02) cùng các dòng bị loại kèm lý do
+    public static final class Reorder {
+        private final OrderForm form;
+        private final List<String> notices;
+
+        Reorder(OrderForm form, List<String> notices) {
+            this.form = form;
+            this.notices = notices;
+        }
+
+        public OrderForm getForm() {
+            return form;
+        }
+
+        public List<String> getNotices() {
+            return notices;
+        }
+    }
+
+    // Đặt lại toàn bộ (selected rỗng) hoặc một phần dòng của đơn cũ. Mặt hàng đã ngừng kinh doanh / không còn trong
+    // bảng giá, hoặc đơn vị không còn dùng, bị loại kèm thông báo. Giá không lấy từ đơn cũ: giỏ tính lại theo bảng giá
+    // hiện hành. null nếu đơn không thuộc đại lý.
+    public Reorder buildReorder(Customer customer, long orderId, Set<Integer> selected) throws SQLException {
+        PortalOrderDao.Reorderable source = portalOrderDao.findReorderable(customer.getId(), orderId);
+        if (source == null) {
+            return null;
+        }
+        Map<Long, OrderProduct> catalog = orderService.getProductsPricedFor(customer).stream()
+                .collect(Collectors.toMap(OrderProduct::getId, Function.identity()));
+        List<DeliveryAddress> addresses = orderService.getDeliveryAddresses(customer.getId());
+        List<OrderForm.Line> lines = new ArrayList<>();
+        List<String> notices = new ArrayList<>();
+        for (PortalOrderDao.Reorderable.Line line : source.getLines()) {
+            if (!selected.isEmpty() && !selected.contains(line.getLineNo())) {
+                continue;
+            }
+            String label = line.getSku() + " - " + line.getName();
+            OrderProduct product = catalog.get(line.getProductId());
+            if (product == null) {
+                notices.add(label + " đã ngừng kinh doanh hoặc chưa có giá, nên không đưa vào đơn mới.");
+            } else if (product.findUnit(line.getUnitId()) == null) {
+                notices.add(label + " không còn bán theo đơn vị cũ, nên không đưa vào đơn mới.");
+            } else {
+                lines.add(new OrderForm.Line(String.valueOf(line.getProductId()), label,
+                        String.valueOf(line.getUnitId()), line.getQty().stripTrailingZeros().toPlainString(), null));
+            }
+        }
+        boolean addressActive = addresses.stream().anyMatch(a -> a.getId() == source.getDeliveryAddressId());
+        if (!addressActive) {
+            notices.add("Điểm giao của đơn cũ không còn dùng, vui lòng chọn lại điểm giao.");
+        }
+        notices.add("Giá và chiết khấu được áp lại theo bảng giá hiện hành.");
+        OrderForm form = new OrderForm(String.valueOf(customer.getId()),
+                addressActive ? String.valueOf(source.getDeliveryAddressId()) : null, null, null, null, null, lines);
+        return new Reorder(form, notices);
     }
 
     // Làm sạch form của đại lý: đại lý theo tài khoản, không giá sửa tay, không đơn nháp
