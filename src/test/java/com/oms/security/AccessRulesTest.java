@@ -423,6 +423,18 @@ class AccessRulesTest {
         }
     }
 
+    // S6-08: ghi nhận giao hàng chỉ nhân viên kho, quản lý kho, Admin; người xem giao hàng xem điểm giao, ảnh biên bản
+    @Test
+    void onlyWarehouseRolesCanConfirmDelivery() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "WAREHOUSE".equals(role) || "WH_MANAGER".equals(role) || "ADMIN".equals(role),
+                AccessRules.isAllowed("/deliveries/confirm", permissions), role));
+        for (String path : new String[] {"/deliveries", "/deliveries/point", "/deliveries/proof"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
+        }
+    }
+
     @Test
     void undeclaredPathIsDeniedEvenForAdmin() {
         assertFalse(AccessRules.isAllowed("/chuc-nang-moi", permissionsOf("ADMIN")));
