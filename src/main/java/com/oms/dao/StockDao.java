@@ -81,6 +81,57 @@ public class StockDao {
         }
     }
 
+    // Dòng tồn của (kho, SKU) kèm mức tối thiểu hiện tại, khoá để sửa (S5-09); null nếu SKU chưa có dòng tồn ở kho
+    public MinStockRow lockMinStock(Connection connection, long warehouseId, long productId) throws SQLException {
+        String sql = "SELECT b.min_stock_base, p.sku, w.code FROM stock_balances b"
+                + " JOIN products p ON p.id = b.product_id JOIN warehouses w ON w.id = b.warehouse_id"
+                + " WHERE b.warehouse_id = ? AND b.product_id = ? FOR UPDATE OF b";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, warehouseId);
+            statement.setLong(2, productId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? new MinStockRow(resultSet.getBigDecimal(1), resultSet.getString(2),
+                        resultSet.getString(3)) : null;
+            }
+        }
+    }
+
+    public void updateMinStock(Connection connection, long warehouseId, long productId, BigDecimal minStock)
+            throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "UPDATE stock_balances SET min_stock_base = ?, version = version + 1, updated_at = UTC_TIMESTAMP()"
+                        + " WHERE warehouse_id = ? AND product_id = ?")) {
+            statement.setBigDecimal(1, minStock);
+            statement.setLong(2, warehouseId);
+            statement.setLong(3, productId);
+            statement.executeUpdate();
+        }
+    }
+
+    public static class MinStockRow {
+        private final BigDecimal minStock;
+        private final String sku;
+        private final String warehouseCode;
+
+        MinStockRow(BigDecimal minStock, String sku, String warehouseCode) {
+            this.minStock = minStock;
+            this.sku = sku;
+            this.warehouseCode = warehouseCode;
+        }
+
+        public BigDecimal getMinStock() {
+            return minStock;
+        }
+
+        public String getSku() {
+            return sku;
+        }
+
+        public String getWarehouseCode() {
+            return warehouseCode;
+        }
+    }
+
     private static Map<Long, OrderStock.Level> readLevels(PreparedStatement statement) throws SQLException {
         Map<Long, OrderStock.Level> levels = new HashMap<>();
         try (ResultSet resultSet = statement.executeQuery()) {
