@@ -148,6 +148,16 @@ public final class AccessRules {
             // Xác nhận xuất kho & giao thiếu (S6-05): ai xem giao hàng cũng xem phiếu xuất; nhân viên kho, quản lý kho xác nhận
             Map.entry("/delivery-notes/view", Permission.DELIVERY_VIEW),
             Map.entry("/delivery-notes/confirm", Permission.DELIVERY_MANAGE),
+            // Chuyến giao hàng (S6-06, S6-07): ai xem giao hàng cũng xem chuyến; nhân viên kho, quản lý kho lập và điều hành
+            Map.entry("/trips", Permission.DELIVERY_VIEW),
+            Map.entry("/trips/view", Permission.DELIVERY_VIEW),
+            Map.entry("/trips/print", Permission.DELIVERY_VIEW),
+            Map.entry("/trips/new", Permission.DELIVERY_MANAGE),
+            Map.entry("/trips/add", Permission.DELIVERY_MANAGE),
+            Map.entry("/trips/remove", Permission.DELIVERY_MANAGE),
+            Map.entry("/trips/depart", Permission.DELIVERY_MANAGE),
+            Map.entry("/trips/complete", Permission.DELIVERY_MANAGE),
+            Map.entry("/trips/cancel", Permission.DELIVERY_MANAGE),
             // Xác nhận giao hàng (S6-08): ai xem giao hàng cũng xem điểm giao, ảnh biên bản; nhân viên kho, quản lý kho ghi nhận
             Map.entry("/deliveries", Permission.DELIVERY_VIEW),
             Map.entry("/deliveries/point", Permission.DELIVERY_VIEW),
