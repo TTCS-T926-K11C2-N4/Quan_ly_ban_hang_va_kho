@@ -144,7 +144,7 @@
             <li>
                 <%-- Nhóm Kho hàng (EP-05, thiết kế Sprint 5); trang đặt activeSubmenu:
                      warehouses (S5-03) | goods-receipts (S5-04) | stock (S5-05) | reservations (S5-06) |
-                     pick-lists (S6-03, S6-05).
+                     pick-lists (S6-03, S6-05) | deliveries (S6-08).
                      Mỗi mục chỉ hiện khi ứng dụng đã có Servlet của màn đó (tên đăng ký mặc định của @WebServlet là
                      tên đầy đủ của lớp), để merge lẻ từng story không hiện mục dẫn tới trang chưa có --%>
                 <c:set var="servlets" value="${pageContext.servletContext.servletRegistrations}"/>
@@ -183,6 +183,12 @@
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'pick-lists' ? ' app-submenu__link--active' : ''}" id="menu-pick-lists"
                            href="<c:url value='/pick-lists'/>"${activeSubmenu == 'pick-lists' ? ' aria-current="page"' : ''}>Phiếu soạn hàng</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.DeliveryListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'deliveries' ? ' app-submenu__link--active' : ''}" id="menu-deliveries"
+                           href="<c:url value='/deliveries'/>"${activeSubmenu == 'deliveries' ? ' aria-current="page"' : ''}>Xác nhận giao hàng</a>
                     </li>
                     </c:if>
                 </ul>

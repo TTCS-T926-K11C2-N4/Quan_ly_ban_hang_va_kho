@@ -79,6 +79,8 @@ public final class AuditCatalog {
         action("PICK_LIST_COMPLETE", "Hoàn tất soạn", GROUP_STATUS);
         action("PICK_LIST_CANCEL", "Huỷ phiếu soạn", GROUP_STATUS);
         action("DELIVERY_NOTE_ISSUE", "Xác nhận xuất kho", GROUP_CREATE);
+        action("DELIVERY_CONFIRM", "Giao thành công", GROUP_STATUS);
+        action("DELIVERY_FAIL", "Giao không thành công", GROUP_STATUS);
         action("SUPPLIER_CREATE", "Thêm mới", GROUP_CREATE);
         action("SUPPLIER_UPDATE", "Sửa", GROUP_UPDATE);
         action("SUPPLIER_DELETE", "Xoá", GROUP_DELETE);
