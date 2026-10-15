@@ -119,6 +119,7 @@ public final class AuditCatalog {
         action("DISCOUNT_POLICY_DEACTIVATE", "Ngừng áp dụng", GROUP_STATUS);
         action("DISCOUNT_POLICY_ACTIVATE", "Áp dụng lại", GROUP_STATUS);
         action("ORDER_CREATE", "Thêm mới", GROUP_CREATE);
+        action("ORDER_COPY", "Sao chép đơn", GROUP_CREATE);
         action("ORDER_UPDATE", "Sửa đơn nháp", GROUP_UPDATE);
         action("ORDER_SUBMIT", "Gửi duyệt", GROUP_STATUS);
         action("ORDER_CANCEL", "Huỷ đơn", GROUP_STATUS);

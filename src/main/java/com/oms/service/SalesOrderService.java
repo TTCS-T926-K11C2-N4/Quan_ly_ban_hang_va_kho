@@ -276,9 +276,16 @@ public class SalesOrderService {
     public Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
                        OrderQuote quote, long actorUserId, String ipAddress)
             throws SQLException, StockShortageException {
+        return save(form, customer, draft, submit, quote, actorUserId, ipAddress, null);
+    }
+
+    // copiedFrom: đơn mới được sao chép từ đơn này (S4-09), chỉ dùng khi tạo mới (draft = null)
+    public Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
+                       OrderQuote quote, long actorUserId, String ipAddress, SalesOrderDao.CopyTemplate copiedFrom)
+            throws SQLException, StockShortageException {
         Long warehouseId = customer.getDefaultWarehouseId();
         Pending pending = new Pending(form, customer, submit, quote, ipAddress,
-                warehouseId == null ? null : stockDao.findWarehouseName(warehouseId));
+                warehouseId == null ? null : stockDao.findWarehouseName(warehouseId), copiedFrom);
         if (draft != null) {
             return updateDraft(draft, parseVersion(form.getVersion()), pending, actorUserId);
         }
@@ -304,15 +311,17 @@ public class SalesOrderService {
         private final OrderQuote quote;
         private final String ipAddress;
         private final String warehouseName;
+        private final SalesOrderDao.CopyTemplate copiedFrom;
 
         Pending(OrderForm form, Customer customer, boolean submit, OrderQuote quote, String ipAddress,
-                String warehouseName) {
+                String warehouseName, SalesOrderDao.CopyTemplate copiedFrom) {
             this.form = form;
             this.customer = customer;
             this.submit = submit;
             this.quote = quote;
             this.ipAddress = ipAddress;
             this.warehouseName = warehouseName;
+            this.copiedFrom = copiedFrom;
         }
 
         SalesOrderDao.Header header(boolean overCreditLimit) {
@@ -320,7 +329,8 @@ public class SalesOrderService {
                     customer.getDefaultWarehouseId(), customer.getSalesRepId(), submit,
                     form.getRequestedDate() == null ? null : parseDate(form.getRequestedDate()), quote.getSubtotal(),
                     quote.getDiscount(), quote.getTotal(), form.getNote(),
-                    quote.isNeedsApproval() || overCreditLimit);
+                    quote.isNeedsApproval() || overCreditLimit,
+                    copiedFrom == null ? null : copiedFrom.getOrderId());
         }
 
         String newValues(String orderNo, boolean overCreditLimit, Map<Long, OrderStock.Level> reserving) {
@@ -328,6 +338,9 @@ public class SalesOrderService {
                     overCreditLimit);
             values.put("reservedLines", quote.getLines().stream()
                     .filter(line -> reserving.containsKey(line.getProduct().getId())).count());
+            if (copiedFrom != null) {
+                values.put("copiedFromOrderNo", copiedFrom.getOrderNo());
+            }
             return JsonUtil.object(values);
         }
     }
@@ -388,7 +401,7 @@ public class SalesOrderService {
                 boolean overLimit = credit != null && credit.exceeds(pending.quote.getTotal());
                 Map<Long, OrderStock.Level> reserving = lockStock(connection, pending);
                 SalesOrderDao.Header header = pending.header(overLimit);
-                AuditEntry audit = new AuditEntry("ORDER_CREATE", null,
+                AuditEntry audit = new AuditEntry(pending.copiedFrom == null ? "ORDER_CREATE" : "ORDER_COPY", null,
                         pending.newValues(orderNo, overLimit, reserving), pending.ipAddress);
                 long orderId = orderDao.insert(connection, orderNo, header, actorUserId);
                 reserve(connection, pending, insertItems(connection, orderId, pending.quote, actorUserId), reserving,
@@ -396,7 +409,9 @@ public class SalesOrderService {
                 // Vòng đời đơn (S4-06): ghi bước đầu tiên ngay khi tạo
                 orderDao.insertStatusHistory(connection, orderId, null,
                         header.isSubmitted() ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
-                        header.isSubmitted() ? "Tạo đơn và gửi duyệt" : "Tạo đơn nháp", actorUserId);
+                        header.isSubmitted() ? "Tạo đơn và gửi duyệt"
+                                : pending.copiedFrom == null ? "Tạo đơn nháp"
+                                : "Sao chép từ đơn " + pending.copiedFrom.getOrderNo(), actorUserId);
                 insertAudit(connection, actorUserId, orderId, audit);
                 boolean approved = header.isSubmitted()
                         && afterSubmit(connection, orderId, orderNo, pending, credit, actorUserId);

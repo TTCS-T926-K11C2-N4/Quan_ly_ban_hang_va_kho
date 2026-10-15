@@ -152,19 +152,60 @@ public class SalesOrderDao {
     public long insert(Connection connection, String orderNo, Header header, long actorUserId) throws SQLException {
         String sql = "INSERT INTO sales_orders (order_no, customer_id, delivery_address_id, warehouse_id, sales_rep_id,"
                 + " source, status, requested_delivery_date, subtotal_amount, discount_amount, total_amount, note,"
-                + " needs_approval, submitted_at, created_at, created_by, updated_at, updated_by)"
+                + " needs_approval, submitted_at, created_at, created_by, updated_at, updated_by,"
+                + " copied_from_order_id)"
                 + " VALUES (?, ?, ?, ?, ?, 'SALES_REP', ?, ?, ?, ?, ?, ?, ?, " + submittedAt(header)
-                + ", UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
+                + ", UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, orderNo);
             int next = bindHeader(statement, 2, header);
             statement.setLong(next++, actorUserId);
-            statement.setLong(next, actorUserId);
+            statement.setLong(next++, actorUserId);
+            setNullableLong(statement, next, header.copiedFromOrderId);
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 keys.next();
                 return keys.getLong(1);
             }
+        }
+    }
+
+    // Đơn nguồn để sao chép (S4-09): đại lý, điểm giao, ghi chú và các dòng (chỉ sản phẩm, đơn vị, số lượng; giá và
+    // chiết khấu không lấy từ đơn cũ). null nếu không có đơn này.
+    public CopyTemplate findCopyTemplate(long orderId) throws SQLException {
+        String headerSql = "SELECT order_no, customer_id, delivery_address_id, note FROM sales_orders WHERE id = ?";
+        String itemSql = "SELECT i.product_id, p.sku, p.name, i.unit_id, i.qty FROM sales_order_items i"
+                + " JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.line_no";
+        try (Connection connection = DbConnection.getConnection()) {
+            String orderNo;
+            long customerId;
+            long deliveryAddressId;
+            String note;
+            try (PreparedStatement statement = connection.prepareStatement(headerSql)) {
+                statement.setLong(1, orderId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) {
+                        return null;
+                    }
+                    orderNo = resultSet.getString("order_no");
+                    customerId = resultSet.getLong("customer_id");
+                    deliveryAddressId = resultSet.getLong("delivery_address_id");
+                    note = resultSet.getString("note");
+                }
+            }
+            List<OrderForm.Line> lines = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(itemSql)) {
+                statement.setLong(1, orderId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        lines.add(new OrderForm.Line(String.valueOf(resultSet.getLong("product_id")),
+                                resultSet.getString("sku") + " - " + resultSet.getString("name"),
+                                String.valueOf(resultSet.getLong("unit_id")),
+                                resultSet.getBigDecimal("qty").stripTrailingZeros().toPlainString(), null));
+                    }
+                }
+            }
+            return new CopyTemplate(orderId, orderNo, customerId, deliveryAddressId, note, lines);
         }
     }
 
@@ -582,10 +623,11 @@ public class SalesOrderDao {
         final BigDecimal total;
         final String note;
         final boolean needsApproval;
+        final Long copiedFromOrderId;
 
         public Header(long customerId, long deliveryAddressId, long warehouseId, Long salesRepId, boolean submitted,
                       LocalDate requestedDate, BigDecimal subtotal, BigDecimal discount, BigDecimal total,
-                      String note, boolean needsApproval) {
+                      String note, boolean needsApproval, Long copiedFromOrderId) {
             this.customerId = customerId;
             this.deliveryAddressId = deliveryAddressId;
             this.warehouseId = warehouseId;
@@ -597,10 +639,55 @@ public class SalesOrderDao {
             this.total = total;
             this.note = note;
             this.needsApproval = needsApproval;
+            this.copiedFromOrderId = copiedFromOrderId;
         }
 
         public boolean isSubmitted() {
             return submitted;
+        }
+    }
+
+    // Đơn gốc của lần sao chép (S4-09)
+    public static class CopyTemplate {
+        private final long orderId;
+        private final String orderNo;
+        private final long customerId;
+        private final long deliveryAddressId;
+        private final String note;
+        private final List<OrderForm.Line> lines;
+
+        CopyTemplate(long orderId, String orderNo, long customerId, long deliveryAddressId, String note,
+                     List<OrderForm.Line> lines) {
+            this.orderId = orderId;
+            this.orderNo = orderNo;
+            this.customerId = customerId;
+            this.deliveryAddressId = deliveryAddressId;
+            this.note = note;
+            this.lines = lines;
+        }
+
+        public long getOrderId() {
+            return orderId;
+        }
+
+        public String getOrderNo() {
+            return orderNo;
+        }
+
+        public long getCustomerId() {
+            return customerId;
+        }
+
+        public long getDeliveryAddressId() {
+            return deliveryAddressId;
+        }
+
+        public String getNote() {
+            return note;
+        }
+
+        public List<OrderForm.Line> getLines() {
+            return lines;
         }
     }
 
