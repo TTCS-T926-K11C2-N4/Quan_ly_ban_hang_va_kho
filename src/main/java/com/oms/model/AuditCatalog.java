@@ -117,6 +117,11 @@ public final class AuditCatalog {
         action("ORDER_REJECT", "Từ chối đơn", GROUP_STATUS);
         action("ORDER_RETURN", "Trả lại sửa", GROUP_STATUS);
         action("ORDER_RESERVATION_EXPIRE", "Hết hạn giữ chỗ", GROUP_STATUS);
+        action("TRANSFER_CREATE", "Tạo phiếu chuyển kho", GROUP_CREATE);
+        action("TRANSFER_UPDATE", "Sửa phiếu chuyển kho", GROUP_UPDATE);
+        action("TRANSFER_SHIP", "Xuất kho chuyển đi", GROUP_STATUS);
+        action("TRANSFER_RECEIVE", "Nhận hàng chuyển kho", GROUP_STATUS);
+        action("TRANSFER_CANCEL", "Huỷ phiếu chuyển kho", GROUP_STATUS);
     }
 
     private AuditCatalog() {
