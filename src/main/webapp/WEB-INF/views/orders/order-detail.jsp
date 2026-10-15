@@ -33,6 +33,12 @@
                 </div>
                 <div class="profile-actions">
                     <a class="sales-button" href="<c:url value='/orders'/>">← Danh sách đơn</a>
+                    <c:if test="${currentUser.can('ORDER_MANAGE')}">
+                        <form method="post" action="<c:url value='/orders/copy'/>">
+                            <input type="hidden" name="id" value="${order.id}">
+                            <button class="sales-button" type="submit" id="copy-order">Sao chép đơn</button>
+                        </form>
+                    </c:if>
                     <c:if test="${canCancel}">
                         <button class="sales-button profile-actions__delete" type="button" id="open-cancel-order">Huỷ đơn</button>
                     </c:if>
