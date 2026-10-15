@@ -237,6 +237,14 @@
                 </details>
             </li>
             </c:if>
+            <c:if test="${not currentUser.customer and (currentUser.can('ORDER_MANAGE') or currentUser.can('WAREHOUSE_MANAGE') or currentUser.can('INVOICE_MANAGE'))}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'returns' ? ' app-menu__link--active' : ''}" id="menu-returns"
+                   href="<c:url value='/returns'/>"${activeMenu == 'returns' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Trả hàng
+                </a>
+            </li>
+            </c:if>
             <%-- Hoá đơn & công nợ (EP-07, Sprint 7): trang đặt activeMenu = finance, activeSubmenu: invoices --%>
             <c:if test="${(currentUser.can('INVOICE_VIEW') or currentUser.can('PAYMENT_COLLECT')) and not currentUser.customer}">
             <li>
