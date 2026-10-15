@@ -1,0 +1,946 @@
+/* Xác nhận giao hàng (S6-08) theo Figma Sprint 6. Thiết kế cho điện thoại 360px (danh sách điểm giao, chi tiết
+   điểm giao, giao thành công có ảnh, giao không thành công có lý do); ở màn rộng các thẻ xếp lưới như trang thường.
+   Khung trang, thẻ, nút dùng chung ở inventory.css. */
+
+.delivery-icon--calendar { --inv-icon: url("../img/icons/delivery/calendar.svg"); }
+.delivery-icon--refresh { --inv-icon: url("../img/icons/delivery/refresh-cw.svg"); }
+.delivery-icon--chevron-right { --inv-icon: url("../img/icons/delivery/chevron-right.svg"); }
+.delivery-icon--phone { --inv-icon: url("../img/icons/delivery/phone.svg"); }
+.delivery-icon--navigation { --inv-icon: url("../img/icons/delivery/navigation.svg"); }
+.delivery-icon--camera { --inv-icon: url("../img/icons/delivery/camera.svg"); }
+.delivery-icon--image-plus { --inv-icon: url("../img/icons/delivery/image-plus.svg"); }
+.delivery-icon--trash { --inv-icon: url("../img/icons/delivery/trash-2.svg"); }
+.delivery-icon--lock { --inv-icon: url("../img/icons/delivery/lock-keyhole.svg"); }
+.delivery-icon--truck { --inv-icon: url("../img/icons/delivery/truck.svg"); }
+
+.delivery-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--inv-muted);
+}
+
+.delivery-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-navy);
+    text-decoration: none;
+}
+
+.delivery-back:hover {
+    text-decoration: underline;
+}
+
+/* Nhãn trạng thái điểm giao / phiếu xuất */
+.delivery-pill--pending,
+.delivery-pill--issued { border-color: #fde68a; background: #fffbeb; color: #b45309; }
+.delivery-pill--partial,
+.delivery-pill--in-transit { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
+.delivery-pill--delivered { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
+.delivery-pill--failed { border-color: #fecaca; background: #fef2f2; color: #dc2626; }
+
+/* ----- Thanh công cụ: ngày giao, tiến độ, tìm kiếm, lọc ----- */
+.delivery-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+    gap: 14px 24px;
+    padding: 16px 20px 18px;
+}
+
+.delivery-toolbar__date {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.delivery-date {
+    position: relative;
+    display: block;
+}
+
+.delivery-date .inv-icon {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    width: 18px;
+    height: 18px;
+    color: var(--inv-navy);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.delivery-date .inv-control {
+    height: 44px;
+    padding-left: 40px;
+    font-weight: 600;
+}
+
+.delivery-progress {
+    align-self: end;
+}
+
+.delivery-progress__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--inv-text);
+}
+
+.delivery-progress__row strong {
+    font-size: 15px;
+    color: var(--inv-heading);
+}
+
+.delivery-progress__bar {
+    height: 6px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+.delivery-progress__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #16a34a;
+}
+
+.delivery-progress__legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.delivery-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: -6px;
+    border-radius: 50%;
+}
+
+.delivery-dot--delivered { background: #16a34a; }
+.delivery-dot--failed { background: #dc2626; }
+.delivery-dot--pending { background: #f59e0b; }
+
+.delivery-toolbar__search .inv-control {
+    height: 44px;
+}
+
+.delivery-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.delivery-chip input {
+    position: absolute;
+    opacity: 0;
+}
+
+.delivery-chip span {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--inv-control-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-text);
+    cursor: pointer;
+}
+
+.delivery-chip input:checked + span {
+    border-color: var(--inv-navy);
+    background: var(--inv-navy);
+    color: #ffffff;
+}
+
+.delivery-chip input:focus-visible + span {
+    outline: 2px solid var(--inv-navy);
+    outline-offset: 2px;
+}
+
+/* ----- Danh sách theo điểm giao ----- */
+.delivery-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 4px 0 10px;
+}
+
+.delivery-section-head__title,
+.delivery-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.delivery-section-head__count {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.delivery-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.delivery-point {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+}
+
+.delivery-point__head,
+.delivery-info__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.delivery-point__name {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 22px;
+    color: var(--inv-heading);
+}
+
+.delivery-point__label {
+    font-weight: 500;
+    color: var(--inv-muted);
+}
+
+.delivery-point__address {
+    display: flex;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--inv-text);
+}
+
+.delivery-point__address .inv-icon {
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    color: var(--inv-muted);
+}
+
+.delivery-point__schedule {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.delivery-point__orders {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.delivery-order-chip {
+    padding: 4px 8px;
+    border: 1px solid var(--inv-border);
+    border-radius: 6px;
+    background: var(--inv-soft);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--inv-heading);
+}
+
+.delivery-order-chip--delivered { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
+.delivery-order-chip--failed { border-color: #fecaca; background: #fef2f2; color: #dc2626; text-decoration: line-through; }
+
+.delivery-point__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--inv-row-border);
+}
+
+.delivery-point__count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-text);
+}
+
+.delivery-point__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--inv-navy);
+    text-decoration: none;
+}
+
+.delivery-point__link .inv-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.delivery-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 20px;
+    font-size: 13px;
+    color: var(--inv-muted);
+}
+
+.delivery-empty .inv-icon {
+    width: 32px;
+    height: 32px;
+    color: var(--inv-subtle);
+}
+
+/* ----- Chi tiết điểm giao ----- */
+.delivery-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+}
+
+.delivery-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 18px;
+}
+
+.delivery-info__name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.delivery-divider {
+    width: 100%;
+    margin: 6px 0;
+    border: 0;
+    border-top: 1px solid var(--inv-border);
+}
+
+.delivery-contact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.delivery-contact__name {
+    margin-top: 3px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.delivery-contact__phone {
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--inv-text);
+}
+
+.delivery-call {
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.delivery-route,
+.delivery-scope {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--inv-soft);
+}
+
+.delivery-route .inv-icon,
+.delivery-scope .inv-icon {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    color: var(--inv-navy);
+}
+
+.delivery-route__text,
+.delivery-scope__text {
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-heading);
+}
+
+.delivery-orders {
+    padding: 0;
+    overflow: hidden;
+}
+
+.delivery-orders__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--inv-border);
+}
+
+.delivery-orders__totals {
+    display: flex;
+    gap: 20px;
+    margin: 0;
+}
+
+.delivery-orders__totals dt {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.delivery-orders__totals dd {
+    margin: 2px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.delivery-stops {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.delivery-stop {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--inv-row-border);
+}
+
+.delivery-stop:last-child {
+    border-bottom: 0;
+}
+
+.delivery-stop.is-done {
+    background: #fcfdfe;
+}
+
+.delivery-stop__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.delivery-stop__check {
+    width: 18px;
+    height: 18px;
+}
+
+.delivery-stop__title {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.delivery-stop__order {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--inv-navy);
+}
+
+.delivery-stop__note {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.delivery-stop__items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0 0 0 28px;
+    list-style: none;
+}
+
+.delivery-stop__items li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--inv-text);
+}
+
+.delivery-stop__item-qty {
+    font-weight: 700;
+    color: var(--inv-heading);
+    white-space: nowrap;
+}
+
+.delivery-stop__foot {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 28px;
+    font-size: 13px;
+    color: var(--inv-muted);
+}
+
+.delivery-stop__foot strong {
+    color: var(--inv-heading);
+}
+
+.delivery-stop__result {
+    margin-left: 28px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.delivery-stop__result--ok {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.delivery-stop__result--failed {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.delivery-stop__proofs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-left: 28px;
+}
+
+.delivery-stop__proofs img {
+    width: 64px;
+    height: 64px;
+    border: 1px solid var(--inv-border);
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+/* Thanh hành động: phạm vi / điều kiện xác nhận và các nút */
+.delivery-actionbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+}
+
+.delivery-actionbar__scope {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 13px;
+    color: var(--inv-text);
+}
+
+.delivery-actionbar__buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.delivery-button {
+    justify-content: center;
+    min-width: 170px;
+    border-color: transparent;
+    color: #ffffff;
+}
+
+.delivery-button--success {
+    background: #16a34a;
+}
+
+.delivery-button--success:hover {
+    background: #15803d;
+}
+
+.delivery-button--fail {
+    background: #dc2626;
+}
+
+.delivery-button--fail:hover {
+    background: #b91c1c;
+}
+
+.delivery-button[disabled] {
+    background: #94a3b8;
+}
+
+/* Nút xác nhận: biểu tượng khoá khi chưa đủ điều kiện, biểu tượng kết quả khi đủ */
+.delivery-button .inv-icon[hidden] {
+    display: none;
+}
+
+/* ----- Ghi nhận giao ----- */
+.delivery-confirm {
+    display: grid;
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+    align-items: start;
+    gap: 14px 16px;
+}
+
+.delivery-confirm > .delivery-info {
+    grid-row: span 3;
+}
+
+.delivery-confirm > .delivery-actionbar {
+    grid-column: 1 / -1;
+}
+
+.delivery-notice {
+    display: flex;
+    gap: 10px;
+    padding: 11px 14px;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    background: #eff6ff;
+    font-size: 13px;
+    line-height: 19px;
+    color: #1e40af;
+}
+
+.delivery-notice .inv-icon {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+}
+
+.delivery-proofs,
+.delivery-reasons,
+.delivery-fields {
+    padding: 16px 18px;
+}
+
+.delivery-proofs.is-invalid,
+.delivery-reasons.is-invalid {
+    border-color: var(--inv-required);
+}
+
+.delivery-proofs__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.delivery-proofs__count {
+    font-size: 13px;
+    color: var(--inv-muted);
+}
+
+.delivery-proofs__count strong {
+    color: var(--inv-heading);
+}
+
+.delivery-proofs__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: 12px;
+    padding: 22px 16px;
+    border: 1.5px dashed var(--inv-control-border);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.delivery-proofs__empty[hidden] {
+    display: none;
+}
+
+.delivery-proofs__camera {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 6px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: var(--inv-navy);
+}
+
+.delivery-proofs__camera .inv-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.delivery-proofs__status {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--inv-heading);
+}
+
+.delivery-proofs__hint,
+.delivery-hint,
+.delivery-proofs__format {
+    font-size: 12px;
+    color: var(--inv-muted);
+}
+
+.delivery-proofs__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.delivery-proof {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--inv-border);
+    border-radius: 10px;
+}
+
+.delivery-proof img {
+    display: block;
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+}
+
+.delivery-proof__caption {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #15803d;
+}
+
+.delivery-proof__caption .inv-icon {
+    width: 13px;
+    height: 13px;
+}
+
+.delivery-proof__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.delivery-proof__remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #dc2626;
+    cursor: pointer;
+}
+
+.delivery-proof__remove .inv-icon {
+    width: 15px;
+    height: 15px;
+}
+
+.delivery-proofs__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.delivery-proofs__add {
+    cursor: pointer;
+}
+
+.delivery-proofs__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.delivery-proofs__input:focus-visible + .delivery-proofs__format {
+    outline: 2px solid var(--inv-navy);
+}
+
+.delivery-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+}
+
+.delivery-fields__wide {
+    grid-column: 1 / -1;
+}
+
+.delivery-field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-text);
+}
+
+.delivery-error {
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--inv-required);
+}
+
+.delivery-reasons .delivery-hint {
+    margin-top: 4px;
+}
+
+.delivery-reasons__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.delivery-reason {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 8px 12px;
+    border: 1px solid var(--inv-control-border);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--inv-heading);
+    cursor: pointer;
+}
+
+.delivery-reason input {
+    position: absolute;
+    opacity: 0;
+}
+
+.delivery-reason__mark {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--inv-control-border);
+    border-radius: 50%;
+}
+
+.delivery-reason__text {
+    flex: 1 1 auto;
+}
+
+.delivery-reason__selected {
+    display: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: #dc2626;
+}
+
+.delivery-reason:has(input:checked) {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+
+.delivery-reason input:checked + .delivery-reason__mark {
+    border: 5px solid #dc2626;
+}
+
+.delivery-reason input:checked ~ .delivery-reason__selected {
+    display: inline;
+}
+
+.delivery-reason input:focus-visible + .delivery-reason__mark {
+    outline: 2px solid var(--inv-navy);
+    outline-offset: 2px;
+}
+
+@media (max-width: 1023px) {
+    .delivery-detail,
+    .delivery-confirm {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .delivery-confirm > .delivery-info {
+        grid-row: auto;
+    }
+}
+
+@media (max-width: 639px) {
+    .delivery-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .delivery-points {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .delivery-orders__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .delivery-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* Thanh hành động dính đáy màn hình như thiết kế điện thoại */
+    .delivery-actionbar {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        flex-direction: column;
+        align-items: stretch;
+        box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .delivery-actionbar__buttons {
+        flex-direction: column-reverse;
+    }
+
+    .delivery-button,
+    .delivery-actionbar__buttons .inv-button {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+    }
+}
