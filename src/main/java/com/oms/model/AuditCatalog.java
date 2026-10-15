@@ -30,6 +30,7 @@ public final class AuditCatalog {
         ENTITIES.put("DISCOUNT_POLICY", "Chính sách chiết khấu");
         ENTITIES.put("CREDIT_LIMIT", "Hạn mức công nợ");
         ENTITIES.put("INVOICE", "Hoá đơn");
+        ENTITIES.put("PAYMENT", "Phiếu thu");
         ENTITIES.put("PRODUCT", "Sản phẩm");
         ENTITIES.put("PRODUCT_CATEGORY", "Nhóm hàng");
         ENTITIES.put("UNIT", "Đơn vị tính");
@@ -125,6 +126,7 @@ public final class AuditCatalog {
         action("ORDER_SUBMIT", "Gửi duyệt", GROUP_STATUS);
         action("ORDER_CANCEL", "Huỷ đơn", GROUP_STATUS);
         action("INVOICE_ISSUE", "Phát hành hoá đơn", GROUP_CREATE);
+        action("PAYMENT_RECORD", "Ghi nhận thanh toán", GROUP_CREATE);
         action("ORDER_APPROVE", "Duyệt đơn", GROUP_STATUS);
         action("ORDER_REJECT", "Từ chối đơn", GROUP_STATUS);
         action("ORDER_RETURN", "Trả lại sửa", GROUP_STATUS);

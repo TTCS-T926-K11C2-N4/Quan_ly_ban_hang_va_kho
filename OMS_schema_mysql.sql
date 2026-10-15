@@ -1656,6 +1656,20 @@ CREATE TRIGGER trg_invoice_items_no_update BEFORE UPDATE ON `invoice_items` FOR 
 CREATE TRIGGER trg_invoice_items_no_delete BEFORE DELETE ON `invoice_items` FOR EACH ROW
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'invoice_items: dòng hoá đơn không được xoá'$$
 
+-- S7-02: phiếu thu và dòng đối trừ không xoá; phiếu thu không sửa số tiền, đại lý, ngày thu, người thu
+CREATE TRIGGER trg_payments_immutable BEFORE UPDATE ON `payments` FOR EACH ROW
+BEGIN
+  IF NOT (NEW.receipt_no <=> OLD.receipt_no) OR NEW.customer_id <> OLD.customer_id OR NEW.amount <> OLD.amount
+     OR NEW.payment_date <> OLD.payment_date OR NEW.collected_by <> OLD.collected_by OR NEW.method <> OLD.method THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'payments: phiếu thu đã ghi nhận không được sửa, chỉ lập bút toán điều chỉnh';
+  END IF;
+END$$
+CREATE TRIGGER trg_payments_no_delete BEFORE DELETE ON `payments` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'payments: phiếu thu không được xoá'$$
+CREATE TRIGGER trg_payment_allocations_no_update BEFORE UPDATE ON `payment_allocations` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'payment_allocations: dòng đối trừ không được sửa'$$
+CREATE TRIGGER trg_payment_allocations_no_delete BEFORE DELETE ON `payment_allocations` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'payment_allocations: dòng đối trừ không được xoá'$$
 DELIMITER ;
 
 -- ---------------------------------------------------------------------
