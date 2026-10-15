@@ -122,6 +122,9 @@ public final class AccessRules {
             Map.entry("/pick-lists/new", Permission.DELIVERY_MANAGE),
             Map.entry("/pick-lists/pick", Permission.DELIVERY_MANAGE),
             Map.entry("/pick-lists/cancel", Permission.DELIVERY_MANAGE),
+            // Xác nhận xuất kho & giao thiếu (S6-05): ai xem giao hàng cũng xem phiếu xuất; nhân viên kho, quản lý kho xác nhận
+            Map.entry("/delivery-notes/view", Permission.DELIVERY_VIEW),
+            Map.entry("/delivery-notes/confirm", Permission.DELIVERY_MANAGE),
             Map.entry("/products/status", Permission.PRODUCT_MANAGE));
 
     private AccessRules() {

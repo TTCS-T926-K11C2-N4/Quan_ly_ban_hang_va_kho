@@ -305,6 +305,16 @@ class AccessRulesTest {
         assertFalse(AccessRules.isAllowed("/stock", permissionsOf("CUSTOMER")));
     }
 
+    // S6-05: chỉ nhân viên kho, quản lý kho, Admin xác nhận xuất kho; kế toán, kinh doanh chỉ xem phiếu xuất
+    @Test
+    void onlyWarehouseRolesCanConfirmIssue() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "WAREHOUSE".equals(role) || "WH_MANAGER".equals(role) || "ADMIN".equals(role),
+                AccessRules.isAllowed("/delivery-notes/confirm", permissions), role));
+        assertTrue(AccessRules.isAllowed("/delivery-notes/view", permissionsOf("ACCOUNTANT")));
+        assertTrue(AccessRules.isAllowed("/delivery-notes/view", permissionsOf("SALES_REP")));
+    }
+
     // S3-07: chỉ Kế toán công nợ và Quản lý kinh doanh khoá/mở giao dịch đại lý
     @Test
     void onlyAccountantAndSalesManagerCanBlockCustomers() {

@@ -57,6 +57,8 @@ public class AuditLogDao {
             + " WHEN 'GOODS_RECEIPT' THEN COALESCE(" + jsonField("receiptNo") + ")"
             // Phiếu soạn hàng: mã phiếu ghi sẵn trong giá trị trước/sau (S6-03)
             + " WHEN 'PICK_LIST' THEN COALESCE(" + jsonField("pickNo") + ")"
+            // Phiếu xuất kho: mã phiếu xuất ghi sẵn trong giá trị trước/sau (S6-05)
+            + " WHEN 'DELIVERY_NOTE' THEN COALESCE(" + jsonField("deliveryNo") + ")"
             // Chính sách chiết khấu: mã CK-xxxx ghi sẵn trong giá trị trước/sau
             + " WHEN 'DISCOUNT_POLICY' THEN COALESCE(" + jsonField("code") + ")"
             // Khoá/mở giao dịch gắn với đại lý: mã đại lý ghi sẵn trong giá trị trước/sau

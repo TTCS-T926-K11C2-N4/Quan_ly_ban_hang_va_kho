@@ -144,7 +144,7 @@
             <li>
                 <%-- Nhóm Kho hàng (EP-05, thiết kế Sprint 5); trang đặt activeSubmenu:
                      warehouses (S5-03) | goods-receipts (S5-04) | stock (S5-05) | reservations (S5-06) |
-                     pick-lists (S6-03).
+                     pick-lists (S6-03, S6-05).
                      Mỗi mục chỉ hiện khi ứng dụng đã có Servlet của màn đó (tên đăng ký mặc định của @WebServlet là
                      tên đầy đủ của lớp), để merge lẻ từng story không hiện mục dẫn tới trang chưa có --%>
                 <c:set var="servlets" value="${pageContext.servletContext.servletRegistrations}"/>
