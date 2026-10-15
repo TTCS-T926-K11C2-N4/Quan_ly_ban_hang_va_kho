@@ -211,12 +211,22 @@ public class PaymentDao {
         }
     }
 
+    // null nếu không có phiếu thu
+    public Payment findPayment(long id) throws SQLException {
+        List<Payment> found = query(null, id, 1);
+        return found.isEmpty() ? null : found.get(0);
+    }
+
     // Mới nhất trước; customerId null: mọi đại lý
     public List<Payment> findPayments(Long customerId, int limit) throws SQLException {
+        return query(customerId, null, limit);
+    }
+
+    private List<Payment> query(Long customerId, Long paymentId, int limit) throws SQLException {
         String sql = "SELECT p.id, p.receipt_no, p.customer_id, c.code, c.name, p.amount, p.method, p.payment_date,"
                 + " u.full_name, p.status, p.note, p.created_at FROM payments p JOIN customers c ON c.id = p.customer_id"
                 + " LEFT JOIN users u ON u.id = p.collected_by WHERE (? IS NULL OR p.customer_id = ?)"
-                + " ORDER BY p.payment_date DESC, p.id DESC LIMIT ?";
+                + " AND (? IS NULL OR p.id = ?) ORDER BY p.payment_date DESC, p.id DESC LIMIT ?";
         List<Payment> result = new ArrayList<>();
         Map<Long, List<Payment.Allocation>> byPayment = new LinkedHashMap<>();
         try (Connection connection = DbConnection.getConnection()) {
@@ -228,7 +238,14 @@ public class PaymentDao {
                     statement.setLong(1, customerId);
                     statement.setLong(2, customerId);
                 }
-                statement.setInt(3, limit);
+                if (paymentId == null) {
+                    statement.setNull(3, Types.BIGINT);
+                    statement.setNull(4, Types.BIGINT);
+                } else {
+                    statement.setLong(3, paymentId);
+                    statement.setLong(4, paymentId);
+                }
+                statement.setInt(5, limit);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     while (resultSet.next()) {
                         List<Payment.Allocation> allocations = new ArrayList<>();
