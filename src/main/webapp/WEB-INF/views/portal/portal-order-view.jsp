@@ -35,6 +35,9 @@
                 <a class="sales-button" href="<c:url value='/portal/orders'/>">← Đơn hàng của tôi</a>
             </header>
 
+            <c:if test="${not empty flashMessage}">
+                <div class="sales-flash" id="portal-order-message" role="status"><c:out value="${flashMessage}"/></div>
+            </c:if>
             <c:if test="${order.shortDelivery}">
                 <div class="sales-flash sales-flash--warning" id="portal-short-delivery" role="status">
                     Đơn này giao thiếu một số mặt hàng, xem cột "Thực giao" bên dưới. Liên hệ nhân viên phụ trách nếu cần bổ sung.

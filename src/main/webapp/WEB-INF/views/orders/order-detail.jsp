@@ -53,6 +53,22 @@
                 <div class="sales-flash sales-flash--error" role="alert"><c:out value="${flashError}"/></div>
             </c:if>
 
+            <%-- S4-10: đơn do đại lý tự đặt trên cổng chờ nhân viên phụ trách xác nhận --%>
+            <c:if test="${canRepConfirm}">
+                <section class="sales-card order-confirm" id="order-rep-confirm" aria-labelledby="order-confirm-title">
+                    <h3 class="order-card__title" id="order-confirm-title">Đơn do đại lý tự đặt, chờ bạn xác nhận</h3>
+                    <form method="post" action="<c:url value='/orders/confirm'/>" class="order-confirm__form">
+                        <input type="hidden" name="id" value="${order.id}">
+                        <label class="sales-field__label" for="order-confirm-comment">Ý kiến (bắt buộc khi từ chối)</label>
+                        <textarea class="sales-field__control" id="order-confirm-comment" name="comment" rows="2" maxlength="500"></textarea>
+                        <div class="order-confirm__actions">
+                            <button class="sales-button" type="submit" name="decision" value="reject" id="order-reject">Từ chối</button>
+                            <button class="sales-button sales-button--primary" type="submit" name="decision" value="approve" id="order-confirm">Xác nhận đơn</button>
+                        </div>
+                    </form>
+                </section>
+            </c:if>
+
             <%-- Hàng đầu: đơn hàng, đại lý, điểm giao (thiết kế S4-06; khối Xuất kho / Thanh toán gắn thêm ở Sprint 6, 7) --%>
             <div class="order-overview">
                 <section class="sales-card order-card" aria-labelledby="order-no">

@@ -50,6 +50,13 @@ public class OrderLifecycleService {
                 && customerService.findVisible(userId, Permission.ORDER_MANAGE, order.getCustomerId()) != null;
     }
 
+    // Đơn do đại lý tự đặt đang chờ nhân viên phụ trách xác nhận (S4-10), và người dùng quản lý được đại lý của đơn
+    public boolean canRepConfirm(long userId, OrderDetail order) throws SQLException {
+        return OrderStatus.PENDING_APPROVAL.equals(order.getStatus())
+                && ApprovalDao.REP_CONFIRMATION.equals(approvalDao.findPendingType(order.getId()))
+                && customerService.findVisible(userId, Permission.ORDER_MANAGE, order.getCustomerId()) != null;
+    }
+
     // Đơn đã gửi gần đây cho hộp "Mở lại" của màn tạo đơn, cùng phạm vi như đơn nháp
     public List<DraftOrder> findVisibleRecent(long userId) throws SQLException {
         String scope = permissionDao.findScope(userId, Permission.ORDER_VIEW);

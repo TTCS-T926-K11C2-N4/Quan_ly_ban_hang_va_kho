@@ -19,6 +19,14 @@
                     <span class="app-menu__icon app-menu__icon--dashboard" aria-hidden="true"></span>${currentUser.customer ? 'Trang chủ' : 'Tổng quan'}
                 </a>
             </li>
+            <c:if test="${currentUser.customer and currentUser.can('ORDER_MANAGE')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'portal-order-new' ? ' app-menu__link--active' : ''}" id="menu-portal-order-new"
+                   href="<c:url value='/portal/order/new'/>"${activeMenu == 'portal-order-new' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Đặt hàng
+                </a>
+            </li>
+            </c:if>
             <c:if test="${currentUser.customer and currentUser.can('ORDER_VIEW')}">
             <li>
                 <a class="app-menu__link${activeMenu == 'portal-orders' ? ' app-menu__link--active' : ''}" id="menu-portal-orders"

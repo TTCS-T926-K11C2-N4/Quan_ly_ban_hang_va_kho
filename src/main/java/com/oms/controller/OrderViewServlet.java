@@ -54,6 +54,7 @@ public class OrderViewServlet extends HttpServlet {
                      String cancelReason) throws ServletException, IOException, SQLException {
         request.setAttribute("order", order);
         request.setAttribute("canCancel", LIFECYCLE.canCancel(CurrentUser.get(request).getId(), order));
+        request.setAttribute("canRepConfirm", LIFECYCLE.canRepConfirm(CurrentUser.get(request).getId(), order));
         request.setAttribute("cancelError", cancelError);
         request.setAttribute("cancelReason", cancelReason);
         request.setAttribute("statusLegend", OrderStatus.legend());

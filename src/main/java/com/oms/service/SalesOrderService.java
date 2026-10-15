@@ -74,6 +74,15 @@ public class SalesOrderService {
         return orderDao.findOrderableProducts();
     }
 
+    // Sản phẩm đại lý được đặt trên cổng (S4-10): đang kinh doanh và có giá trong bảng giá của nhóm khách hàng mình
+    public List<OrderProduct> getProductsPricedFor(Customer customer) throws SQLException {
+        PricingRules rules = orderDao.findPricingRules(customer.getCustomerGroupId(), DateTimeUtil.today());
+        return orderDao.findOrderableProducts().stream()
+                .filter(product -> product.getUnits().stream()
+                        .anyMatch(unit -> rules.findPrice(product.getId(), unit.getId()) != null))
+                .toList();
+    }
+
     public List<DeliveryAddress> getDeliveryAddresses(long customerId) throws SQLException {
         return deliveryAddressDao.findDeliveryAddresses(customerId);
     }
@@ -283,9 +292,21 @@ public class SalesOrderService {
     public Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
                        OrderQuote quote, long actorUserId, String ipAddress, SalesOrderDao.CopyTemplate copiedFrom)
             throws SQLException, StockShortageException {
+        return save(form, customer, draft, submit, quote, actorUserId, ipAddress, copiedFrom, false);
+    }
+
+    // Đơn đại lý tự đặt trên cổng (S4-10): gửi ngay, luôn chờ nhân viên phụ trách xác nhận, không tự duyệt
+    public Saved savePortal(OrderForm form, Customer customer, OrderQuote quote, long actorUserId, String ipAddress)
+            throws SQLException, StockShortageException {
+        return save(form, customer, null, true, quote, actorUserId, ipAddress, null, true);
+    }
+
+    private Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
+                       OrderQuote quote, long actorUserId, String ipAddress, SalesOrderDao.CopyTemplate copiedFrom,
+                       boolean portal) throws SQLException, StockShortageException {
         Long warehouseId = customer.getDefaultWarehouseId();
         Pending pending = new Pending(form, customer, submit, quote, ipAddress,
-                warehouseId == null ? null : stockDao.findWarehouseName(warehouseId), copiedFrom);
+                warehouseId == null ? null : stockDao.findWarehouseName(warehouseId), copiedFrom, portal);
         if (draft != null) {
             return updateDraft(draft, parseVersion(form.getVersion()), pending, actorUserId);
         }
@@ -312,9 +333,10 @@ public class SalesOrderService {
         private final String ipAddress;
         private final String warehouseName;
         private final SalesOrderDao.CopyTemplate copiedFrom;
+        private final boolean portal;
 
         Pending(OrderForm form, Customer customer, boolean submit, OrderQuote quote, String ipAddress,
-                String warehouseName, SalesOrderDao.CopyTemplate copiedFrom) {
+                String warehouseName, SalesOrderDao.CopyTemplate copiedFrom, boolean portal) {
             this.form = form;
             this.customer = customer;
             this.submit = submit;
@@ -322,6 +344,7 @@ public class SalesOrderService {
             this.ipAddress = ipAddress;
             this.warehouseName = warehouseName;
             this.copiedFrom = copiedFrom;
+            this.portal = portal;
         }
 
         SalesOrderDao.Header header(boolean overCreditLimit) {
@@ -330,7 +353,7 @@ public class SalesOrderService {
                     form.getRequestedDate() == null ? null : parseDate(form.getRequestedDate()), quote.getSubtotal(),
                     quote.getDiscount(), quote.getTotal(), form.getNote(),
                     quote.isNeedsApproval() || overCreditLimit,
-                    copiedFrom == null ? null : copiedFrom.getOrderId());
+                    copiedFrom == null ? null : copiedFrom.getOrderId(), portal);
         }
 
         String newValues(String orderNo, boolean overCreditLimit, Map<Long, OrderStock.Level> reserving) {
@@ -386,7 +409,7 @@ public class SalesOrderService {
                                 CustomerCredit credit, long actorUserId) throws SQLException, StockShortageException {
         try {
             return approvalService.afterSubmit(connection, orderId, orderNo, pending.quote, credit, actorUserId,
-                    pending.ipAddress);
+                    pending.ipAddress, pending.portal);
         } catch (StockReservationService.InsufficientStockException e) {
             throw new StockShortageException(new LinkedHashMap<>(Map.of("form", e.getMessage())));
         }
