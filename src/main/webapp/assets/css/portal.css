@@ -189,3 +189,26 @@
     gap: 10px;
     margin-top: 12px;
 }
+
+/* Công nợ của đại lý (S7-07) */
+.portal-debt-summary {
+    margin-bottom: 16px;
+}
+
+.portal-debt-summary__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px 24px;
+    margin: 0;
+}
+
+.portal-debt-summary__list dt {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.portal-debt-summary__list dd {
+    margin: 2px 0 0;
+    font-size: 20px;
+    font-weight: 700;
+}
