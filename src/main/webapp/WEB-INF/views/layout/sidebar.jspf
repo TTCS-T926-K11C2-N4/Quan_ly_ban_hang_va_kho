@@ -239,6 +239,12 @@
                            href="<c:url value='/invoices'/>"${activeSubmenu == 'invoices' ? ' aria-current="page"' : ''}>Hoá đơn bán hàng</a>
                     </li>
                     </c:if>
+                    <c:if test="${not empty financeServlets['com.oms.controller.PaymentListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'payments' ? ' app-submenu__link--active' : ''}" id="menu-payments"
+                           href="<c:url value='/payments'/>"${activeSubmenu == 'payments' ? ' aria-current="page"' : ''}>Thu tiền</a>
+                    </li>
+                    </c:if>
                 </ul>
                 </details>
             </li>
