@@ -31,6 +31,9 @@
                     <h1 class="inv-header__title">Chuyến giao hàng</h1>
                     <p class="inv-header__subtitle">Gom nhiều phiếu xuất vào một chuyến theo khu vực, gán tài xế và phương tiện để xe chạy một vòng giao nhiều điểm.</p>
                 </div>
+                <div class="inv-header__actions">
+                    <a class="inv-button" id="trip-monitor-link" href="<c:url value='/trips/monitor'/>">Theo dõi chuyến đang giao</a>
+                </div>
             </header>
 
             <c:if test="${not empty flashMessage}">
