@@ -93,6 +93,9 @@
                                                     <c:if test="${row.overCreditLimit}">
                                                         <span class="approval-reason approval-reason--credit">Vượt hạn mức <fmt:formatNumber value="${row.exceededBy}" maxFractionDigits="0"/> ₫</span>
                                                     </c:if>
+                                                    <c:if test="${row.overdueDebt}">
+                                                        <span class="approval-reason approval-reason--credit">Đại lý có nợ quá hạn</span>
+                                                    </c:if>
                                                     <c:if test="${row.belowFloorLines > 0}">
                                                         <span class="approval-reason approval-reason--floor">${row.belowFloorLines} dòng dưới giá sàn</span>
                                                     </c:if>

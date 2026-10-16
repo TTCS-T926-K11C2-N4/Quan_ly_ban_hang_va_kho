@@ -38,6 +38,7 @@ public class PaymentService {
 
     private final PaymentDao paymentDao = new PaymentDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
+    private final CreditFlagService creditFlagService = new CreditFlagService();
 
     // error != null: lỗi nghiệp vụ (hoặc "NOT_FOUND"); ngược lại id và số phiếu thu
     public static final class Outcome {
@@ -215,6 +216,7 @@ public class PaymentService {
         paymentDao.insertLedgerEntry(connection, customerId, amount, paymentId, paymentDate,
                 "Phiếu thu " + receiptNo, actorUserId);
         PaymentDao.adjustBalance(connection, customerId, amount.negate());
+        creditFlagService.evaluate(connection, customerId, actorUserId, ipAddress);
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("receiptNo", receiptNo);
         values.put("customerId", customerId);

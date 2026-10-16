@@ -19,9 +19,18 @@ public class CustomerCredit {
     private final BigDecimal openOrders;
     private final BigDecimal overdueAmount;
     private final LocalDate oldestDueDate;
+    private final String flagMode;
 
+    // Chưa biết cấu hình cờ (S7-04): chỉ khoản quá hạn chặn đơn như S4-02
     public CustomerCredit(BigDecimal creditLimit, int maxDebtDays, BigDecimal ledgerBalance, BigDecimal openOrders,
                           BigDecimal overdueAmount, LocalDate oldestDueDate) {
+        this(creditLimit, maxDebtDays, ledgerBalance, openOrders, overdueAmount, oldestDueDate, null);
+    }
+
+    // flagMode: credit.overdue_mode, BLOCK (chặn) hoặc REQUIRE_APPROVAL (chuyển duyệt) khi đại lý bị gắn cờ
+    public CustomerCredit(BigDecimal creditLimit, int maxDebtDays, BigDecimal ledgerBalance, BigDecimal openOrders,
+                          BigDecimal overdueAmount, LocalDate oldestDueDate, String flagMode) {
+        this.flagMode = flagMode;
         this.creditLimit = creditLimit;
         this.maxDebtDays = maxDebtDays;
         this.ledgerBalance = ledgerBalance;
@@ -47,9 +56,31 @@ public class CustomerCredit {
         return getAvailable().subtract(orderTotal);
     }
 
-    // AC2: tổng đơn cộng công nợ hiện tại vượt hạn mức thì đơn cần duyệt
+    // AC2: tổng đơn cộng công nợ hiện tại vượt hạn mức thì đơn cần duyệt; đại lý bị gắn cờ quá hạn ở chế độ
+    // chuyển duyệt (S7-04) thì mọi đơn mới đều cần duyệt
     public boolean exceeds(BigDecimal orderTotal) {
-        return getAvailableAfter(orderTotal).signum() < 0;
+        return requiresApprovalByFlag() || getAvailableAfter(orderTotal).signum() < 0;
+    }
+
+    // S7-04: cờ tự động của đại lý, theo số liệu hiện tại: OVERDUE (ưu tiên), OVER_LIMIT hoặc OK
+    public String getFlag() {
+        if (isOverdue()) {
+            return "OVERDUE";
+        }
+        return getUsed().compareTo(creditLimit) > 0 ? "OVER_LIMIT" : "OK";
+    }
+
+    // Chế độ BLOCK: đại lý bị gắn cờ thì chặn đơn mới. Chưa có cấu hình: chỉ chặn khi có nợ quá hạn (S4-02)
+    public boolean isBlocking() {
+        if ("BLOCK".equals(flagMode)) {
+            return !"OK".equals(getFlag());
+        }
+        return !"REQUIRE_APPROVAL".equals(flagMode) && isOverdue();
+    }
+
+    // Chế độ REQUIRE_APPROVAL: có nợ quá hạn thì đơn không bị chặn mà chuyển sang chờ duyệt
+    public boolean requiresApprovalByFlag() {
+        return "REQUIRE_APPROVAL".equals(flagMode) && isOverdue();
     }
 
     public BigDecimal getExceededBy(BigDecimal orderTotal) {

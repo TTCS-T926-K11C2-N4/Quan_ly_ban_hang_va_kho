@@ -17,10 +17,12 @@ public class ApprovalQueueRow {
     private final LocalDateTime requestedAt;
     private final BigDecimal exceededBy;
     private final int belowFloorLines;
+    private final boolean overdueDebt;
 
     public ApprovalQueueRow(long orderId, String orderNo, String customerName, String customerCode,
                             String salesRepName, BigDecimal total, LocalDateTime requestedAt, BigDecimal exceededBy,
-                            int belowFloorLines) {
+                            int belowFloorLines, boolean overdueDebt) {
+        this.overdueDebt = overdueDebt;
         this.orderId = orderId;
         this.orderNo = orderNo;
         this.customerName = customerName;
@@ -30,6 +32,11 @@ public class ApprovalQueueRow {
         this.requestedAt = requestedAt;
         this.exceededBy = exceededBy;
         this.belowFloorLines = belowFloorLines;
+    }
+
+    // S7-04: đơn chờ duyệt vì đại lý đang có nợ quá hạn
+    public boolean isOverdueDebt() {
+        return overdueDebt;
     }
 
     public boolean isOverCreditLimit() {

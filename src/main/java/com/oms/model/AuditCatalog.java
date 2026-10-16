@@ -138,6 +138,7 @@ public final class AuditCatalog {
         action("ORDER_CANCEL", "Huỷ đơn", GROUP_STATUS);
         action("INVOICE_ISSUE", "Phát hành hoá đơn", GROUP_CREATE);
         action("PAYMENT_RECORD", "Ghi nhận thanh toán", GROUP_CREATE);
+        action("CREDIT_FLAG_CHANGE", "Đổi cờ công nợ", GROUP_STATUS);
         action("ORDER_APPROVE", "Duyệt đơn", GROUP_STATUS);
         action("ORDER_REJECT", "Từ chối đơn", GROUP_STATUS);
         action("ORDER_RETURN", "Trả lại sửa", GROUP_STATUS);

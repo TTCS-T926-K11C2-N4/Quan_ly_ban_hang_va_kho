@@ -30,6 +30,11 @@ public class CustomerCreditDao {
         }
     }
 
+    // Đọc trong transaction của người gọi (đánh giá lại cờ sau thu tiền, S7-04); null nếu không còn đại lý
+    public CustomerCredit find(Connection connection, long customerId, LocalDate today) throws SQLException {
+        return find(connection, customerId, today, false);
+    }
+
     // Gọi đầu transaction lưu đơn: khoá dòng đại lý trước rồi mới cộng nợ, để hai đơn gửi cùng lúc
     // phải chờ nhau và đơn sau thấy được đơn trước (null nếu không còn đại lý)
     public CustomerCredit lock(Connection connection, long customerId, LocalDate today) throws SQLException {
@@ -49,6 +54,14 @@ public class CustomerCreditDao {
                 }
                 creditLimit = resultSet.getBigDecimal("credit_limit");
                 maxDebtDays = resultSet.getInt("max_debt_days");
+            }
+        }
+        String flagMode = null;
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT `value` FROM system_settings WHERE `key` = 'credit.overdue_mode'");
+             ResultSet resultSet = statement.executeQuery()) {
+            if (resultSet.next() && resultSet.getString(1) != null) {
+                flagMode = resultSet.getString(1).trim();
             }
         }
         BigDecimal ledgerBalance = BigDecimal.ZERO;
@@ -75,7 +88,7 @@ public class CustomerCreditDao {
             try (ResultSet resultSet = statement.executeQuery()) {
                 resultSet.next();
                 return new CustomerCredit(creditLimit, maxDebtDays, ledgerBalance, openOrders,
-                        resultSet.getBigDecimal(1), resultSet.getObject(2, LocalDate.class));
+                        resultSet.getBigDecimal(1), resultSet.getObject(2, LocalDate.class), flagMode);
             }
         }
     }

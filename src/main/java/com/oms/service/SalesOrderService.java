@@ -133,14 +133,14 @@ public class SalesOrderService {
                 errors.put("customerId", "Đại lý đang bị khoá giao dịch nên không tạo được đơn mới.");
             } else if (!customer.isActive()) {
                 errors.put("customerId", "Đại lý đã ngừng giao dịch.");
-            } else if (credit != null && credit.isOverdue()) {
-                // AC3 của S4-02: có khoản quá hạn thì chặn hẳn đơn mới, kể cả lưu nháp
-                errors.put("customerId", overdueMessage(credit) + " nên không tạo được đơn mới.");
+            } else if (credit != null && credit.isBlocking()) {
+                // AC3 của S4-02, S7-04: đại lý bị gắn cờ ở chế độ chặn thì không tạo đơn mới, kể cả lưu nháp
+                errors.put("customerId", flagMessage(credit) + " nên không tạo được đơn mới.");
             }
-        } else if (submit && credit != null && credit.isOverdue()) {
+        } else if (submit && credit != null && credit.isBlocking()) {
             // Đơn nháp đã có vẫn lưu được (như đại lý bị khoá) nhưng chưa gửi được cho tới khi trả khoản quá hạn
-            errors.put("form", overdueMessage(credit) + " nên chưa gửi được đơn. Đơn nháp vẫn lưu được;"
-                    + " gửi lại sau khi đại lý thanh toán khoản quá hạn.");
+            errors.put("form", flagMessage(credit) + " nên chưa gửi được đơn. Đơn nháp vẫn lưu được;"
+                    + " gửi lại sau khi đại lý thanh toán.");
         }
         if (customer != null && customer.getDefaultWarehouseId() == null) {
             errors.put("form", "Đại lý chưa có kho phục vụ mặc định nên chưa tạo được đơn. Vui lòng cập nhật"
@@ -247,6 +247,15 @@ public class SalesOrderService {
         public Map<String, String> getErrors() {
             return errors;
         }
+    }
+
+    // Lý do đại lý bị gắn cờ: quá hạn thanh toán hoặc vượt hạn mức công nợ
+    static String flagMessage(CustomerCredit credit) {
+        if (credit.isOverdue()) {
+            return overdueMessage(credit);
+        }
+        return "Đại lý đang vượt hạn mức công nợ (" + MoneyUtil.format(credit.getUsed()) + " ₫ trên hạn mức "
+                + MoneyUtil.format(credit.getCreditLimit()) + " ₫)";
     }
 
     public static String overdueMessage(CustomerCredit credit) {
