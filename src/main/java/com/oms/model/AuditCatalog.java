@@ -81,6 +81,10 @@ public final class AuditCatalog {
         action("DELIVERY_NOTE_ISSUE", "Xác nhận xuất kho", GROUP_CREATE);
         action("DELIVERY_CONFIRM", "Giao thành công", GROUP_STATUS);
         action("DELIVERY_FAIL", "Giao không thành công", GROUP_STATUS);
+        action("LOT_TRACKING_UPDATE", "Bật / tắt quản lý lô", GROUP_UPDATE);
+        action("LOT_EXPIRED_ISSUE_ALLOW", "Cho phép xuất lô quá hạn", GROUP_STATUS);
+        action("LOT_EXPIRED_ISSUE_REVOKE", "Thu hồi cho phép xuất lô quá hạn", GROUP_STATUS);
+        action("LOT_NEAR_EXPIRY_UPDATE", "Đặt ngưỡng lô sắp hết hạn", GROUP_UPDATE);
         action("SUPPLIER_CREATE", "Thêm mới", GROUP_CREATE);
         action("SUPPLIER_UPDATE", "Sửa", GROUP_UPDATE);
         action("SUPPLIER_DELETE", "Xoá", GROUP_DELETE);
