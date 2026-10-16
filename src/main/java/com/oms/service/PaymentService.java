@@ -92,6 +92,10 @@ public class PaymentService {
         return paymentDao.findOpenInvoices(customerId);
     }
 
+    public Payment find(long id) throws SQLException {
+        return paymentDao.findPayment(id);
+    }
+
     public List<Payment> findPayments(Long customerId) throws SQLException {
         return paymentDao.findPayments(customerId, LIST_LIMIT);
     }
