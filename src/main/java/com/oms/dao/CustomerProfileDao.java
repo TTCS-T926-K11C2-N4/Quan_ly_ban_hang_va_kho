@@ -32,7 +32,7 @@ public class CustomerProfileDao {
     public CustomerProfile findProfile(long id) throws SQLException {
         String sql = "SELECT c.id, c.code, c.name, c.tax_code, c.phone, c.email, c.address, c.customer_group_id,"
                 + " g.name AS group_name, c.region_id, r.name AS region_name, c.sales_rep_id, u.full_name AS rep_name,"
-                + " c.default_warehouse_id, w.name AS warehouse_name, c.status, c.is_blocked, c.version, "
+                + " c.default_warehouse_id, w.name AS warehouse_name, c.status, c.is_blocked, c.credit_status, c.version, "
                 + HAS_TRANSACTIONS_SQL + " AS has_transactions FROM customers c"
                 + " JOIN customer_groups g ON g.id = c.customer_group_id JOIN regions r ON r.id = c.region_id"
                 + " LEFT JOIN users u ON u.id = c.sales_rep_id LEFT JOIN warehouses w ON w.id = c.default_warehouse_id"
@@ -52,7 +52,8 @@ public class CustomerProfileDao {
                         resultSet.getObject("sales_rep_id", Long.class), resultSet.getString("rep_name"),
                         resultSet.getObject("default_warehouse_id", Long.class), resultSet.getString("warehouse_name"),
                         resultSet.getString("status"), resultSet.getBoolean("is_blocked"),
-                        resultSet.getBoolean("has_transactions"), resultSet.getLong("version"));
+                        resultSet.getBoolean("has_transactions"), resultSet.getLong("version"),
+                        resultSet.getString("credit_status"));
             }
         }
     }
