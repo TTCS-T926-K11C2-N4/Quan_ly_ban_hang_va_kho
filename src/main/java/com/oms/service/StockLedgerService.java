@@ -1,6 +1,7 @@
 package com.oms.service;
 
 import com.oms.dao.StockLedgerDao;
+import com.oms.dao.WarehouseDao;
 import com.oms.model.PageResult;
 import com.oms.model.SelectOption;
 import com.oms.model.StockLedgerFilter;
@@ -26,6 +27,19 @@ public class StockLedgerService {
         "Đang giữ chỗ", "Tồn khả dụng", "Tồn tối thiểu", "Đơn vị cơ sở", "Trạng thái"};
 
     private final StockLedgerDao ledgerDao = new StockLedgerDao();
+    private final WarehouseDao warehouseDao = new WarehouseDao();
+
+    // Tên tệp xuất (S8-08): chứa mã kho đang lọc (hoặc "tat-ca-kho") và ngày xuất yyyyMMdd
+    public String exportFileName(StockLedgerFilter filter, String dateText) throws SQLException {
+        String scope = "tat-ca-kho";
+        if (filter.getWarehouseId() != null) {
+            com.oms.model.Warehouse warehouse = warehouseDao.findById(filter.getWarehouseId());
+            if (warehouse != null) {
+                scope = warehouse.getCode().replaceAll("[^A-Za-z0-9_-]", "");
+            }
+        }
+        return "so-ton-kho-" + scope + "-" + dateText + ".xlsx";
+    }
 
     // Ba thẻ số liệu đầu trang, theo bộ lọc kho / nhóm hàng / từ khoá đang chọn
     public record Summary(long total, long out, long low) {

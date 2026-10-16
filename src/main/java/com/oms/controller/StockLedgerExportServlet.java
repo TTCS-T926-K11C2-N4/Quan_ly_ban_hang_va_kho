@@ -22,8 +22,9 @@ public class StockLedgerExportServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            ExcelDownload.send(response, "so-ton-kho-" + DateTimeUtil.today().format(FILE_DATE) + ".xlsx",
-                    ledgerService.export(StockLedgerServlet.parseFilter(request)));
+            com.oms.model.StockLedgerFilter filter = StockLedgerServlet.parseFilter(request);
+            ExcelDownload.send(response, ledgerService.exportFileName(filter,
+                    DateTimeUtil.today().format(FILE_DATE)), ledgerService.export(filter));
         } catch (SQLException e) {
             log("Không xuất được sổ tồn kho", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
