@@ -33,6 +33,12 @@
                 <ul class="report-hub" id="report-hub">
                     <li><a class="inv-table__main" id="report-sales" href="<c:url value='/reports/sales'/>">Doanh số nhiều chiều</a>
                         <span class="inv-table__sub">Theo nhân viên, khu vực, đại lý, nhóm hàng, SKU; so với kỳ trước; biên lợi nhuận cho người xem được giá vốn.</span></li>
+                    <c:if test="${currentUser.can('SALES_TARGET_MANAGE')}">
+                        <li><a class="inv-table__main" id="report-targets" href="<c:url value='/targets'/>">Chỉ tiêu doanh số</a>
+                            <span class="inv-table__sub">Đặt chỉ tiêu tháng cho nhân viên và khu vực, theo dõi tiến độ.</span></li>
+                    </c:if>
+                    <li><a class="inv-table__main" id="report-my-target" href="<c:url value='/targets/my'/>">Chỉ tiêu của tôi</a>
+                        <span class="inv-table__sub">Tiến độ chỉ tiêu doanh số tháng của chính bạn.</span></li>
                     <c:if test="${currentUser.can('INVENTORY_VIEW')}">
                         <li><a class="inv-table__main" id="report-stock" href="<c:url value='/reports/stock'/>">Tồn kho và vòng quay hàng</a>
                             <span class="inv-table__sub">Giá trị tồn theo kho, nhóm hàng; số ngày tồn và hàng chậm luân chuyển.</span></li>
