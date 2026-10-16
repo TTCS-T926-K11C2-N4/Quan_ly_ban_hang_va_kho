@@ -5,6 +5,7 @@ import com.oms.model.PickListDetail;
 import com.oms.model.PickListStatus;
 import com.oms.model.SessionUser;
 import com.oms.service.PickListService;
+import com.oms.service.PickLotService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -58,6 +59,10 @@ public class PickListViewServlet extends HttpServlet {
         request.setAttribute("canCancel", canManage && (pickList.isEditable()
                 || (pickList.isDone() && !pickList.isAnyIssued())));
         request.setAttribute("shortReasons", PickListStatus.SHORT_REASONS);
+        // S6-04: lô khác có thể chọn thay cho dòng chưa soạn (thủ kho đổi lô phải nhập lý do)
+        request.setAttribute("lotCandidates", canManage && pickList.isEditable()
+                ? new PickLotService().candidates(pickList.getId()) : Map.of());
+        request.setAttribute("lotReasonMax", PickLotService.REASON_MAX_LENGTH);
         request.setAttribute("inputs", inputs);
         request.setAttribute("errors", errors);
         request.getRequestDispatcher(VIEW).forward(request, response);

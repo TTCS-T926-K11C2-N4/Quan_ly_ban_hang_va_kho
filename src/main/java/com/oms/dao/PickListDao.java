@@ -411,7 +411,8 @@ public class PickListDao {
         }
     }
 
-    // Lô còn hàng của SKU tại kho, hạn sử dụng gần nhất trước (FEFO), bỏ lô đã hết hạn; lô không hạn để cuối.
+    // Lô còn hàng của SKU tại kho, hạn sử dụng gần nhất trước (FEFO), bỏ lô đã hết hạn (trừ lô Quản lý kho đã cho phép
+    // xuất, S6-01); lô không hạn để cuối.
     // Phần đã chia cho phiếu soạn khác chưa xuất kho được trừ ra (trừ đơn đã huỷ giữa chừng).
     public List<LotStock> findPickableLots(Connection connection, long warehouseId, long productId, LocalDate today)
             throws SQLException {
@@ -425,7 +426,7 @@ public class PickListDao {
                 + " AND d.order_id = oi.order_id)), 0) AS free_qty"
                 + " FROM stock_lot_balances b JOIN lots l ON l.id = b.lot_id"
                 + " WHERE b.warehouse_id = ? AND l.product_id = ? AND b.qty_on_hand_base > 0"
-                + " AND (l.expiry_date IS NULL OR l.expiry_date >= ?)"
+                + " AND (l.expiry_date IS NULL OR l.expiry_date >= ? OR l.expired_issue_approved_at IS NOT NULL)"
                 + " ORDER BY l.expiry_date IS NULL, l.expiry_date, l.id";
         List<LotStock> lots = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {

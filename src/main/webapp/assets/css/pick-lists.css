@@ -622,3 +622,27 @@
         display: none;
     }
 }
+
+/* S6-04: đổi lô xuất kèm lý do */
+.pick-lot-change {
+    margin-top: 16px;
+}
+
+.pick-lot-change__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--inv-border, #e2e8f0);
+}
+
+.pick-lot-change__line {
+    flex: 1 1 100%;
+    margin: 0;
+}
+
+.pick-lot-change__row .inv-control {
+    flex: 1 1 200px;
+    min-width: 160px;
+}
