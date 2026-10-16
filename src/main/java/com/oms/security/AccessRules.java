@@ -153,6 +153,8 @@ public final class AccessRules {
             Map.entry("/deliveries/point", Permission.DELIVERY_VIEW),
             Map.entry("/deliveries/proof", Permission.DELIVERY_VIEW),
             Map.entry("/deliveries/confirm", Permission.DELIVERY_MANAGE),
+            // Thẻ kho (S6-02): ai xem tồn kho cũng xem được
+            Map.entry("/stock/card", Permission.INVENTORY_VIEW),
             Map.entry("/products/status", Permission.PRODUCT_MANAGE));
 
     private AccessRules() {
