@@ -42,6 +42,12 @@
                     <span class="app-menu__icon app-menu__icon--reports" aria-hidden="true"></span>Công nợ của tôi
                 </a>
             </li>
+            <li>
+                <a class="app-menu__link${activeMenu == 'portal-statements' ? ' app-menu__link--active' : ''}" id="menu-portal-statements"
+                   href="<c:url value='/portal/statements'/>"${activeMenu == 'portal-statements' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--reports" aria-hidden="true"></span>Đối chiếu công nợ
+                </a>
+            </li>
             </c:if>
             <c:if test="${currentUser.can('USER_VIEW') or currentUser.can('AUDIT_LOG_VIEW') or (currentUser.can('CUSTOMER_VIEW') and not currentUser.customer)}">
             <li>
@@ -275,6 +281,12 @@
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'debts' ? ' app-submenu__link--active' : ''}" id="menu-debts"
                            href="<c:url value='/debts'/>"${activeSubmenu == 'debts' ? ' aria-current="page"' : ''}>Sổ công nợ</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('INVOICE_VIEW') and not empty financeServlets['com.oms.controller.StatementServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'statements' ? ' app-submenu__link--active' : ''}" id="menu-statements"
+                           href="<c:url value='/statements'/>"${activeSubmenu == 'statements' ? ' aria-current="page"' : ''}>Đối chiếu công nợ</a>
                     </li>
                     </c:if>
                     <c:if test="${currentUser.can('PAYMENT_COLLECT') and not empty financeServlets['com.oms.controller.CollectionServlet']}">

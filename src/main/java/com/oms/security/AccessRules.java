@@ -127,6 +127,13 @@ public final class AccessRules {
             Map.entry("/payments/confirm", Permission.INVOICE_MANAGE),
             Map.entry("/payments/void", Permission.INVOICE_MANAGE),
             Map.entry("/payments/receipt", AUTHENTICATED),
+            // Biên bản đối chiếu công nợ (S7-06): lập và gửi cần INVOICE_MANAGE (kiểm tra trong Servlet POST)
+            Map.entry("/statements", Permission.INVOICE_VIEW),
+            Map.entry("/statements/view", Permission.INVOICE_VIEW),
+            Map.entry("/statements/print", Permission.INVOICE_VIEW),
+            Map.entry("/portal/statements", Permission.INVOICE_VIEW),
+            Map.entry("/portal/statements/respond", Permission.INVOICE_VIEW),
+            Map.entry("/portal/statements/print", Permission.INVOICE_VIEW),
             // Sổ công nợ theo đại lý và tuổi nợ (S7-03)
             Map.entry("/debts", Permission.INVOICE_VIEW),
             Map.entry("/debts/export", Permission.INVOICE_VIEW),
