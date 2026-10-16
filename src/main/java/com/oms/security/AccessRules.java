@@ -154,6 +154,10 @@ public final class AccessRules {
             // Báo cáo công nợ quá hạn theo tuổi nợ (S8-09)
             Map.entry("/debts/overdue", Permission.INVOICE_VIEW),
             Map.entry("/debts/overdue/export", Permission.INVOICE_VIEW),
+            // Báo cáo (EP-09): trang tổng hợp và báo cáo tồn kho, vòng quay hàng (S8-07)
+            Map.entry("/reports", Permission.REPORT_VIEW),
+            Map.entry("/reports/stock", Permission.INVENTORY_VIEW),
+            Map.entry("/reports/stock/export", Permission.INVENTORY_VIEW),
             // Đại lý xem công nợ và hoá đơn của chính mình (S7-07)
             Map.entry("/portal/debts", Permission.INVOICE_VIEW),
             Map.entry("/portal/invoices/print", Permission.INVOICE_VIEW),
