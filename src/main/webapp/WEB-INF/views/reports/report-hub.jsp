@@ -31,6 +31,8 @@
             </header>
             <section class="inv-card" aria-label="Danh sách báo cáo">
                 <ul class="report-hub" id="report-hub">
+                    <li><a class="inv-table__main" id="report-sales" href="<c:url value='/reports/sales'/>">Doanh số nhiều chiều</a>
+                        <span class="inv-table__sub">Theo nhân viên, khu vực, đại lý, nhóm hàng, SKU; so với kỳ trước; biên lợi nhuận cho người xem được giá vốn.</span></li>
                     <c:if test="${currentUser.can('INVENTORY_VIEW')}">
                         <li><a class="inv-table__main" id="report-stock" href="<c:url value='/reports/stock'/>">Tồn kho và vòng quay hàng</a>
                             <span class="inv-table__sub">Giá trị tồn theo kho, nhóm hàng; số ngày tồn và hàng chậm luân chuyển.</span></li>
