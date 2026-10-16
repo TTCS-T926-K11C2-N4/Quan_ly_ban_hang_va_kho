@@ -141,6 +141,7 @@
                                 <th scope="col">Người phụ trách</th>
                                 <th scope="col">Số điện thoại</th>
                                 <th scope="col">Trạng thái</th>
+                                <th scope="col">Cờ công nợ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -172,11 +173,14 @@
                                     <td data-label="Trạng thái">
                                         <span class="customer-status customer-status--${fn:toLowerCase(customer.status.code)}">${customer.status.label}</span>
                                     </td>
+                                    <td data-label="Cờ công nợ">
+                                        <span class="customer-credit-flag customer-credit-flag--${customer.creditFlagTone}"><c:out value="${customer.creditFlagLabel}"/></span>
+                                    </td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty customerPage.items}">
                                 <tr class="customer-table__empty-row">
-                                    <td class="customer-table__empty" colspan="7">
+                                    <td class="customer-table__empty" colspan="8">
                                         <c:choose>
                                             <c:when test="${not filter.filtered}">Chưa có đại lý nào trong phạm vi bạn được xem.</c:when>
                                             <c:otherwise>Không tìm thấy đại lý phù hợp. Thử bỏ bớt điều kiện lọc hoặc đổi từ khoá tìm kiếm.</c:otherwise>

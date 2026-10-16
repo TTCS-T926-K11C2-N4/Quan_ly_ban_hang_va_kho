@@ -23,12 +23,24 @@ public class CustomerProfile {
     private final boolean blocked;
     private final boolean hasTransactions;
     private final long version;
+    private final String creditStatus;
 
     public CustomerProfile(long id, String code, String name, String taxCode, String phone, String email,
                            String address, long customerGroupId, String customerGroupName, long regionId,
                            String regionName, Long salesRepId, String salesRepName, Long defaultWarehouseId,
                            String defaultWarehouseName, String status, boolean blocked, boolean hasTransactions,
                            long version) {
+        this(id, code, name, taxCode, phone, email, address, customerGroupId, customerGroupName, regionId, regionName,
+                salesRepId, salesRepName, defaultWarehouseId, defaultWarehouseName, status, blocked, hasTransactions,
+                version, "OK");
+    }
+
+    public CustomerProfile(long id, String code, String name, String taxCode, String phone, String email,
+                           String address, long customerGroupId, String customerGroupName, long regionId,
+                           String regionName, Long salesRepId, String salesRepName, Long defaultWarehouseId,
+                           String defaultWarehouseName, String status, boolean blocked, boolean hasTransactions,
+                           long version, String creditStatus) {
+        this.creditStatus = creditStatus;
         this.id = id;
         this.code = code;
         this.name = name;
@@ -48,6 +60,15 @@ public class CustomerProfile {
         this.blocked = blocked;
         this.hasTransactions = hasTransactions;
         this.version = version;
+    }
+
+    // Cờ công nợ tự động (S7-04)
+    public String getCreditFlagLabel() {
+        return CreditFlag.label(creditStatus);
+    }
+
+    public String getCreditFlagTone() {
+        return CreditFlag.tone(creditStatus);
     }
 
     public long getId() {
