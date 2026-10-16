@@ -144,6 +144,8 @@ public final class AccessRules {
             Map.entry("/pick-lists/view", Permission.DELIVERY_VIEW),
             Map.entry("/pick-lists/new", Permission.DELIVERY_MANAGE),
             Map.entry("/pick-lists/pick", Permission.DELIVERY_MANAGE),
+            // Đổi lô xuất của dòng soạn kèm lý do (S6-04)
+            Map.entry("/pick-lists/lot", Permission.DELIVERY_MANAGE),
             Map.entry("/pick-lists/cancel", Permission.DELIVERY_MANAGE),
             // Lô và hạn sử dụng (S6-01): ai xem tồn kho cũng xem lô; bật / tắt quản lý lô theo SKU cần INVENTORY_MANAGE;
             // cho phép xuất lô quá hạn và đặt ngưỡng cảnh báo chỉ Quản lý kho (WAREHOUSE_MANAGE)

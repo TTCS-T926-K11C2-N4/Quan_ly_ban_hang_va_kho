@@ -266,6 +266,7 @@
                     </div>
                 </c:if>
             </form>
+            <%@ include file="/WEB-INF/views/pick-lists/pick-lot-change.jspf" %>
             <c:if test="${canCancel}">
                 <form id="pick-cancel-form" action="<c:url value='/pick-lists/cancel'/>" method="post" hidden>
                     <input type="hidden" name="id" value="${pickList.id}">
