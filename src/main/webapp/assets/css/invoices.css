@@ -145,3 +145,77 @@
 .collection-form__wide {
     grid-column: 1 / -1;
 }
+
+.exec-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.exec-card {
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.exec-card--alert {
+    border-color: #fecaca;
+    background: #fff5f5;
+}
+
+.exec-card__label {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.exec-card__value {
+    margin: 6px 0 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.exec-bars {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.exec-bars__row {
+    display: grid;
+    grid-template-columns: 90px 1fr 110px;
+    align-items: center;
+    gap: 10px;
+    padding: 3px 0;
+}
+
+.exec-bars__track {
+    height: 10px;
+    border-radius: 5px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+.exec-bars__fill {
+    display: block;
+    height: 100%;
+    background: #2563eb;
+}
+
+.exec-bars__value {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-hub {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.report-hub li {
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
