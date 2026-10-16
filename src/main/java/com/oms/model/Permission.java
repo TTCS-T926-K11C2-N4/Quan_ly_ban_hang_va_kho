@@ -19,6 +19,9 @@ public final class Permission {
     public static final String ORDER_APPROVE = "ORDER_APPROVE";
     // Chỉ Quản lý kinh doanh có, kể cả Admin cũng không (seed_permissions.sql)
     public static final String COST_PRICE_VIEW = "COST_PRICE_VIEW";
+    // Hoá đơn và công nợ (S7): Kế toán công nợ lập và thu tiền, Quản lý kinh doanh xem; Đại lý chỉ xem của mình (OWN)
+    public static final String INVOICE_VIEW = "INVOICE_VIEW";
+    public static final String INVOICE_MANAGE = "INVOICE_MANAGE";
     // Nhà cung cấp (S2-09) dùng chung quyền kho: nhân viên kho, quản lý kho, Admin quản lý
     public static final String INVENTORY_VIEW = "INVENTORY_VIEW";
     public static final String INVENTORY_MANAGE = "INVENTORY_MANAGE";

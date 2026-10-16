@@ -111,6 +111,11 @@ public final class AccessRules {
             Map.entry("/orders/view", Permission.ORDER_VIEW),
             Map.entry("/orders/print", Permission.ORDER_VIEW),
             Map.entry("/orders/cancel", Permission.ORDER_MANAGE),
+            // Hoá đơn bán hàng (S7-01): xem, in cần INVOICE_VIEW (phạm vi ALL); phát hành cần INVOICE_MANAGE
+            Map.entry("/invoices", Permission.INVOICE_VIEW),
+            Map.entry("/invoices/view", Permission.INVOICE_VIEW),
+            Map.entry("/invoices/print", Permission.INVOICE_VIEW),
+            Map.entry("/invoices/issue", Permission.INVOICE_MANAGE),
             Map.entry("/orders/confirm", Permission.ORDER_MANAGE),
             Map.entry("/orders/copy", Permission.ORDER_MANAGE),
             Map.entry("/approvals", Permission.ORDER_APPROVAL_VIEW),
