@@ -158,6 +158,9 @@ public final class AccessRules {
             Map.entry("/reports", Permission.REPORT_VIEW),
             Map.entry("/reports/stock", Permission.INVENTORY_VIEW),
             Map.entry("/reports/stock/export", Permission.INVENTORY_VIEW),
+            // Báo cáo doanh số nhiều chiều (S8-06)
+            Map.entry("/reports/sales", Permission.REPORT_VIEW),
+            Map.entry("/reports/sales/export", Permission.REPORT_VIEW),
             // Đại lý xem công nợ và hoá đơn của chính mình (S7-07)
             Map.entry("/portal/debts", Permission.INVOICE_VIEW),
             Map.entry("/portal/invoices/print", Permission.INVOICE_VIEW),
