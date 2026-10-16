@@ -1,0 +1,347 @@
+/* Cổng đại lý (S5-01): danh sách và chi tiết đơn hàng của đại lý, dùng được trên điện thoại */
+.portal-orders__card {
+    padding: 16px;
+}
+
+.portal-orders__title {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.portal-orders__address,
+.portal-orders__note {
+    margin: 0 0 12px;
+}
+
+.portal-orders__table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.portal-orders__table th,
+.portal-orders__table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--color-sales-border, #e2e8f0);
+    text-align: left;
+    vertical-align: top;
+}
+
+.portal-orders__num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.portal-orders__link {
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.portal-orders__sku {
+    display: block;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.portal-orders__row--short td {
+    background: #fffbeb;
+}
+
+.portal-orders__short {
+    color: #b45309;
+}
+
+/* Điện thoại: mỗi dòng là một thẻ, nhãn cột lấy từ data-label */
+@media (max-width: 640px) {
+    .portal-orders__table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .portal-orders__table,
+    .portal-orders__table tbody,
+    .portal-orders__table tr,
+    .portal-orders__table td {
+        display: block;
+        width: 100%;
+    }
+
+    .portal-orders__table tr {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--color-sales-border, #e2e8f0);
+    }
+
+    .portal-orders__table td {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 4px 0;
+        border: 0;
+        text-align: right;
+    }
+
+    .portal-orders__table td::before {
+        content: attr(data-label);
+        color: #64748b;
+        font-weight: 500;
+        text-align: left;
+    }
+}
+
+/* S4-10: giỏ hàng đại lý, mỗi dòng gọn trên điện thoại */
+.portal-cart__head {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.portal-cart__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.portal-cart__line {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.2fr) 36px;
+    align-items: center;
+    gap: 8px;
+}
+
+.portal-cart__line--invalid {
+    padding: 6px;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    background: #fef2f2;
+}
+
+.portal-cart__amount {
+    text-align: right;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.portal-cart__remove {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--color-sales-border, #e2e8f0);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.portal-cart__error {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: #b91c1c;
+    font-size: 13px;
+}
+
+.portal-cart__notices {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.portal-cart__summary {
+    margin: 16px 0;
+}
+
+.portal-cart__credit {
+    margin: 8px 0 0;
+}
+
+.portal-cart__credit--over {
+    color: #b45309;
+}
+
+.portal-cart__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+    .portal-cart__line {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px;
+    }
+
+    .portal-cart__product {
+        grid-column: 1 / -1;
+    }
+
+    .portal-cart__actions .sales-button {
+        flex: 1 1 100%;
+    }
+}
+
+/* S5-02: đặt lại đơn cũ */
+.portal-orders__reorder {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+
+/* Công nợ của đại lý (S7-07) */
+.portal-debt-summary {
+    margin-bottom: 16px;
+}
+
+.portal-debt-summary__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px 24px;
+    margin: 0;
+}
+
+.portal-debt-summary__list dt {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.portal-debt-summary__list dd {
+    margin: 2px 0 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+
+.portal-statement {
+    margin-bottom: 16px;
+}
+
+.portal-statement__title {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.portal-statement__status {
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.portal-statement__form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
+.portal-statement__input {
+    flex: 1 1 260px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+
+/* S6-09: tiến trình giao hàng của đơn */
+.portal-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 0;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.portal-step {
+    position: relative;
+    display: flex;
+    flex: 1 1 140px;
+    flex-direction: column;
+    align-items: center;
+    min-width: 110px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.portal-step::before {
+    position: absolute;
+    top: 13px;
+    left: -50%;
+    z-index: 0;
+    width: 100%;
+    height: 2px;
+    background: #e2e8f0;
+    content: "";
+}
+
+.portal-step:first-child::before {
+    display: none;
+}
+
+.portal-step--done {
+    color: #0f172a;
+}
+
+.portal-step--done::before {
+    background: #16a34a;
+}
+
+.portal-step__dot {
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.portal-step--done .portal-step__dot {
+    background: #16a34a;
+    color: #fff;
+}
+
+.portal-step--current .portal-step__dot {
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.25);
+}
+
+.portal-step__label {
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+.portal-step__time {
+    font-size: 12px;
+    color: #64748b;
+}
+
+@media (max-width: 640px) {
+    .portal-steps {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .portal-step {
+        flex-direction: row;
+        flex-basis: auto;
+        justify-content: flex-start;
+        gap: 10px;
+        text-align: left;
+    }
+
+    .portal-step::before {
+        display: none;
+    }
+
+    .portal-step__label {
+        margin-top: 0;
+    }
+}
+
+

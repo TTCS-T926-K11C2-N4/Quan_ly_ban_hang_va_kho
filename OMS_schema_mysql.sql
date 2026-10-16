@@ -640,7 +640,8 @@ CREATE TABLE `sales_order_items` (
   `is_below_floor` boolean NOT NULL DEFAULT false,
   `discount_amount` decimal(18,2) NOT NULL DEFAULT 0,
   `line_total` decimal(18,2) NOT NULL DEFAULT 0,
-  `qty_shipped_base` decimal(18,3) NOT NULL DEFAULT 0 COMMENT 'Cộng dồn khi xuất kho; còn thiếu = qty_base - qty_shipped_base (hàng còn nợ)',
+  `qty_shipped_base` decimal(18,3) NOT NULL DEFAULT 0 COMMENT 'Cộng dồn khi xuất kho; còn thiếu = qty_base - qty_shipped_base - qty_closed_base (hàng còn nợ)',
+  `qty_closed_base` decimal(18,3) NOT NULL DEFAULT 0 COMMENT 'Phần thiếu đã đóng khi xuất kho, không giao bổ sung (S6-05)',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_by` bigint,
   CONSTRAINT fk_sales_order_items_created_by FOREIGN KEY (`created_by`) REFERENCES `users`(`id`),
@@ -652,6 +653,7 @@ CREATE TABLE `sales_order_items` (
   CONSTRAINT ck_sales_order_items_1 CHECK (qty > 0 AND qty_base > 0),
   CONSTRAINT ck_sales_order_items_2 CHECK (unit_price >= 0),
   CONSTRAINT ck_sales_order_items_3 CHECK (qty_shipped_base >= 0 AND qty_shipped_base <= qty_base),
+  CONSTRAINT ck_sales_order_items_4 CHECK (qty_closed_base >= 0 AND qty_shipped_base + qty_closed_base <= qty_base),
   KEY ix_order_items_product (`product_id`),
   KEY ix_sales_order_items_product_id (`product_id`),
   KEY ix_sales_order_items_unit_id (`unit_id`),
@@ -722,6 +724,7 @@ CREATE TABLE `warehouses` (
   `id` bigint AUTO_INCREMENT,
   `code` varchar(30) NOT NULL UNIQUE,
   `name` varchar(150) NOT NULL,
+  `description` varchar(200) COMMENT 'Mô tả ngắn hiện dưới tên kho, vd Kho chính, Khu cách ly hàng lỗi (S5-03)',
   `address` varchar(300),
   `manager_user_id` bigint,
   CONSTRAINT fk_warehouses_manager_user_id FOREIGN KEY (`manager_user_id`) REFERENCES `users`(`id`),
@@ -741,6 +744,8 @@ CREATE TABLE `warehouse_locations` (
   `id` bigint AUTO_INCREMENT,
   `warehouse_id` bigint NOT NULL,
   CONSTRAINT fk_warehouse_locations_warehouse_id FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`),
+  `parent_id` bigint COMMENT 'Khu chứa kệ này (cây vị trí Khu > Kệ, S5-03); NULL với khu và kệ đứng riêng',
+  CONSTRAINT fk_warehouse_locations_parent_id FOREIGN KEY (`parent_id`) REFERENCES `warehouse_locations`(`id`),
   `code` varchar(30) NOT NULL,
   `name` varchar(100),
   `location_type` varchar(30) NOT NULL DEFAULT 'RACK' CHECK (`location_type` IN ('ZONE','RACK')) COMMENT 'ZONE | RACK',
@@ -753,7 +758,8 @@ CREATE TABLE `warehouse_locations` (
   `updated_by` bigint,
   CONSTRAINT fk_warehouse_locations_updated_by FOREIGN KEY (`updated_by`) REFERENCES `users`(`id`),
   PRIMARY KEY (`id`),
-  UNIQUE KEY ux_warehouse_locations_warehouse_id_code (`warehouse_id`, `code`)
+  UNIQUE KEY ux_warehouse_locations_warehouse_id_code (`warehouse_id`, `code`),
+  KEY ix_warehouse_locations_parent_id (`parent_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Vị trí lưu trong kho (khu / kệ). pick_sequence = thứ tự đi soạn hàng (S6-03).';
 
 CREATE TABLE `lots` (
@@ -766,6 +772,10 @@ CREATE TABLE `lots` (
   `supplier_id` bigint,
   CONSTRAINT fk_lots_supplier_id FOREIGN KEY (`supplier_id`) REFERENCES `suppliers`(`id`),
   `is_default` boolean NOT NULL DEFAULT false,
+  `expired_issue_approved_by` bigint COMMENT 'Quản lý kho cho phép xuất lô đã quá hạn (S6-01)',
+  CONSTRAINT fk_lots_expired_issue_approved_by FOREIGN KEY (`expired_issue_approved_by`) REFERENCES `users`(`id`),
+  `expired_issue_approved_at` datetime COMMENT 'Thời điểm cho phép (UTC)',
+  `expired_issue_reason` text COMMENT 'Lý do bắt buộc khi cho phép',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_by` bigint,
   CONSTRAINT fk_lots_created_by FOREIGN KEY (`created_by`) REFERENCES `users`(`id`),
@@ -908,12 +918,17 @@ CREATE TABLE `goods_receipt_items` (
   `unit_factor` decimal(18,4) NOT NULL,
   `qty` decimal(18,3) NOT NULL,
   `qty_base` decimal(18,3) NOT NULL,
+  `unit_price` decimal(18,2) NOT NULL DEFAULT 0 COMMENT 'Đơn giá nhập theo đơn vị nhập (unit_id); thành tiền = qty * unit_price (S5-04)',
+  `location_id` bigint COMMENT 'Vị trí cất hàng trong kho nhập (S5-04)',
+  CONSTRAINT fk_goods_receipt_items_location_id FOREIGN KEY (`location_id`) REFERENCES `warehouse_locations`(`id`),
   PRIMARY KEY (`id`),
   CONSTRAINT ck_goods_receipt_items_1 CHECK (qty_base <> 0),
+  CONSTRAINT ck_goods_receipt_items_2 CHECK (unit_price >= 0),
   KEY ix_goods_receipt_items_receipt_id (`receipt_id`),
   KEY ix_goods_receipt_items_product_id (`product_id`),
   KEY ix_goods_receipt_items_lot_id (`lot_id`),
-  KEY ix_goods_receipt_items_unit_id (`unit_id`)
+  KEY ix_goods_receipt_items_unit_id (`unit_id`),
+  KEY ix_goods_receipt_items_location_id (`location_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Dòng phiếu nhập: nhập theo đơn vị bất kỳ, quy về đơn vị cơ sở khi ghi sổ.';
 
 CREATE TABLE `stock_transfers` (
@@ -1099,6 +1114,10 @@ CREATE TABLE `delivery_notes` (
   `recipient_name` varchar(150),
   `delivered_at` datetime,
   `failure_reason` text,
+  `shortage_action` varchar(20) CHECK (`shortage_action` IN ('BACKORDER','CLOSE')) COMMENT 'Xử lý phần thiếu: BACKORDER giao bổ sung sau | CLOSE đóng phần thiếu; NULL nếu xuất đủ',
+  `backorder_due_at` datetime COMMENT 'Lịch giao bổ sung (UTC)',
+  `shortage_note` text COMMENT 'Ghi chú xử lý phần thiếu',
+  `delivery_remark` text COMMENT 'Ghi chú lúc giao hàng / ghi chú bổ sung khi giao không thành công (S6-08)',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_by` bigint,
   CONSTRAINT fk_delivery_notes_created_by FOREIGN KEY (`created_by`) REFERENCES `users`(`id`),
@@ -1106,6 +1125,8 @@ CREATE TABLE `delivery_notes` (
   `updated_by` bigint,
   CONSTRAINT fk_delivery_notes_updated_by FOREIGN KEY (`updated_by`) REFERENCES `users`(`id`),
   PRIMARY KEY (`id`),
+  UNIQUE KEY ux_delivery_notes_pick_order (`pick_list_id`, `order_id`),
+  CONSTRAINT ck_delivery_notes_1 CHECK (shortage_action IS NULL OR shortage_action <> 'BACKORDER' OR backorder_due_at IS NOT NULL),
   KEY ix_delivery_order (`order_id`),
   KEY ix_delivery_notes_order_id (`order_id`),
   KEY ix_delivery_notes_warehouse_id (`warehouse_id`),
@@ -1133,6 +1154,22 @@ CREATE TABLE `delivery_note_items` (
   KEY ix_delivery_note_items_product_id (`product_id`),
   KEY ix_delivery_note_items_lot_id (`lot_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Dòng phiếu xuất: số xuất vs số thực giao. Hoá đơn sinh từ số thực giao (S7-01).';
+
+CREATE TABLE `delivery_note_shortages` (
+  `id` bigint AUTO_INCREMENT,
+  `delivery_note_id` bigint NOT NULL,
+  CONSTRAINT fk_delivery_note_shortages_delivery_note_id FOREIGN KEY (`delivery_note_id`) REFERENCES `delivery_notes`(`id`),
+  `order_item_id` bigint NOT NULL,
+  CONSTRAINT fk_delivery_note_shortages_order_item_id FOREIGN KEY (`order_item_id`) REFERENCES `sales_order_items`(`id`),
+  `qty_required_base` decimal(18,3) NOT NULL,
+  `qty_issued_base` decimal(18,3) NOT NULL,
+  `short_reason` text NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY ux_delivery_note_shortages_note_item (`delivery_note_id`, `order_item_id`),
+  CONSTRAINT ck_delivery_note_shortages_1 CHECK (qty_issued_base >= 0 AND qty_issued_base < qty_required_base),
+  KEY ix_delivery_note_shortages_order_item_id (`order_item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Dòng xuất thiếu của phiếu xuất kèm lý do bắt buộc (S6-05).';
 
 CREATE TABLE `delivery_proofs` (
   `id` bigint AUTO_INCREMENT,
@@ -1561,6 +1598,8 @@ CREATE TRIGGER trg_ar_ledger_entries_no_update BEFORE UPDATE ON `ar_ledger_entri
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ar_ledger_entries chỉ cho INSERT (append-only), không được sửa/xoá';
 CREATE TRIGGER trg_ar_ledger_entries_no_delete BEFORE DELETE ON `ar_ledger_entries` FOR EACH ROW
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ar_ledger_entries chỉ cho INSERT (append-only), không được sửa/xoá';
+CREATE TRIGGER trg_approval_requests_no_delete BEFORE DELETE ON `approval_requests` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'approval_requests là lịch sử duyệt, không được xoá';
 
 -- ---------------------------------------------------------------------
 -- TRIGGER: bảng giá ACTIVE không được chồng khoảng ngày hiệu lực trong cùng 1 nhóm khách hàng
@@ -1592,6 +1631,64 @@ BEGIN
   END IF;
 END$$
 
+-- Lịch sử duyệt (S4-05): mỗi yêu cầu duyệt chỉ được ghi quyết định một lần (PENDING -> quyết định), rồi khoá lại
+CREATE TRIGGER trg_approval_requests_decide_once BEFORE UPDATE ON `approval_requests` FOR EACH ROW
+BEGIN
+  IF OLD.status <> 'PENDING' OR NEW.status = 'PENDING'
+     OR NEW.order_id <> OLD.order_id OR NEW.approval_type <> OLD.approval_type
+     OR NOT (NEW.violations <=> OLD.violations) OR NEW.requested_by <> OLD.requested_by
+     OR NEW.requested_at <> OLD.requested_at THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'approval_requests: chỉ được ghi quyết định một lần cho yêu cầu đang chờ duyệt';
+  END IF;
+END$$
+
+
+-- S7-01: hoá đơn đã phát hành không sửa nội dung và không xoá; chỉ được đổi các trường thanh toán, trạng thái, phiên bản
+CREATE TRIGGER trg_invoices_immutable BEFORE UPDATE ON `invoices` FOR EACH ROW
+BEGIN
+  IF NOT (NEW.invoice_no <=> OLD.invoice_no) OR NEW.customer_id <> OLD.customer_id OR NEW.issue_date <> OLD.issue_date
+     OR NEW.due_date <> OLD.due_date OR NEW.payment_term_days <> OLD.payment_term_days
+     OR NEW.subtotal_amount <> OLD.subtotal_amount OR NEW.discount_amount <> OLD.discount_amount
+     OR NEW.total_amount <> OLD.total_amount THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'invoices: hoá đơn đã phát hành không được sửa nội dung, chỉ lập chứng từ điều chỉnh';
+  END IF;
+END$$
+CREATE TRIGGER trg_invoices_no_delete BEFORE DELETE ON `invoices` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'invoices: hoá đơn không được xoá'$$
+CREATE TRIGGER trg_invoice_items_no_update BEFORE UPDATE ON `invoice_items` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'invoice_items: dòng hoá đơn không được sửa'$$
+CREATE TRIGGER trg_invoice_items_no_delete BEFORE DELETE ON `invoice_items` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'invoice_items: dòng hoá đơn không được xoá'$$
+
+-- S7-02: phiếu thu và dòng đối trừ không xoá; phiếu thu không sửa số tiền, đại lý, ngày thu, người thu
+CREATE TRIGGER trg_payments_immutable BEFORE UPDATE ON `payments` FOR EACH ROW
+BEGIN
+  IF NOT (NEW.receipt_no <=> OLD.receipt_no) OR NEW.customer_id <> OLD.customer_id OR NEW.amount <> OLD.amount
+     OR NEW.payment_date <> OLD.payment_date OR NEW.collected_by <> OLD.collected_by OR NEW.method <> OLD.method THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'payments: phiếu thu đã ghi nhận không được sửa, chỉ lập bút toán điều chỉnh';
+  END IF;
+END$$
+CREATE TRIGGER trg_payments_no_delete BEFORE DELETE ON `payments` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'payments: phiếu thu không được xoá'$$
+CREATE TRIGGER trg_payment_allocations_no_update BEFORE UPDATE ON `payment_allocations` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'payment_allocations: dòng đối trừ không được sửa'$$
+CREATE TRIGGER trg_payment_allocations_no_delete BEFORE DELETE ON `payment_allocations` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'payment_allocations: dòng đối trừ không được xoá'$$
+-- S8-02: chứng từ điều chỉnh giảm trừ không xoá, không sửa nội dung
+CREATE TRIGGER trg_credit_notes_immutable BEFORE UPDATE ON `credit_notes` FOR EACH ROW
+BEGIN
+  IF NOT (NEW.credit_note_no <=> OLD.credit_note_no) OR NEW.invoice_id <> OLD.invoice_id
+     OR NOT (NEW.return_id <=> OLD.return_id) OR NEW.customer_id <> OLD.customer_id
+     OR NEW.total_amount <> OLD.total_amount THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'credit_notes: chứng từ điều chỉnh đã lập không được sửa nội dung';
+  END IF;
+END$$
+CREATE TRIGGER trg_credit_notes_no_delete BEFORE DELETE ON `credit_notes` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'credit_notes: chứng từ điều chỉnh không được xoá'$$
+CREATE TRIGGER trg_credit_note_items_no_update BEFORE UPDATE ON `credit_note_items` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'credit_note_items: dòng chứng từ điều chỉnh không được sửa'$$
+CREATE TRIGGER trg_credit_note_items_no_delete BEFORE DELETE ON `credit_note_items` FOR EACH ROW
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'credit_note_items: dòng chứng từ điều chỉnh không được xoá'$$
 DELIMITER ;
 
 -- ---------------------------------------------------------------------

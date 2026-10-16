@@ -17,11 +17,13 @@ public class CustomerListItem {
     private final String salesRepName;
     private final LocalDateTime assignedAt;
     private final CustomerListStatus status;
+    private final String creditStatus;
 
     // assignedAt: lần phân công / chuyển giao gần nhất (UTC), null nếu chưa từng đổi người phụ trách
     public CustomerListItem(long id, String code, String name, String phone, String regionName,
                             String customerGroupName, Long salesRepId, String salesRepName, LocalDateTime assignedAt,
-                            CustomerListStatus status) {
+                            CustomerListStatus status, String creditStatus) {
+        this.creditStatus = creditStatus;
         this.id = id;
         this.code = code;
         this.name = name;
@@ -72,5 +74,14 @@ public class CustomerListItem {
 
     public CustomerListStatus getStatus() {
         return status;
+    }
+
+    // Cờ công nợ tự động (S7-04)
+    public String getCreditFlagLabel() {
+        return CreditFlag.label(creditStatus);
+    }
+
+    public String getCreditFlagTone() {
+        return CreditFlag.tone(creditStatus);
     }
 }

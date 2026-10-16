@@ -98,6 +98,8 @@
                                 <c:otherwise>Không</c:otherwise>
                             </c:choose>
                         </dd></div>
+                        <div><dt>Cờ công nợ</dt><dd><span class="customer-credit-flag customer-credit-flag--${profile.creditFlagTone}" id="profile-credit-flag"><c:out value="${profile.creditFlagLabel}"/></span>
+                            <span class="profile-info__hint">Hệ thống tự đánh giá mỗi ngày và sau mỗi lần thu tiền</span></dd></div>
                         <div><dt>Tình trạng giao dịch</dt><dd>${profile.hasTransactions ? 'Đã phát sinh giao dịch' : 'Chưa phát sinh giao dịch'}</dd></div>
                     </dl>
                 </section>

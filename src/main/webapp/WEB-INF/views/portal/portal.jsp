@@ -36,8 +36,15 @@
                         <ul class="quick-actions">
                             <c:if test="${canOrder}">
                                 <li>
-                                    <a class="quick-action tone--light-blue" id="portal-create-order" href="<c:url value='/sales'/>">
+                                    <a class="quick-action tone--light-blue" id="portal-create-order" href="<c:url value='/portal/order/new'/>">
                                         Đặt hàng<span class="quick-action__arrow" aria-hidden="true">→</span>
+                                    </a>
+                                </li>
+                            </c:if>
+                            <c:if test="${currentUser.can('ORDER_VIEW')}">
+                                <li>
+                                    <a class="quick-action tone--light-blue" id="portal-orders-link" href="<c:url value='/portal/orders'/>">
+                                        Theo dõi đơn hàng<span class="quick-action__arrow" aria-hidden="true">→</span>
                                     </a>
                                 </li>
                             </c:if>

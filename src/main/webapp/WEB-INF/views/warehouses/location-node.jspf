@@ -1,0 +1,43 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Một dòng của cây vị trí (khu hoặc kệ); trang include đặt biến location, warehouse, canManage --%>
+<div class="location-node${location.active ? '' : ' location-node--inactive'}" id="location-${location.id}">
+    <span class="location-node__icon${location.zone ? ' location-node__icon--zone' : ''}">
+        <span class="inv-icon ${location.zone ? 'inv-icon--layers' : 'inv-icon--rows'}" aria-hidden="true"></span>
+    </span>
+    <div class="location-node__text">
+        <p class="location-node__title">
+            <span class="location-node__code"><c:out value="${location.code}"/></span>
+            <c:if test="${not empty location.name}"><span class="location-node__name"><c:out value="${location.name}"/></span></c:if>
+        </p>
+        <p class="location-node__meta">${location.typeLabel} · Thứ tự soạn ${location.pickSequence}<c:if test="${location.skuCount > 0}"> · ${location.skuCount} SKU lưu chính</c:if></p>
+    </div>
+    <c:if test="${not location.active}"><span class="inv-pill inv-pill--muted">Ngừng dùng</span></c:if>
+    <c:if test="${canManage}">
+        <div class="inv-actions location-node__actions">
+            <c:if test="${location.zone and location.active}">
+                <c:url var="addRackUrl" value="/warehouses/locations">
+                    <c:param name="id" value="${warehouse.id}"/><c:param name="type" value="RACK"/><c:param name="parent" value="${location.id}"/>
+                </c:url>
+                <a class="inv-button inv-button--small" href="${fn:escapeXml(addRackUrl)}#location-form">
+                    <span class="inv-icon inv-icon--plus" aria-hidden="true"></span>Thêm kệ
+                </a>
+            </c:if>
+            <c:url var="editLocationUrl" value="/warehouses/locations">
+                <c:param name="id" value="${warehouse.id}"/><c:param name="edit" value="${location.id}"/>
+            </c:url>
+            <a class="inv-icon-button" href="${fn:escapeXml(editLocationUrl)}#location-form" title="Sửa"
+               aria-label="Sửa vị trí <c:out value='${location.code}'/>">
+                <span class="inv-icon inv-icon--pencil" aria-hidden="true"></span>
+            </a>
+            <form class="location-node__status" method="post" action="<c:url value='/warehouses/locations/status'/>">
+                <input type="hidden" name="warehouseId" value="${warehouse.id}">
+                <input type="hidden" name="locationId" value="${location.id}">
+                <input type="hidden" name="active" value="${not location.active}">
+                <button class="inv-icon-button" type="submit" title="${location.active ? 'Ngừng dùng' : 'Dùng lại'}"
+                        aria-label="${location.active ? 'Ngừng dùng' : 'Dùng lại'} vị trí <c:out value='${location.code}'/>">
+                    <span class="inv-icon ${location.active ? 'inv-icon--ban' : 'inv-icon--rotate-ccw'}" aria-hidden="true"></span>
+                </button>
+            </form>
+        </div>
+    </c:if>
+</div>

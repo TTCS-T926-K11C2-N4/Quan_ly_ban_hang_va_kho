@@ -44,6 +44,11 @@ public final class DateTimeUtil {
         return LocalDate.now(DISPLAY_ZONE);
     }
 
+    // Ngày (giờ Việt Nam) của một thời điểm UTC
+    public static LocalDate toDay(LocalDateTime utc) {
+        return toDisplayZone(utc).toLocalDate();
+    }
+
     private static ZonedDateTime toDisplayZone(LocalDateTime utc) {
         return utc.atZone(ZoneOffset.UTC).withZoneSameInstant(DISPLAY_ZONE);
     }

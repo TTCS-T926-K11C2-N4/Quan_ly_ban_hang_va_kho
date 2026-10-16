@@ -1,0 +1,29 @@
+<%-- S6-04: đổi lô xuất. Mặc định hệ thống gợi ý lô có hạn dùng gần nhất còn đủ số lượng (FEFO); chọn lô khác phải nhập lý do.
+     Mỗi dòng một form riêng nên đặt ngoài form soạn hàng (không lồng form). --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:if test="${canPick and not empty lotCandidates}">
+    <section class="inv-card pick-lot-change" id="pick-lot-change" aria-labelledby="pick-lot-title">
+        <h2 class="inv-card__title" id="pick-lot-title">Đổi lô xuất</h2>
+        <p class="inv-card__subtitle">Hệ thống đã gợi ý lô có hạn dùng gần nhất còn đủ số lượng. Chọn lô khác thì phải ghi lý do; xuất kho sẽ trừ đúng lô đã chọn.</p>
+        <c:forEach var="line" items="${pickList.lines}">
+            <c:if test="${not empty lotCandidates[line.id]}">
+                <form class="pick-lot-change__row" action="<c:url value='/pick-lists/lot'/>" method="post">
+                    <input type="hidden" name="id" value="${pickList.id}">
+                    <input type="hidden" name="line" value="${line.id}">
+                    <p class="pick-lot-change__line">
+                        <strong><c:out value="${line.sku}"/></strong> · đơn <c:out value="${line.orderNo}"/> · lô hiện tại <c:out value="${line.lotText}"/>
+                    </p>
+                    <select class="inv-control" name="lot" required aria-label="Lô xuất thay thế cho ${line.sku}">
+                        <option value="">Chọn lô khác</option>
+                        <c:forEach var="option" items="${lotCandidates[line.id]}">
+                            <option value="${option.lotId}"><c:out value="${option.lotNo}"/> · <c:out value="${option.expiryText}"/> · còn ${option.freeText}</option>
+                        </c:forEach>
+                    </select>
+                    <input class="inv-control" type="text" name="reason" maxlength="${lotReasonMax}" required
+                           placeholder="Lý do chọn lô khác (bắt buộc)" aria-label="Lý do đổi lô của ${line.sku}">
+                    <button class="inv-button inv-button--small" type="submit">Đổi lô</button>
+                </form>
+            </c:if>
+        </c:forEach>
+    </section>
+</c:if>

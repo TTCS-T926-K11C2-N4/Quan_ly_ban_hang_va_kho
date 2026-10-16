@@ -5,7 +5,7 @@ import com.oms.util.DateTimeUtil;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-// Đơn nháp trong hộp "Mở lại" của màn tạo đơn (S3-09). updatedAt lưu theo UTC.
+// Đơn trong hộp "Mở lại" của màn tạo đơn: đơn nháp (S3-09) và đơn đã gửi gần đây (S4-06). updatedAt lưu theo UTC.
 public class DraftOrder {
 
     private final long id;
@@ -14,15 +14,17 @@ public class DraftOrder {
     private final boolean customerBlocked;
     private final BigDecimal total;
     private final LocalDateTime updatedAt;
+    private final String status;
 
     public DraftOrder(long id, String orderNo, String customerName, boolean customerBlocked, BigDecimal total,
-                      LocalDateTime updatedAt) {
+                      LocalDateTime updatedAt, String status) {
         this.id = id;
         this.orderNo = orderNo;
         this.customerName = customerName;
         this.customerBlocked = customerBlocked;
         this.total = total;
         this.updatedAt = updatedAt;
+        this.status = status;
     }
 
     public long getId() {
@@ -47,5 +49,13 @@ public class DraftOrder {
 
     public String getUpdatedAtText() {
         return DateTimeUtil.formatDateTime(updatedAt);
+    }
+
+    public String getStatusLabel() {
+        return OrderStatus.label(status);
+    }
+
+    public String getStatusTone() {
+        return OrderStatus.tone(status);
     }
 }

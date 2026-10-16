@@ -73,7 +73,7 @@ public class CustomerDao {
             throws SQLException {
         List<Object> params = new ArrayList<>();
         // Đại lý đang giao dịch lên trước, rồi theo mã để thứ tự không đổi giữa các trang
-        String sql = "SELECT c.id, c.code, c.name, c.phone, c.is_blocked, c.status, r.name AS region_name,"
+        String sql = "SELECT c.id, c.code, c.name, c.phone, c.is_blocked, c.status, c.credit_status, r.name AS region_name,"
                 + " g.name AS group_name, c.sales_rep_id, u.full_name AS sales_rep_name,"
                 + " (SELECT MAX(h.created_at) FROM customer_assignment_history h WHERE h.customer_id = c.id) AS assigned_at"
                 + " FROM customers c"
@@ -94,7 +94,8 @@ public class CustomerDao {
                             resultSet.getObject("sales_rep_id", Long.class), resultSet.getString("sales_rep_name"),
                             resultSet.getObject("assigned_at", LocalDateTime.class),
                             CustomerListStatus.of(resultSet.getBoolean("is_blocked"),
-                                    Customer.ACTIVE.equals(resultSet.getString("status")))));
+                                    Customer.ACTIVE.equals(resultSet.getString("status"))),
+                            resultSet.getString("credit_status")));
                 }
             }
         }

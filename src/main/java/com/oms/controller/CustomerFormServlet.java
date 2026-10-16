@@ -114,9 +114,10 @@ public class CustomerFormServlet extends HttpServlet {
         return profile;
     }
 
+    // Kho phục vụ mặc định chỉ chọn kho bán được đang hoạt động; kho hàng lỗi không phục vụ đại lý (S5-03)
     private CustomerProfileService.Options options() throws SQLException {
         return new CustomerProfileService.Options(priceListDao.findActiveGroups(), regionDao.findActive(),
-                warehouseDao.findActive(), assignmentService.getActiveSalesReps());
+                warehouseDao.findActiveSellable(), assignmentService.getActiveSalesReps());
     }
 
     private void show(HttpServletRequest request, HttpServletResponse response, CustomerForm form,

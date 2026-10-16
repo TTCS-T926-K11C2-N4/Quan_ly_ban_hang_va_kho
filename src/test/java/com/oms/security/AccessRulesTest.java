@@ -36,7 +36,7 @@ class AccessRulesTest {
             rolePermissions.computeIfAbsent(row.group(1), role -> new HashSet<>()).add(row.group(2));
         }
 
-        // ADMIN: mọi quyền trừ COST_PRICE_VIEW và CREDIT_MANAGE (câu INSERT cuối file seed)
+        // ADMIN: mọi quyền trừ COST_PRICE_VIEW, CREDIT_MANAGE và STOCKTAKE_FINALIZE (câu INSERT cuối file seed)
         Set<String> allPermissions = new HashSet<>();
         Matcher permission = Pattern.compile("(?m)^\\s*\\('([A-Z_]+)', '").matcher(sql);
         while (permission.find()) {
@@ -44,6 +44,7 @@ class AccessRulesTest {
         }
         allPermissions.remove("COST_PRICE_VIEW");
         allPermissions.remove("CREDIT_MANAGE");
+        allPermissions.remove("STOCKTAKE_FINALIZE");
         rolePermissions.put("ADMIN", allPermissions);
     }
 
@@ -55,6 +56,20 @@ class AccessRulesTest {
     void seedHasAllSevenRoles() {
         assertEquals(Set.of("CUSTOMER", "SALES_REP", "SALES_MANAGER", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT", "ADMIN"),
                 rolePermissions.keySet());
+    }
+
+    // S6-03: ai xem giao hàng cũng xem phiếu soạn; chỉ nhân viên kho, quản lý kho, Admin lập phiếu và ghi nhận soạn
+    @Test
+    void onlyWarehouseRolesCanPick() {
+        for (String path : new String[] {"/pick-lists/new", "/pick-lists/pick", "/pick-lists/cancel"}) {
+            rolePermissions.forEach((role, permissions) -> assertEquals(
+                    "WAREHOUSE".equals(role) || "WH_MANAGER".equals(role) || "ADMIN".equals(role),
+                    AccessRules.isAllowed(path, permissions), role + " " + path));
+        }
+        for (String role : new String[] {"SALES_REP", "ACCOUNTANT", "SALES_MANAGER", "WAREHOUSE"}) {
+            assertTrue(AccessRules.isAllowed("/pick-lists", permissionsOf(role)), role);
+            assertTrue(AccessRules.isAllowed("/pick-lists/view", permissionsOf(role)), role);
+        }
     }
 
     @Test
@@ -138,6 +153,25 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/units", permissionsOf("WAREHOUSE")));
     }
 
+    // S5-03: ai xem tồn kho cũng xem được kho và vị trí; chỉ Quản lý kho và Admin thêm, sửa kho và vị trí
+    @Test
+    void onlyWarehouseManagersDeclareWarehouses() {
+        for (String path : new String[] {"/warehouses", "/warehouses/export", "/warehouses/locations"}) {
+            for (String role : new String[] {"WAREHOUSE", "WH_MANAGER", "SALES_REP", "ACCOUNTANT", "ADMIN"}) {
+                assertTrue(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("CUSTOMER")), path);
+        }
+        for (String path : new String[] {"/warehouses/new", "/warehouses/edit", "/warehouses/locations/save",
+                "/warehouses/locations/status"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("WH_MANAGER")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ADMIN")), path);
+            for (String role : new String[] {"WAREHOUSE", "SALES_REP", "SALES_MANAGER", "ACCOUNTANT", "CUSTOMER"}) {
+                assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
+            }
+        }
+    }
+
     // S2-09: ai xem kho thì xem được nhà cung cấp; chỉ nhân viên kho, quản lý kho, Admin thêm/sửa/xoá/ngừng giao dịch
     @Test
     void onlyWarehouseStaffCanManageSuppliers() {
@@ -193,6 +227,21 @@ class AccessRulesTest {
         assertFalse(AccessRules.isAllowed("/discount-policies/save", permissionsOf("SALES_REP")));
     }
 
+    // S5-04: nhân viên kho, quản lý kho lập và ghi sổ phiếu nhập; kinh doanh, kế toán chỉ xem
+    @Test
+    void warehouseStaffCreateGoodsReceipts() {
+        for (String path : new String[] {"/goods-receipts/new", "/goods-receipts/edit"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("WH_MANAGER")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("SALES_REP")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+        }
+        for (String path : new String[] {"/goods-receipts", "/goods-receipts/view", "/goods-receipts/export"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("CUSTOMER")), path);
+        }
+    }
+
     // S3-02: ai xem được bảng giá thì xem được lịch sử thay đổi giá; lịch sử chỉ xem nên không có đường dẫn sửa/xoá
     @Test
     void priceHistoryIsViewOnlyForProductViewers() {
@@ -245,6 +294,26 @@ class AccessRulesTest {
                 assertFalse(AccessRules.isAllowed(path, permissionsOf(role)), role + " " + path);
             }
         }
+    }
+
+    // S5-05: sổ tồn kho cho mọi vai trò xem tồn kho, kể cả nhân viên kinh doanh (xem tồn khả dụng); đại lý thì không
+    @Test
+    void inventoryViewersCanOpenStockLedger() {
+        for (String role : new String[] {"SALES_REP", "WAREHOUSE", "WH_MANAGER", "ACCOUNTANT", "SALES_MANAGER", "ADMIN"}) {
+            assertTrue(AccessRules.isAllowed("/stock", permissionsOf(role)), role);
+            assertTrue(AccessRules.isAllowed("/stock/export", permissionsOf(role)), role);
+        }
+        assertFalse(AccessRules.isAllowed("/stock", permissionsOf("CUSTOMER")));
+    }
+
+    // S6-05: chỉ nhân viên kho, quản lý kho, Admin xác nhận xuất kho; kế toán, kinh doanh chỉ xem phiếu xuất
+    @Test
+    void onlyWarehouseRolesCanConfirmIssue() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "WAREHOUSE".equals(role) || "WH_MANAGER".equals(role) || "ADMIN".equals(role),
+                AccessRules.isAllowed("/delivery-notes/confirm", permissions), role));
+        assertTrue(AccessRules.isAllowed("/delivery-notes/view", permissionsOf("ACCOUNTANT")));
+        assertTrue(AccessRules.isAllowed("/delivery-notes/view", permissionsOf("SALES_REP")));
     }
 
     // S3-07: chỉ Kế toán công nợ và Quản lý kinh doanh khoá/mở giao dịch đại lý
@@ -334,6 +403,16 @@ class AccessRulesTest {
         assertTrue(AccessRules.isAllowed("/change-password", Set.of()));
     }
 
+    // S5-06: nhân viên kinh doanh xem được đơn đang giữ chỗ (lọc đơn của mình ở service); đại lý thì không
+    @Test
+    void salesRepsCanViewReservations() {
+        for (String path : new String[] {"/stock/reservations", "/stock/reservations/view"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_REP")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
+            assertFalse(AccessRules.isAllowed(path, permissionsOf("CUSTOMER")), path);
+        }
+    }
+
     // S3-09: Nhân viên, Quản lý kinh doanh tạo đơn; kho và kế toán không tạo đơn
     @Test
     void salesRolesCanCreateOrders() {
@@ -342,6 +421,18 @@ class AccessRulesTest {
             assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
             assertFalse(AccessRules.isAllowed(path, permissionsOf("WAREHOUSE")), path);
             assertFalse(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+        }
+    }
+
+    // S6-08: ghi nhận giao hàng chỉ nhân viên kho, quản lý kho, Admin; người xem giao hàng xem điểm giao, ảnh biên bản
+    @Test
+    void onlyWarehouseRolesCanConfirmDelivery() {
+        rolePermissions.forEach((role, permissions) -> assertEquals(
+                "WAREHOUSE".equals(role) || "WH_MANAGER".equals(role) || "ADMIN".equals(role),
+                AccessRules.isAllowed("/deliveries/confirm", permissions), role));
+        for (String path : new String[] {"/deliveries", "/deliveries/point", "/deliveries/proof"}) {
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("ACCOUNTANT")), path);
+            assertTrue(AccessRules.isAllowed(path, permissionsOf("SALES_MANAGER")), path);
         }
     }
 
@@ -358,5 +449,16 @@ class AccessRulesTest {
         }
         assertFalse(AccessRules.isPublic("/dashboard"));
         assertFalse(AccessRules.isPublic("/accounts"));
+    }
+
+    // AC4 của S5-08: chỉ Quản lý kho được chốt phiếu kiểm kê; nhân viên kho đếm được nhưng không chốt, Admin cũng không
+    @Test
+    void onlyWarehouseManagerCanFinalizeStocktake() {
+        assertTrue(AccessRules.isAllowed("/stocktakes/finalize", permissionsOf("WH_MANAGER")));
+        assertFalse(AccessRules.isAllowed("/stocktakes/finalize", permissionsOf("WAREHOUSE")));
+        assertFalse(AccessRules.isAllowed("/stocktakes/finalize", permissionsOf("ADMIN")));
+        assertFalse(AccessRules.isAllowed("/stocktakes/finalize", permissionsOf("SALES_MANAGER")));
+        assertTrue(AccessRules.isAllowed("/stocktakes/count", permissionsOf("WAREHOUSE")));
+        assertFalse(AccessRules.isAllowed("/stocktakes/new", permissionsOf("SALES_REP")));
     }
 }
