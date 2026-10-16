@@ -219,6 +219,12 @@
                            href="<c:url value='/pick-lists'/>"${activeSubmenu == 'pick-lists' ? ' aria-current="page"' : ''}>Phiếu soạn hàng</a>
                     </li>
                     </c:if>
+                    <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.TripListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'trips' ? ' app-submenu__link--active' : ''}" id="menu-trips"
+                           href="<c:url value='/trips'/>"${activeSubmenu == 'trips' ? ' aria-current="page"' : ''}>Chuyến giao hàng</a>
+                    </li>
+                    </c:if>
                     <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.DeliveryListServlet']}">
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'deliveries' ? ' app-submenu__link--active' : ''}" id="menu-deliveries"
