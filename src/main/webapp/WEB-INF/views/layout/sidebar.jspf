@@ -297,6 +297,12 @@
                            href="<c:url value='/debts'/>"${activeSubmenu == 'debts' ? ' aria-current="page"' : ''}>Sổ công nợ</a>
                     </li>
                     </c:if>
+                    <c:if test="${currentUser.can('INVOICE_VIEW') and not empty financeServlets['com.oms.controller.OverdueReportServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'overdue' ? ' app-submenu__link--active' : ''}" id="menu-overdue"
+                           href="<c:url value='/debts/overdue'/>"${activeSubmenu == 'overdue' ? ' aria-current="page"' : ''}>Công nợ quá hạn</a>
+                    </li>
+                    </c:if>
                     <c:if test="${currentUser.can('INVOICE_VIEW') and not empty financeServlets['com.oms.controller.StatementServlet']}">
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'statements' ? ' app-submenu__link--active' : ''}" id="menu-statements"
