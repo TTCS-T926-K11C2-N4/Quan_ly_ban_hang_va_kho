@@ -86,3 +86,44 @@
     margin: 12px 0 0;
     color: #475569;
 }
+
+.invoice-reminder {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-bottom: 12px;
+}
+
+.notification-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.notification-list__item {
+    padding: 12px 4px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.notification-list__item--unread {
+    border-left: 3px solid #2563eb;
+    padding-left: 10px;
+    background: #f8fafc;
+}
+
+.notification-list__title {
+    margin: 0;
+    font-weight: 600;
+}
+
+.notification-list__body {
+    margin: 4px 0;
+    color: #334155;
+}
+
+.notification-list__time {
+    margin: 0;
+    color: #64748b;
+    font-size: 12px;
+}
