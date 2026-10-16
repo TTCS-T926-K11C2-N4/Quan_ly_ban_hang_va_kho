@@ -63,7 +63,11 @@ public class PortalOrderDao {
                 + " JOIN customer_delivery_addresses a ON a.id = o.delivery_address_id"
                 + " WHERE o.id = ? AND o.customer_id = ? AND o.status <> 'DRAFT'";
         String itemSql = "SELECT i.line_no, p.sku, p.name, u.name AS unit_name, i.qty, i.qty_shipped_base,"
-                + " i.unit_factor, i.unit_price, i.discount_amount, i.line_total FROM sales_order_items i"
+                + " i.unit_factor, i.unit_price, i.discount_amount, i.line_total,"
+                + " (SELECT SUM(n.qty_delivered_base) FROM delivery_note_items n"
+                + " JOIN delivery_notes d ON d.id = n.delivery_note_id"
+                + " WHERE n.order_item_id = i.id AND d.status = 'DELIVERED') AS qty_delivered_base"
+                + " FROM sales_order_items i"
                 + " JOIN products p ON p.id = i.product_id JOIN units u ON u.id = i.unit_id"
                 + " WHERE i.order_id = ? ORDER BY i.line_no";
         try (Connection connection = DbConnection.getConnection()) {
@@ -76,7 +80,8 @@ public class PortalOrderDao {
                         return null;
                     }
                     boolean shipped = SHIPPED_STATUSES.contains(resultSet.getString("status"));
-                    return readOrder(resultSet, readItems(connection, itemSql, orderId, shipped));
+                    return readOrder(resultSet, readItems(connection, itemSql, orderId, shipped),
+                            readTimeline(connection, orderId));
                 }
             }
         }
@@ -186,22 +191,82 @@ public class PortalOrderDao {
                     BigDecimal factor = resultSet.getBigDecimal("unit_factor");
                     BigDecimal shippedInUnit = resultSet.getBigDecimal("qty_shipped_base")
                             .divide(factor, 3, RoundingMode.HALF_UP);
+                    BigDecimal deliveredBase = resultSet.getBigDecimal("qty_delivered_base");
                     items.add(new PortalOrder.Item(resultSet.getInt("line_no"), resultSet.getString("sku"),
                             resultSet.getString("name"), resultSet.getString("unit_name"),
                             resultSet.getBigDecimal("qty"), shippedInUnit, shipped,
                             resultSet.getBigDecimal("unit_price"), resultSet.getBigDecimal("discount_amount"),
-                            resultSet.getBigDecimal("line_total")));
+                            resultSet.getBigDecimal("line_total"),
+                            deliveredBase == null ? null : deliveredBase.divide(factor, 3, RoundingMode.HALF_UP)));
                 }
             }
         }
         return items;
     }
 
+    // Các mốc giao hàng (S6-09). Duyệt, soạn, xuất, giao lấy từ lịch sử trạng thái đơn; đang giao lấy giờ xuất phát của
+    // chuyến (hoặc phiếu xuất đã sang Đang giao); giao xong khi mọi phiếu xuất của đơn đã giao.
+    private static List<PortalOrder.Milestone> readTimeline(Connection connection, long orderId) throws SQLException {
+        String historySql = "SELECT to_status, MIN(created_at) FROM order_status_history WHERE order_id = ?"
+                + " AND to_status IN ('APPROVED', 'PICKING', 'SHIPPED', 'DELIVERED') GROUP BY to_status";
+        String noteSql = "SELECT MIN(d.issued_at), MIN(t.departed_at),"
+                + " COALESCE(SUM(d.status IN ('IN_TRANSIT', 'DELIVERED', 'FAILED')), 0), COUNT(*),"
+                + " COALESCE(SUM(d.status = 'DELIVERED'), 0), MAX(d.delivered_at) FROM delivery_notes d"
+                + " LEFT JOIN delivery_trips t ON t.id = d.trip_id WHERE d.order_id = ?";
+        LocalDateTime approved = null;
+        LocalDateTime picking = null;
+        LocalDateTime shipped = null;
+        LocalDateTime delivered = null;
+        try (PreparedStatement statement = connection.prepareStatement(historySql)) {
+            statement.setLong(1, orderId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    LocalDateTime at = resultSet.getObject(2, LocalDateTime.class);
+                    switch (resultSet.getString(1)) {
+                        case "APPROVED" -> approved = at;
+                        case "PICKING" -> picking = at;
+                        case "SHIPPED" -> shipped = at;
+                        default -> delivered = at;
+                    }
+                }
+            }
+        }
+        LocalDateTime inTransit = null;
+        try (PreparedStatement statement = connection.prepareStatement(noteSql)) {
+            statement.setLong(1, orderId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                LocalDateTime issued = resultSet.getObject(1, LocalDateTime.class);
+                LocalDateTime departed = resultSet.getObject(2, LocalDateTime.class);
+                long moving = resultSet.getLong(3);
+                long notes = resultSet.getLong(4);
+                long done = resultSet.getLong(5);
+                if (shipped == null) {
+                    shipped = issued;
+                }
+                if (moving > 0) {
+                    inTransit = departed != null ? departed : issued;
+                }
+                if (delivered == null && notes > 0 && done == notes) {
+                    delivered = resultSet.getObject(6, LocalDateTime.class);
+                }
+            }
+        }
+        return List.of(new PortalOrder.Milestone("Đã duyệt", approved),
+                new PortalOrder.Milestone("Đang soạn hàng", picking), new PortalOrder.Milestone("Đã xuất kho", shipped),
+                new PortalOrder.Milestone("Đang giao", inTransit), new PortalOrder.Milestone("Đã giao", delivered));
+    }
+
     private static PortalOrder readOrder(ResultSet resultSet, List<PortalOrder.Item> items) throws SQLException {
+        return readOrder(resultSet, items, List.of());
+    }
+
+    private static PortalOrder readOrder(ResultSet resultSet, List<PortalOrder.Item> items,
+                                         List<PortalOrder.Milestone> timeline) throws SQLException {
         return new PortalOrder(resultSet.getLong("id"), resultSet.getString("order_no"),
                 resultSet.getString("status"), resultSet.getObject("requested_delivery_date", LocalDate.class),
                 resultSet.getObject("created_at", LocalDateTime.class), resultSet.getBigDecimal("subtotal_amount"),
                 resultSet.getBigDecimal("discount_amount"), resultSet.getBigDecimal("total_amount"),
-                resultSet.getString("note"), resultSet.getString("address"), items);
+                resultSet.getString("note"), resultSet.getString("address"), items, timeline);
     }
 }

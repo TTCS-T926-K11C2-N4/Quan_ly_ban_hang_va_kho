@@ -21,10 +21,18 @@ public class PortalOrder {
     private final String note;
     private final String deliveryAddress;
     private final List<Item> items;
+    private final List<Milestone> timeline;
 
     public PortalOrder(long id, String orderNo, String status, LocalDate requestedDate, LocalDateTime createdAt,
                        BigDecimal subtotal, BigDecimal discount, BigDecimal total, String note,
                        String deliveryAddress, List<Item> items) {
+        this(id, orderNo, status, requestedDate, createdAt, subtotal, discount, total, note, deliveryAddress, items,
+                List.of());
+    }
+
+    public PortalOrder(long id, String orderNo, String status, LocalDate requestedDate, LocalDateTime createdAt,
+                       BigDecimal subtotal, BigDecimal discount, BigDecimal total, String note,
+                       String deliveryAddress, List<Item> items, List<Milestone> timeline) {
         this.id = id;
         this.orderNo = orderNo;
         this.status = status;
@@ -36,6 +44,23 @@ public class PortalOrder {
         this.note = note;
         this.deliveryAddress = deliveryAddress;
         this.items = List.copyOf(items);
+        this.timeline = List.copyOf(timeline);
+    }
+
+    // Các mốc giao hàng của đơn (S6-09): đã duyệt, đang soạn, đã xuất kho, đang giao, đã giao
+    public List<Milestone> getTimeline() {
+        return timeline;
+    }
+
+    // Chỉ số mốc cuối cùng đã đạt (-1 nếu chưa đạt mốc nào), để làm nổi bật bước hiện tại
+    public int getCurrentStep() {
+        int current = -1;
+        for (int i = 0; i < timeline.size(); i++) {
+            if (timeline.get(i).isReached()) {
+                current = i;
+            }
+        }
+        return current;
     }
 
     public long getId() {
@@ -95,6 +120,29 @@ public class PortalOrder {
         return items.stream().anyMatch(Item::isShortDelivered);
     }
 
+    // Một mốc trên đường đi của đơn; at null nghĩa là chưa tới mốc này
+    public static class Milestone {
+        private final String label;
+        private final LocalDateTime at;
+
+        public Milestone(String label, LocalDateTime at) {
+            this.label = label;
+            this.at = at;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public boolean isReached() {
+            return at != null;
+        }
+
+        public String getAtText() {
+            return DateTimeUtil.formatDateTime(at);
+        }
+    }
+
     // Dòng hàng; qty tính theo đơn vị đặt, qtyShipped quy ngược từ đơn vị cơ sở theo hệ số đã chụp lúc đặt
     public static class Item {
         private final int lineNo;
@@ -107,10 +155,20 @@ public class PortalOrder {
         private final BigDecimal unitPrice;
         private final BigDecimal discount;
         private final BigDecimal lineTotal;
+        private final BigDecimal qtyDelivered;
 
         public Item(int lineNo, String sku, String productName, String unitName, BigDecimal qty,
                     BigDecimal qtyShipped, boolean shippedKnown, BigDecimal unitPrice, BigDecimal discount,
                     BigDecimal lineTotal) {
+            this(lineNo, sku, productName, unitName, qty, qtyShipped, shippedKnown, unitPrice, discount, lineTotal,
+                    null);
+        }
+
+        // qtyDelivered: số đã giao thành công theo đơn vị đặt (từ phiếu xuất đã giao); null nếu chưa có phiếu giao xong
+        public Item(int lineNo, String sku, String productName, String unitName, BigDecimal qty,
+                    BigDecimal qtyShipped, boolean shippedKnown, BigDecimal unitPrice, BigDecimal discount,
+                    BigDecimal lineTotal, BigDecimal qtyDelivered) {
+            this.qtyDelivered = qtyDelivered;
             this.lineNo = lineNo;
             this.sku = sku;
             this.productName = productName;
@@ -152,8 +210,22 @@ public class PortalOrder {
             return shippedKnown;
         }
 
+        // Số thực giao thành công; null nếu chưa có phiếu xuất nào giao xong
+        public BigDecimal getQtyDelivered() {
+            return qtyDelivered;
+        }
+
+        public boolean isDeliveredKnown() {
+            return qtyDelivered != null;
+        }
+
+        // Số lượng thực giao nếu đã giao xong, ngược lại số đã xuất kho
+        public BigDecimal getQtyActual() {
+            return qtyDelivered != null ? qtyDelivered : qtyShipped;
+        }
+
         public boolean isShortDelivered() {
-            return shippedKnown && qtyShipped.compareTo(qty) < 0;
+            return shippedKnown && getQtyActual().compareTo(qty) < 0;
         }
 
         public BigDecimal getUnitPrice() {
