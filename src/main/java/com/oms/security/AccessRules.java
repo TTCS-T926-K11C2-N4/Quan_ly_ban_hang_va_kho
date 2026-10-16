@@ -120,6 +120,13 @@ public final class AccessRules {
             Map.entry("/payments", Permission.INVOICE_VIEW),
             Map.entry("/payments/new", Permission.INVOICE_MANAGE),
             Map.entry("/payments/print", Permission.INVOICE_VIEW),
+            // Thu tiền theo tuyến (S7-05): NV kinh doanh ghi nhận (PAYMENT_COLLECT), kế toán xác nhận/huỷ và đối chiếu
+            Map.entry("/collections", Permission.PAYMENT_COLLECT),
+            Map.entry("/collections/new", Permission.PAYMENT_COLLECT),
+            Map.entry("/collections/reconcile", Permission.INVOICE_VIEW),
+            Map.entry("/payments/confirm", Permission.INVOICE_MANAGE),
+            Map.entry("/payments/void", Permission.INVOICE_MANAGE),
+            Map.entry("/payments/receipt", AUTHENTICATED),
             // Sổ công nợ theo đại lý và tuổi nợ (S7-03)
             Map.entry("/debts", Permission.INVOICE_VIEW),
             Map.entry("/debts/export", Permission.INVOICE_VIEW),

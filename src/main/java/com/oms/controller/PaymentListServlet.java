@@ -18,6 +18,7 @@ public class PaymentListServlet extends HttpServlet {
 
     static final String VIEW = "/WEB-INF/views/payments/payment-list.jsp";
     static final String FLASH_MESSAGE = "paymentFlashMessage";
+    static final String FLASH_ERROR = "paymentFlashError";
 
     private final PaymentService paymentService = new PaymentService();
     private final InvoiceService invoiceService = new InvoiceService();
@@ -33,12 +34,14 @@ public class PaymentListServlet extends HttpServlet {
             }
             request.setAttribute("debtors", paymentService.debtors());
             request.setAttribute("payments", paymentService.findPayments(customerId));
+            request.setAttribute("pendingPayments", paymentService.findPending());
         } catch (SQLException e) {
             log("Không tải được danh sách phiếu thu", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
         Flash.moveToRequest(request, FLASH_MESSAGE, "flashMessage");
+        Flash.moveToRequest(request, FLASH_ERROR, "flashError");
         request.setAttribute("canManage", CurrentUser.get(request).can(Permission.INVOICE_MANAGE));
         request.setAttribute("customerId", customerId);
         request.getRequestDispatcher(VIEW).forward(request, response);

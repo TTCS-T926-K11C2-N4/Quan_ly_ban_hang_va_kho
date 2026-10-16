@@ -1,15 +1,19 @@
 package com.oms.service;
 
 import com.oms.dao.AuditLogDao;
+import com.oms.dao.FileObjectDao;
 import com.oms.dao.PaymentDao;
 import com.oms.model.Debtor;
 import com.oms.model.OpenInvoice;
 import com.oms.model.Payment;
 import com.oms.util.DateTimeUtil;
 import com.oms.util.DbConnection;
+import com.oms.util.FileStorage;
 import com.oms.util.JsonUtil;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -20,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 // Ghi nhận thanh toán và đối trừ công nợ (S7-02).
@@ -32,12 +37,14 @@ public class PaymentService {
 
     public static final int LIST_LIMIT = 100;
     public static final int NOTE_MAX = 1000;
+    public static final long RECEIPT_MAX_BYTES = 5L * 1024 * 1024;
     private static final Pattern MONEY = Pattern.compile("[0-9]{1,13}");
     private static final String AUDIT_ENTITY = "PAYMENT";
     private static final String NOT_FOUND = "NOT_FOUND";
 
     private final PaymentDao paymentDao = new PaymentDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
+    private final FileObjectDao fileObjectDao = new FileObjectDao();
     private final CreditFlagService creditFlagService = new CreditFlagService();
 
     // error != null: lỗi nghiệp vụ (hoặc "NOT_FOUND"); ngược lại id và số phiếu thu
@@ -228,5 +235,209 @@ public class PaymentService {
         auditLogDao.insert(connection, actorUserId, "PAYMENT_RECORD", AUDIT_ENTITY, paymentId, null,
                 JsonUtil.object(values), null, ipAddress);
         return Outcome.success(paymentId, receiptNo);
+    }
+
+    // Ảnh biên lai tải lên (S7-05)
+    public record ReceiptUpload(byte[] content, String originalName) {
+    }
+
+    // S7-05: nhân viên kinh doanh ghi nhận khoản thu tại cửa hàng của đại lý mình phụ trách, kèm ảnh biên lai.
+    // Khoản thu ở trạng thái Chờ nộp, chưa trừ công nợ cho tới khi kế toán xác nhận đã nhận tiền.
+    public Outcome collect(long actorUserId, long customerId, String amountText, String method, String dateText,
+                           String note, ReceiptUpload receipt, String ipAddress) throws SQLException, IOException {
+        BigDecimal amount = parseAmount(amountText);
+        if (amount == null) {
+            return Outcome.failure("Số tiền thu phải là số nguyên đồng lớn hơn 0.");
+        }
+        if (!Payment.isMethod(method)) {
+            return Outcome.failure("Chọn hình thức thu (tiền mặt hoặc chuyển khoản).");
+        }
+        LocalDate paymentDate;
+        try {
+            paymentDate = dateText == null || dateText.isBlank() ? DateTimeUtil.today() : LocalDate.parse(dateText.trim());
+        } catch (DateTimeParseException e) {
+            return Outcome.failure("Ngày thu không hợp lệ.");
+        }
+        if (paymentDate.isAfter(DateTimeUtil.today())) {
+            return Outcome.failure("Ngày thu không được sau hôm nay.");
+        }
+        String cleanNote = note == null || note.trim().isEmpty() ? null : note.trim();
+        if (cleanNote != null && cleanNote.length() > NOTE_MAX) {
+            return Outcome.failure("Ghi chú tối đa " + NOTE_MAX + " ký tự.");
+        }
+        if (receipt == null || receipt.content().length == 0) {
+            return Outcome.failure("Vui lòng chụp hoặc chọn ảnh biên lai.");
+        }
+        if (receipt.content().length > RECEIPT_MAX_BYTES) {
+            return Outcome.failure("Ảnh biên lai tối đa 5MB.");
+        }
+        String type = DeliveryConfirmService.detectImageType(receipt.content());
+        if (type == null) {
+            return Outcome.failure("Ảnh biên lai phải là JPG hoặc PNG.");
+        }
+        if (!paymentDao.isAssignedTo(customerId, actorUserId)) {
+            return Outcome.failure(NOT_FOUND);
+        }
+        String key = "receipts/" + DateTimeUtil.today().toString().substring(0, 7) + "/" + UUID.randomUUID()
+                + ("image/png".equals(type) ? ".png" : ".jpg");
+        FileStorage.save(key, receipt.content());
+        try (Connection connection = DbConnection.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                if (!paymentDao.lockCustomer(connection, customerId)) {
+                    connection.rollback();
+                    Files.deleteIfExists(FileStorage.resolve(key));
+                    return Outcome.failure(NOT_FOUND);
+                }
+                BigDecimal outstanding = paymentDao.findOutstanding(connection, customerId);
+                BigDecimal pending = paymentDao.findPendingTotal(connection, customerId);
+                if (amount.compareTo(outstanding.subtract(pending)) > 0) {
+                    connection.rollback();
+                    Files.deleteIfExists(FileStorage.resolve(key));
+                    return Outcome.failure("Số tiền thu vượt công nợ còn lại của đại lý ("
+                            + outstanding.subtract(pending).max(BigDecimal.ZERO).stripTrailingZeros().toPlainString()
+                            + " ₫, đã trừ các khoản đang chờ nộp).");
+                }
+                long fileId = fileObjectDao.insert(connection, key, fileName(receipt.originalName()), type,
+                        receipt.content().length, "RECEIPT", actorUserId);
+                String receiptNo = paymentDao.nextReceiptNo(connection, paymentDate.getYear());
+                long paymentId = paymentDao.insertPending(connection, receiptNo, customerId, amount, method,
+                        paymentDate, cleanNote, fileId, actorUserId);
+                Map<String, Object> values = new LinkedHashMap<>();
+                values.put("receiptNo", receiptNo);
+                values.put("customerId", customerId);
+                values.put("amount", amount.toPlainString());
+                values.put("method", method);
+                values.put("paymentDate", paymentDate.toString());
+                values.put("status", Payment.PENDING_HANDOVER);
+                auditLogDao.insert(connection, actorUserId, "PAYMENT_COLLECT", AUDIT_ENTITY, paymentId, null,
+                        JsonUtil.object(values), null, ipAddress);
+                connection.commit();
+                return Outcome.success(paymentId, receiptNo);
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                Files.deleteIfExists(FileStorage.resolve(key));
+                throw e;
+            }
+        }
+    }
+
+    // S7-05: kế toán xác nhận đã nhận tiền; khoản thu được đối trừ vào hoá đơn cũ nhất trước như thu trực tiếp
+    public Outcome confirmHandover(long actorUserId, long paymentId, String ipAddress) throws SQLException {
+        try (Connection connection = DbConnection.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                PaymentDao.PaymentLock payment = paymentDao.lockPayment(connection, paymentId);
+                if (payment == null) {
+                    connection.rollback();
+                    return Outcome.failure(NOT_FOUND);
+                }
+                if (!Payment.PENDING_HANDOVER.equals(payment.status())) {
+                    connection.rollback();
+                    return Outcome.failure("Khoản thu " + payment.receiptNo() + " không còn ở trạng thái Chờ nộp.");
+                }
+                paymentDao.lockCustomer(connection, payment.customerId());
+                List<Share> shares = allocate(payment.amount(),
+                        paymentDao.lockOpenInvoices(connection, payment.customerId()));
+                if (shares == null) {
+                    connection.rollback();
+                    return Outcome.failure("Công nợ còn lại của đại lý không đủ để đối trừ khoản thu "
+                            + payment.receiptNo() + "; có thể hoá đơn đã được thu trực tiếp. Hãy huỷ khoản thu này.");
+                }
+                List<String> invoiceNos = new ArrayList<>();
+                for (Share share : shares) {
+                    paymentDao.allocate(connection, payment.id(), share.invoice().getId(), share.amount(),
+                            actorUserId);
+                    invoiceNos.add(share.invoice().getInvoiceNo());
+                }
+                paymentDao.insertLedgerEntry(connection, payment.customerId(), payment.amount(), payment.id(),
+                        payment.paymentDate(), "Phiếu thu " + payment.receiptNo(), actorUserId);
+                PaymentDao.adjustBalance(connection, payment.customerId(), payment.amount().negate());
+                paymentDao.confirm(connection, payment.id(), actorUserId);
+                creditFlagService.evaluate(connection, payment.customerId(), actorUserId, ipAddress);
+                Map<String, Object> before = new LinkedHashMap<>();
+                before.put("status", Payment.PENDING_HANDOVER);
+                Map<String, Object> after = new LinkedHashMap<>();
+                after.put("receiptNo", payment.receiptNo());
+                after.put("status", "CONFIRMED");
+                after.put("amount", payment.amount().toPlainString());
+                after.put("invoices", String.join(", ", invoiceNos));
+                auditLogDao.insert(connection, actorUserId, "PAYMENT_CONFIRM", AUDIT_ENTITY, payment.id(),
+                        JsonUtil.object(before), JsonUtil.object(after), null, ipAddress);
+                connection.commit();
+                return Outcome.success(payment.id(), payment.receiptNo());
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        }
+    }
+
+    // Huỷ khoản thu chờ nộp kèm lý do (không nhận được tiền hoặc sai số liệu); không đụng công nợ
+    public Outcome voidPending(long actorUserId, long paymentId, String reason, String ipAddress)
+            throws SQLException {
+        String cleanReason = reason == null ? "" : reason.trim();
+        if (cleanReason.isEmpty()) {
+            return Outcome.failure("Nhập lý do huỷ khoản thu.");
+        }
+        if (cleanReason.length() > NOTE_MAX) {
+            return Outcome.failure("Lý do tối đa " + NOTE_MAX + " ký tự.");
+        }
+        try (Connection connection = DbConnection.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                PaymentDao.PaymentLock payment = paymentDao.lockPayment(connection, paymentId);
+                if (payment == null) {
+                    connection.rollback();
+                    return Outcome.failure(NOT_FOUND);
+                }
+                if (!Payment.PENDING_HANDOVER.equals(payment.status())) {
+                    connection.rollback();
+                    return Outcome.failure("Chỉ huỷ được khoản thu đang Chờ nộp.");
+                }
+                paymentDao.voidPending(connection, payment.id(), cleanReason, actorUserId);
+                Map<String, Object> before = new LinkedHashMap<>();
+                before.put("status", Payment.PENDING_HANDOVER);
+                Map<String, Object> after = new LinkedHashMap<>();
+                after.put("receiptNo", payment.receiptNo());
+                after.put("status", "VOIDED");
+                after.put("amount", payment.amount().toPlainString());
+                auditLogDao.insert(connection, actorUserId, "PAYMENT_VOID", AUDIT_ENTITY, payment.id(),
+                        JsonUtil.object(before), JsonUtil.object(after), cleanReason, ipAddress);
+                connection.commit();
+                return Outcome.success(payment.id(), payment.receiptNo());
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+        }
+    }
+
+    public List<Debtor> debtorsOf(long salesRepId) throws SQLException {
+        return paymentDao.findDebtors(salesRepId);
+    }
+
+    public List<Payment> findByCollector(long collectorId) throws SQLException {
+        return paymentDao.findPayments(collectorId, null, LIST_LIMIT);
+    }
+
+    public List<Payment> findPending() throws SQLException {
+        return paymentDao.findPayments(null, Payment.PENDING_HANDOVER, LIST_LIMIT);
+    }
+
+    public List<PaymentDao.ReconciliationRow> reconciliation(LocalDate from, LocalDate to) throws SQLException {
+        return paymentDao.findReconciliation(from, to);
+    }
+
+    public PaymentDao.Receipt findReceipt(long paymentId) throws SQLException {
+        return paymentDao.findReceipt(paymentId);
+    }
+
+    // Tên tệp gốc do người dùng gửi lên chỉ để hiển thị: bỏ đường dẫn, giới hạn độ dài
+    private static String fileName(String submitted) {
+        String name = submitted == null ? "receipt" : submitted;
+        int slash = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
+        name = slash >= 0 ? name.substring(slash + 1) : name;
+        return name.isBlank() ? "receipt" : name.substring(0, Math.min(name.length(), 200));
     }
 }

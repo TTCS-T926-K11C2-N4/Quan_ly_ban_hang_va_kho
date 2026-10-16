@@ -250,7 +250,7 @@
             </li>
             </c:if>
             <%-- Hoá đơn & công nợ (EP-07, Sprint 7): trang đặt activeMenu = finance, activeSubmenu: invoices --%>
-            <c:if test="${currentUser.can('INVOICE_VIEW') and not currentUser.customer}">
+            <c:if test="${(currentUser.can('INVOICE_VIEW') or currentUser.can('PAYMENT_COLLECT')) and not currentUser.customer}">
             <li>
                 <c:set var="financeServlets" value="${pageContext.servletContext.servletRegistrations}"/>
                 <details class="app-menu__group"${activeMenu == 'finance' ? ' open' : ''}>
@@ -275,6 +275,18 @@
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'debts' ? ' app-submenu__link--active' : ''}" id="menu-debts"
                            href="<c:url value='/debts'/>"${activeSubmenu == 'debts' ? ' aria-current="page"' : ''}>Sổ công nợ</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('PAYMENT_COLLECT') and not empty financeServlets['com.oms.controller.CollectionServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'collections' ? ' app-submenu__link--active' : ''}" id="menu-collections"
+                           href="<c:url value='/collections'/>"${activeSubmenu == 'collections' ? ' aria-current="page"' : ''}>Thu tiền tại cửa hàng</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('INVOICE_MANAGE') and not empty financeServlets['com.oms.controller.ReconciliationServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'reconcile' ? ' app-submenu__link--active' : ''}" id="menu-reconcile"
+                           href="<c:url value='/collections/reconcile'/>"${activeSubmenu == 'reconcile' ? ' aria-current="page"' : ''}>Đối chiếu tiền thu</a>
                     </li>
                     </c:if>
                 </ul>
