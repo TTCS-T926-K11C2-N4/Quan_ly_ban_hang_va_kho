@@ -50,6 +50,7 @@ INSERT INTO `permissions` (`code`, `module`, `action`, `description`) VALUES
   ('RETURN_VIEW', 'Trả hàng & điều chỉnh', 'VIEW', 'Xem phiếu trả hàng và điều chỉnh'),
   ('RETURN_MANAGE', 'Trả hàng & điều chỉnh', 'MANAGE', 'Lập phiếu trả hàng và điều chỉnh'),
   ('REPORT_VIEW', 'Báo cáo & dashboard', 'VIEW', 'Xem báo cáo và dashboard'),
+  ('SALES_TARGET_MANAGE', 'Báo cáo & dashboard', 'MANAGE', 'Đặt và sửa chỉ tiêu doanh số theo tháng cho nhân viên và khu vực'),
   ('USER_VIEW', 'Người dùng & nhật ký', 'VIEW', 'Xem tài khoản người dùng và nhật ký'),
   ('USER_MANAGE', 'Người dùng & nhật ký', 'MANAGE', 'Tạo, sửa, khoá tài khoản người dùng'),
   ('AUDIT_LOG_VIEW', 'Người dùng & nhật ký', 'VIEW', 'Xem nhật ký thao tác trên tồn kho, giá, công nợ, hoá đơn')
@@ -134,6 +135,7 @@ FROM (VALUES
   ROW('SALES_MANAGER', 'INVENTORY_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'DELIVERY_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'INVOICE_VIEW', 'ALL'),
+  ROW('SALES_MANAGER', 'SALES_TARGET_MANAGE', 'ALL'),
   ROW('SALES_MANAGER', 'RETURN_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'RETURN_MANAGE', 'ALL'),
   ROW('SALES_MANAGER', 'REPORT_VIEW', 'ALL'),

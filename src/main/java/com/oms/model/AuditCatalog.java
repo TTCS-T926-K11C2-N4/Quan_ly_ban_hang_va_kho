@@ -31,6 +31,7 @@ public final class AuditCatalog {
         ENTITIES.put("CREDIT_LIMIT", "Hạn mức công nợ");
         ENTITIES.put("INVOICE", "Hoá đơn");
         ENTITIES.put("PAYMENT", "Phiếu thu");
+        ENTITIES.put("SALES_TARGET", "Chỉ tiêu doanh số");
         ENTITIES.put("STOCK_ADJUSTMENT", "Phiếu điều chỉnh tồn kho");
         ENTITIES.put("SALES_RETURN", "Phiếu trả hàng");
         ENTITIES.put("CREDIT_NOTE", "Chứng từ giảm trừ công nợ");
@@ -134,6 +135,7 @@ public final class AuditCatalog {
         action("PAYMENT_COLLECT", "Thu tiền theo tuyến (chờ nộp)", GROUP_CREATE);
         action("PAYMENT_CONFIRM", "Xác nhận đã nhận tiền", GROUP_STATUS);
         action("PAYMENT_VOID", "Huỷ khoản thu chờ nộp", GROUP_STATUS);
+        action("TARGET_SET", "Đặt hoặc sửa chỉ tiêu doanh số", GROUP_UPDATE);
         action("ADJUSTMENT_CREATE", "Lập phiếu điều chỉnh tồn kho", GROUP_CREATE);
         action("ADJUSTMENT_APPROVE", "Duyệt phiếu điều chỉnh tồn kho", GROUP_STATUS);
         action("ADJUSTMENT_REJECT", "Từ chối phiếu điều chỉnh tồn kho", GROUP_STATUS);
