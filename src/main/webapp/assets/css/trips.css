@@ -94,3 +94,33 @@
 .trip-candidates li {
     padding: 4px 0;
 }
+
+/* S6-07: theo dõi chuyến đang giao */
+.trip-overdue {
+    color: #b91c1c;
+}
+
+.trip-monitor {
+    margin-top: 14px;
+}
+
+.trip-monitor--overdue {
+    border-color: #fca5a5;
+    box-shadow: inset 4px 0 0 #dc2626;
+}
+
+.trip-monitor-empty {
+    padding: 18px 20px;
+    color: #64748b;
+}
+
+.trip-progress {
+    width: 100%;
+    height: 10px;
+    margin-top: 6px;
+}
+
+.trip-failed {
+    margin: 10px 0 0;
+    color: #92400e;
+}
