@@ -63,7 +63,7 @@
                         <tbody>
                             <c:forEach var="row" items="${rows}">
                                 <tr>
-                                    <td><span class="inv-table__main"><c:out value="${row.name}"/></span><span class="inv-table__sub"><c:out value="${row.code}"/></span></td>
+                                    <td><a class="inv-table__main" href="<c:url value='/debts/detail'><c:param name='customer' value='${row.customerId}'/></c:url>"><c:out value="${row.name}"/></a><span class="inv-table__sub"><c:out value="${row.code}"/> · Sổ chi tiết</span></td>
                                     <td class="is-number"><fmt:formatNumber value="${row.receivable}" maxFractionDigits="0"/></td>
                                     <td class="is-number"><fmt:formatNumber value="${row.paid}" maxFractionDigits="0"/></td>
                                     <td class="is-number"><strong><fmt:formatNumber value="${row.outstanding}" maxFractionDigits="0"/></strong></td>
