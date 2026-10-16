@@ -116,6 +116,9 @@ public final class AccessRules {
             Map.entry("/invoices/view", Permission.INVOICE_VIEW),
             Map.entry("/invoices/print", Permission.INVOICE_VIEW),
             Map.entry("/invoices/issue", Permission.INVOICE_MANAGE),
+            // Phiếu thu và đối trừ công nợ (S7-02): xem cần INVOICE_VIEW (phạm vi ALL), ghi nhận cần INVOICE_MANAGE
+            Map.entry("/payments", Permission.INVOICE_VIEW),
+            Map.entry("/payments/new", Permission.INVOICE_MANAGE),
             Map.entry("/orders/confirm", Permission.ORDER_MANAGE),
             Map.entry("/orders/copy", Permission.ORDER_MANAGE),
             Map.entry("/approvals", Permission.ORDER_APPROVAL_VIEW),

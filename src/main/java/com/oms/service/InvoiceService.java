@@ -2,6 +2,7 @@ package com.oms.service;
 
 import com.oms.dao.AuditLogDao;
 import com.oms.dao.InvoiceDao;
+import com.oms.dao.PaymentDao;
 import com.oms.dao.PermissionDao;
 import com.oms.model.Invoice;
 import com.oms.model.InvoiceCandidate;
@@ -197,6 +198,7 @@ public class InvoiceService {
         }
         invoiceDao.insertLedgerEntry(connection, customerId, total, invoiceId, today, "Hoá đơn " + invoiceNo,
                 actorUserId);
+        PaymentDao.adjustBalance(connection, customerId, total);
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("invoiceNo", invoiceNo);
         values.put("customerId", customerId);
