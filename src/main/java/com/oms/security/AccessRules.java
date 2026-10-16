@@ -180,6 +180,12 @@ public final class AccessRules {
             Map.entry("/stocktakes/count", Permission.INVENTORY_MANAGE),
             Map.entry("/stocktakes/cancel", Permission.INVENTORY_MANAGE),
             Map.entry("/stocktakes/finalize", Permission.STOCKTAKE_FINALIZE),
+            // Điều chỉnh tồn kho (S8-03): lập cần INVENTORY_MANAGE, duyệt/từ chối cần quyền chốt kho của Quản lý kho
+            Map.entry("/adjustments", Permission.INVENTORY_VIEW),
+            Map.entry("/adjustments/view", Permission.INVENTORY_VIEW),
+            Map.entry("/adjustments/new", Permission.INVENTORY_MANAGE),
+            Map.entry("/adjustments/approve", Permission.STOCKTAKE_FINALIZE),
+            Map.entry("/adjustments/reject", Permission.STOCKTAKE_FINALIZE),
             Map.entry("/stock/reservations/view", Permission.INVENTORY_VIEW),
             // Phiếu soạn hàng (S6-03): ai xem giao hàng cũng xem phiếu; nhân viên kho, quản lý kho lập phiếu và ghi nhận soạn
             Map.entry("/pick-lists", Permission.DELIVERY_VIEW),
