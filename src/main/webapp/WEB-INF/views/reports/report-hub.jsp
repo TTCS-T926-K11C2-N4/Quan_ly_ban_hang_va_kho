@@ -31,6 +31,8 @@
             </header>
             <section class="inv-card" aria-label="Danh sách báo cáo">
                 <ul class="report-hub" id="report-hub">
+                    <li><a class="inv-table__main" id="report-executive" href="<c:url value='/executive'/>">Dashboard điều hành</a>
+                        <span class="inv-table__sub">Doanh số, đơn chờ xử lý, công nợ quá hạn và tồn dưới mức tối thiểu toàn công ty (cần quyền xem toàn bộ).</span></li>
                     <li><a class="inv-table__main" id="report-sales" href="<c:url value='/reports/sales'/>">Doanh số nhiều chiều</a>
                         <span class="inv-table__sub">Theo nhân viên, khu vực, đại lý, nhóm hàng, SKU; so với kỳ trước; biên lợi nhuận cho người xem được giá vốn.</span></li>
                     <c:if test="${currentUser.can('SALES_TARGET_MANAGE')}">

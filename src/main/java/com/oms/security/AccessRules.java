@@ -164,6 +164,8 @@ public final class AccessRules {
             // Chỉ tiêu doanh số tháng (S8-04): đặt chỉ tiêu cần SALES_TARGET_MANAGE, xem tiến độ của mình cần REPORT_VIEW
             Map.entry("/targets", Permission.SALES_TARGET_MANAGE),
             Map.entry("/targets/my", Permission.REPORT_VIEW),
+            // Dashboard điều hành (S8-05): kiểm phạm vi ALL trong Servlet
+            Map.entry("/executive", Permission.REPORT_VIEW),
             // Đại lý xem công nợ và hoá đơn của chính mình (S7-07)
             Map.entry("/portal/debts", Permission.INVOICE_VIEW),
             Map.entry("/portal/invoices/print", Permission.INVOICE_VIEW),
