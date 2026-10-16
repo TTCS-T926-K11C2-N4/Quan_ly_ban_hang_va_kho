@@ -12,7 +12,10 @@
 </head>
 <body class="print-page">
     <div class="print-toolbar">
-        <a class="print-toolbar__button" href="<c:url value='/invoices/view'><c:param name='id' value='${invoice.id}'/></c:url>">← Quay lại hoá đơn</a>
+        <c:choose>
+            <c:when test="${not empty backUrl}"><a class="print-toolbar__button" href="<c:url value='${backUrl}'/>">← Quay lại công nợ</a></c:when>
+            <c:otherwise><a class="print-toolbar__button" href="<c:url value='/invoices/view'><c:param name='id' value='${invoice.id}'/></c:url>">← Quay lại hoá đơn</a></c:otherwise>
+        </c:choose>
         <button class="print-toolbar__button print-toolbar__button--primary" type="button" id="print-order">In / Lưu PDF</button>
         <p class="print-toolbar__hint">Trong hộp in chọn "Lưu dạng PDF" để xuất file.</p>
     </div>
