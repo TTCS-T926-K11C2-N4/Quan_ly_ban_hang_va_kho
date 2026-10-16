@@ -38,6 +38,10 @@ public class ReturnViewServlet extends HttpServlet {
             Flash.moveToRequest(request, ReturnListServlet.FLASH_ERROR, "flashError");
             request.setAttribute("salesReturn", salesReturn);
             request.setAttribute("access", access);
+            request.setAttribute("canIssueCredit", CurrentUser.get(request).can(com.oms.model.Permission.INVOICE_MANAGE)
+                    && "ALL".equals(new com.oms.dao.PermissionDao().findScope(CurrentUser.get(request).getId(),
+                    com.oms.model.Permission.INVOICE_MANAGE)));
+            request.setAttribute("creditNoteId", new com.oms.service.CreditNoteService().findByReturn(id));
             request.getRequestDispatcher(VIEW).forward(request, response);
         } catch (SQLException e) {
             log("Không tải được phiếu trả hàng", e);

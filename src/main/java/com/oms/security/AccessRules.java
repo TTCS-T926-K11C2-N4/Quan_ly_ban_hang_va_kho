@@ -134,6 +134,10 @@ public final class AccessRules {
             Map.entry("/returns/view", AUTHENTICATED),
             Map.entry("/returns/receive", AUTHENTICATED),
             Map.entry("/returns/cancel", AUTHENTICATED),
+            // Chứng từ điều chỉnh giảm trừ công nợ (S8-02): xem cần INVOICE_VIEW (ALL), lập cần INVOICE_MANAGE
+            Map.entry("/credit-notes", Permission.INVOICE_VIEW),
+            Map.entry("/credit-notes/view", Permission.INVOICE_VIEW),
+            Map.entry("/credit-notes/issue", Permission.INVOICE_MANAGE),
             Map.entry("/statements", Permission.INVOICE_VIEW),
             Map.entry("/statements/view", Permission.INVOICE_VIEW),
             Map.entry("/statements/print", Permission.INVOICE_VIEW),
