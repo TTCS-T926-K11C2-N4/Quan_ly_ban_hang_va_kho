@@ -214,6 +214,12 @@
                            href="<c:url value='/stock/reservations'/>"${activeSubmenu == 'reservations' ? ' aria-current="page"' : ''}>Giữ chỗ tồn</a>
                     </li>
                     </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.LotListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'lots' ? ' app-submenu__link--active' : ''}" id="menu-lots"
+                           href="<c:url value='/lots'/>"${activeSubmenu == 'lots' ? ' aria-current="page"' : ''}>Lô và hạn dùng</a>
+                    </li>
+                    </c:if>
                     <%-- Sprint 6: phiếu soạn hàng (S6-03); cần thêm quyền xem giao hàng --%>
                     <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.PickListListServlet']}">
                     <li>
@@ -221,10 +227,22 @@
                            href="<c:url value='/pick-lists'/>"${activeSubmenu == 'pick-lists' ? ' aria-current="page"' : ''}>Phiếu soạn hàng</a>
                     </li>
                     </c:if>
+                    <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.TripListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'trips' ? ' app-submenu__link--active' : ''}" id="menu-trips"
+                           href="<c:url value='/trips'/>"${activeSubmenu == 'trips' ? ' aria-current="page"' : ''}>Chuyến giao hàng</a>
+                    </li>
+                    </c:if>
                     <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.DeliveryListServlet']}">
                     <li>
                         <a class="app-submenu__link${activeSubmenu == 'deliveries' ? ' app-submenu__link--active' : ''}" id="menu-deliveries"
                            href="<c:url value='/deliveries'/>"${activeSubmenu == 'deliveries' ? ' aria-current="page"' : ''}>Xác nhận giao hàng</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.StockCardServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'stock-card' ? ' app-submenu__link--active' : ''}" id="menu-stock-card"
+                           href="<c:url value='/stock/card'/>"${activeSubmenu == 'stock-card' ? ' aria-current="page"' : ''}>Thẻ kho</a>
                     </li>
                     </c:if>
                 </ul>
