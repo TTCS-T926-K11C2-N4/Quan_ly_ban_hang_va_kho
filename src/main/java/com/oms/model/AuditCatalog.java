@@ -32,6 +32,7 @@ public final class AuditCatalog {
         ENTITIES.put("CREDIT_LIMIT", "Hạn mức công nợ");
         ENTITIES.put("INVOICE", "Hoá đơn");
         ENTITIES.put("PAYMENT", "Phiếu thu");
+        ENTITIES.put("SALES_RETURN", "Phiếu trả hàng");
         ENTITIES.put("RECONCILIATION", "Biên bản đối chiếu công nợ");
         ENTITIES.put("PRODUCT", "Sản phẩm");
         ENTITIES.put("PRODUCT_CATEGORY", "Nhóm hàng");
@@ -142,6 +143,9 @@ public final class AuditCatalog {
         action("PAYMENT_COLLECT", "Thu tiền theo tuyến (chờ nộp)", GROUP_CREATE);
         action("PAYMENT_CONFIRM", "Xác nhận đã nhận tiền", GROUP_STATUS);
         action("PAYMENT_VOID", "Huỷ khoản thu chờ nộp", GROUP_STATUS);
+        action("RETURN_CREATE", "Lập phiếu trả hàng", GROUP_CREATE);
+        action("RETURN_RECEIVE", "Xác nhận nhận hàng trả", GROUP_STATUS);
+        action("RETURN_CANCEL", "Huỷ phiếu trả hàng", GROUP_STATUS);
         action("STATEMENT_CREATE", "Lập biên bản đối chiếu công nợ", GROUP_CREATE);
         action("STATEMENT_SEND", "Gửi biên bản đối chiếu cho đại lý", GROUP_STATUS);
         action("STATEMENT_RESPOND", "Đại lý phản hồi biên bản đối chiếu", GROUP_STATUS);
