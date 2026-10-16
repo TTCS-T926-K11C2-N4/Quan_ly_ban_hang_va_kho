@@ -147,6 +147,10 @@ public final class AccessRules {
             // Sổ công nợ theo đại lý và tuổi nợ (S7-03)
             Map.entry("/debts", Permission.INVOICE_VIEW),
             Map.entry("/debts/export", Permission.INVOICE_VIEW),
+            // Sổ chi tiết công nợ một đại lý (S8-10)
+            Map.entry("/debts/detail", Permission.INVOICE_VIEW),
+            Map.entry("/debts/detail/export", Permission.INVOICE_VIEW),
+            Map.entry("/debts/detail/print", Permission.INVOICE_VIEW),
             // Đại lý xem công nợ và hoá đơn của chính mình (S7-07)
             Map.entry("/portal/debts", Permission.INVOICE_VIEW),
             Map.entry("/portal/invoices/print", Permission.INVOICE_VIEW),
