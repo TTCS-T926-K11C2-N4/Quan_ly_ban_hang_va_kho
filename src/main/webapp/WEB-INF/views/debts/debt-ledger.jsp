@@ -4,7 +4,7 @@
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="finance"/>
 <c:set var="activeSubmenu" value="debts"/>
-<c:set var="breadcrumbSection" value="Hoá đơn &amp; công nợ"/>
+<c:set var="breadcrumbSection" value="Hoá đơn & công nợ"/>
 <c:set var="breadcrumbPage" value="Sổ công nợ"/>
 <!DOCTYPE html>
 <html lang="vi">

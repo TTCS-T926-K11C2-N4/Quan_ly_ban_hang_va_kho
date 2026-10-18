@@ -4,7 +4,7 @@
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="finance"/>
 <c:set var="activeSubmenu" value="collections"/>
-<c:set var="breadcrumbSection" value="Hoá đơn &amp; công nợ"/>
+<c:set var="breadcrumbSection" value="Hoá đơn & công nợ"/>
 <c:set var="breadcrumbPage" value="Thu tiền tại cửa hàng"/>
 <!DOCTYPE html>
 <html lang="vi">
@@ -49,7 +49,7 @@
                     <c:otherwise>
                         <form class="collection-form" id="collection-form" action="<c:url value='/collections/new'/>" method="post" enctype="multipart/form-data">
                             <div class="inv-field collection-form__wide">
-                                <label class="stock-filters__label" for="collection-customer">Đại lý</label>
+                                <label class="inv-field__label" for="collection-customer">Đại lý</label>
                                 <select class="inv-control" id="collection-customer" name="customer" required>
                                     <c:forEach var="debtor" items="${debtors}">
                                         <option value="${debtor.customerId}"${customer == debtor.customerId.toString() ? ' selected' : ''}><c:out value="${debtor.name}"/> (<c:out value="${debtor.code}"/>) · còn nợ <fmt:formatNumber value="${debtor.outstanding}" maxFractionDigits="0"/> ₫</option>
@@ -57,26 +57,26 @@
                                 </select>
                             </div>
                             <div class="inv-field">
-                                <label class="stock-filters__label" for="collection-amount">Số tiền thu (₫)</label>
+                                <label class="inv-field__label" for="collection-amount">Số tiền thu (₫)</label>
                                 <input class="inv-control" type="text" inputmode="numeric" id="collection-amount" name="amount" required value="<c:out value='${amount}'/>">
                             </div>
                             <div class="inv-field">
-                                <label class="stock-filters__label" for="collection-method">Hình thức thu</label>
+                                <label class="inv-field__label" for="collection-method">Hình thức thu</label>
                                 <select class="inv-control" id="collection-method" name="method">
                                     <option value="CASH"${method != 'BANK_TRANSFER' ? ' selected' : ''}>Tiền mặt</option>
                                     <option value="BANK_TRANSFER"${method == 'BANK_TRANSFER' ? ' selected' : ''}>Chuyển khoản</option>
                                 </select>
                             </div>
                             <div class="inv-field">
-                                <label class="stock-filters__label" for="collection-date">Ngày thu</label>
+                                <label class="inv-field__label" for="collection-date">Ngày thu</label>
                                 <input class="inv-control" type="date" id="collection-date" name="date" value="<c:out value='${date}'/>">
                             </div>
                             <div class="inv-field">
-                                <label class="stock-filters__label" for="collection-receipt">Ảnh biên lai (JPG/PNG, tối đa ${maxReceiptMb}MB)</label>
+                                <label class="inv-field__label" for="collection-receipt">Ảnh biên lai (JPG/PNG, tối đa ${maxReceiptMb}MB)</label>
                                 <input class="inv-control" type="file" id="collection-receipt" name="receipt" accept="image/jpeg,image/png" capture="environment" required>
                             </div>
                             <div class="inv-field collection-form__wide">
-                                <label class="stock-filters__label" for="collection-note">Ghi chú</label>
+                                <label class="inv-field__label" for="collection-note">Ghi chú</label>
                                 <input class="inv-control" type="text" id="collection-note" name="note" maxlength="1000" value="<c:out value='${note}'/>">
                             </div>
                             <div class="collection-form__wide">

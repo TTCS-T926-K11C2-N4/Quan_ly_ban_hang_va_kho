@@ -39,11 +39,11 @@
                 <h2 class="visually-hidden" id="stock-filter-title">Tham số</h2>
                 <form class="invoice-filters" action="<c:url value='/reports/stock'/>" method="get">
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="stock-window">Tính doanh số bán trong (ngày)</label>
+                        <label class="inv-field__label" for="stock-window">Tính doanh số bán trong (ngày)</label>
                         <input class="inv-control" type="number" min="1" max="365" id="stock-window" name="window" value="${report.windowDays}">
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="stock-slow">Ngưỡng chậm luân chuyển (ngày tồn)</label>
+                        <label class="inv-field__label" for="stock-slow">Ngưỡng chậm luân chuyển (ngày tồn)</label>
                         <input class="inv-control" type="number" min="1" max="3650" id="stock-slow" name="slow" value="${report.slowDays}">
                     </div>
                     <button class="inv-button" type="submit" id="stock-report-filter">Cập nhật</button>

@@ -4,7 +4,7 @@
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="finance"/>
 <c:set var="activeSubmenu" value="invoices"/>
-<c:set var="breadcrumbSection" value="Hoá đơn &amp; công nợ"/>
+<c:set var="breadcrumbSection" value="Hoá đơn & công nợ"/>
 <c:set var="breadcrumbPage" value="Hoá đơn bán hàng"/>
 <!DOCTYPE html>
 <html lang="vi">
@@ -103,7 +103,7 @@
                 </div>
                 <form class="invoice-filters" action="<c:url value='/invoices'/>" method="get">
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="invoice-status">Trạng thái</label>
+                        <label class="inv-field__label" for="invoice-status">Trạng thái</label>
                         <select class="inv-control" id="invoice-status" name="status">
                             <option value="">Tất cả</option>
                             <option value="ISSUED"${status == 'ISSUED' ? ' selected' : ''}>Chưa thanh toán</option>

@@ -4,7 +4,7 @@
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="finance"/>
 <c:set var="activeSubmenu" value="statements"/>
-<c:set var="breadcrumbSection" value="Hoá đơn &amp; công nợ"/>
+<c:set var="breadcrumbSection" value="Hoá đơn & công nợ"/>
 <c:set var="breadcrumbPage" value="Đối chiếu công nợ"/>
 <!DOCTYPE html>
 <html lang="vi">
@@ -45,7 +45,7 @@
                     <h2 class="inv-card__title" id="statement-new-title">Lập biên bản mới</h2>
                     <form class="invoice-filters" id="statement-form" action="<c:url value='/statements'/>" method="post">
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="statement-customer">Đại lý</label>
+                            <label class="inv-field__label" for="statement-customer">Đại lý</label>
                             <select class="inv-control" id="statement-customer" name="customer" required>
                                 <c:forEach var="customer" items="${customers}">
                                     <option value="${customer.id}"><c:out value="${customer.name}"/> (<c:out value="${customer.code}"/>)</option>
@@ -53,11 +53,11 @@
                             </select>
                         </div>
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="statement-from">Từ ngày</label>
+                            <label class="inv-field__label" for="statement-from">Từ ngày</label>
                             <input class="inv-control" type="date" id="statement-from" name="from" value="${defaultFrom}" required>
                         </div>
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="statement-to">Đến ngày</label>
+                            <label class="inv-field__label" for="statement-to">Đến ngày</label>
                             <input class="inv-control" type="date" id="statement-to" name="to" value="${defaultTo}" required>
                         </div>
                         <button class="inv-button inv-button--primary" type="submit" id="statement-create">Lập biên bản</button>

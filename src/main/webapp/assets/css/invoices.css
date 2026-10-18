@@ -1,9 +1,61 @@
 /* Hoá đơn và công nợ (S7): dùng khung inv-* của kho, chỉ thêm phần riêng */
+
+/* Thẻ inv-card không có lề trong: phần đặt thẳng trong thẻ (không qua inv-card__head) cần lề riêng,
+   cùng lề 18px với tiêu đề thẻ để chữ không dính mép */
+.inv-card > .inv-card__title {
+    padding: 14px 18px 0;
+}
+
+.inv-card > .inv-card__subtitle {
+    padding: 0 18px;
+}
+
+.inv-card > .inv-card__title + .inv-table-scroll,
+.inv-card > .inv-card__subtitle + .inv-table-scroll {
+    margin-top: 12px;
+}
+
+.inv-card > .inv-card__title:last-child,
+.inv-card > .inv-card__subtitle:last-child {
+    padding-bottom: 14px;
+}
+
+.inv-card > .invoice-note,
+.inv-card > .exec-bars,
+.inv-card > .report-hub {
+    margin: 12px 18px 16px;
+}
+
+.inv-card > .invoice-totals {
+    margin: 12px 18px 16px auto;
+}
+
+/* Form bọc nhiều thẻ (lập phiếu trả, chỉ tiêu): giữ khoảng cách giữa các thẻ như inv-page */
+.inv-page > form:not([class]) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.inv-card > .collection-form {
+    margin: 0;
+    padding: 16px 18px;
+}
+
+.inv-card > .notification-list {
+    padding: 4px 18px;
+}
+
 .invoice-issue {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 12px;
+}
+
+.inv-card > .invoice-issue {
+    margin: 0;
+    padding: 12px 18px 16px;
 }
 
 .invoice-issue .inv-control {
@@ -18,11 +70,48 @@
     margin-bottom: 12px;
 }
 
+.inv-card > .invoice-filters,
+.inv-card > form > .invoice-filters {
+    margin: 0;
+    padding: 16px 18px;
+}
+
+.invoice-filters .inv-field {
+    flex: 0 1 220px;
+}
+
+.invoice-filters .inv-control,
+.invoice-issue .inv-control,
+.collection-form .inv-control {
+    height: 38px;
+    font-size: 13px;
+}
+
+.invoice-filters .inv-button,
+.invoice-issue .inv-button {
+    height: 38px;
+}
+
 .invoice-filters__check {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding-bottom: 8px;
+    height: 38px;
+    font-size: 13px;
+    color: var(--inv-text);
+}
+
+/* Dòng tổng ở chân bảng: cả dòng cùng nền, chữ đậm */
+.inv-table tfoot th,
+.inv-table tfoot td {
+    background: var(--inv-soft);
+    font-weight: 700;
+}
+
+.inv-table tfoot th {
+    font-size: 12px;
+    text-transform: none;
+    color: var(--inv-heading);
 }
 
 .invoice-pill {
@@ -62,6 +151,8 @@
 .invoice-totals {
     width: min(360px, 100%);
     margin: 14px 0 0 auto;
+    font-size: 14px;
+    color: var(--inv-text);
 }
 
 .invoice-totals div {
