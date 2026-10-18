@@ -48,7 +48,7 @@
                     <h2 class="inv-card__title" id="trip-new-title">Lập chuyến giao</h2>
                     <form class="trip-pick" id="trip-pick-form" action="<c:url value='/trips'/>" method="get">
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="trip-warehouse">Kho xuất hàng</label>
+                            <label class="inv-field__label" for="trip-warehouse">Kho xuất hàng</label>
                             <select class="inv-control" id="trip-warehouse" name="warehouse" required>
                                 <option value="">Chọn kho</option>
                                 <c:forEach var="warehouse" items="${warehouses}">
@@ -57,7 +57,7 @@
                             </select>
                         </div>
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="trip-region">Khu vực</label>
+                            <label class="inv-field__label" for="trip-region">Khu vực</label>
                             <select class="inv-control" id="trip-region" name="region">
                                 <option value="">Tất cả khu vực</option>
                                 <c:forEach var="region" items="${regions}">
@@ -101,27 +101,27 @@
                             </div>
                             <div class="trip-fields">
                                 <div class="inv-field">
-                                    <label class="stock-filters__label" for="trip-driver">Tài xế<span class="trip-required">*</span></label>
+                                    <label class="inv-field__label" for="trip-driver">Tài xế<span class="trip-required">*</span></label>
                                     <input class="inv-control" type="text" id="trip-driver" name="driverName" maxlength="150" required>
                                 </div>
                                 <div class="inv-field">
-                                    <label class="stock-filters__label" for="trip-phone">Điện thoại tài xế</label>
+                                    <label class="inv-field__label" for="trip-phone">Điện thoại tài xế</label>
                                     <input class="inv-control" type="text" id="trip-phone" name="driverPhone" maxlength="20" inputmode="tel">
                                 </div>
                                 <div class="inv-field">
-                                    <label class="stock-filters__label" for="trip-plate">Biển số xe<span class="trip-required">*</span></label>
+                                    <label class="inv-field__label" for="trip-plate">Biển số xe<span class="trip-required">*</span></label>
                                     <input class="inv-control" type="text" id="trip-plate" name="vehiclePlate" maxlength="20" required>
                                 </div>
                                 <div class="inv-field">
-                                    <label class="stock-filters__label" for="trip-departure">Giờ xuất phát dự kiến</label>
+                                    <label class="inv-field__label" for="trip-departure">Giờ xuất phát dự kiến</label>
                                     <input class="inv-control" type="datetime-local" id="trip-departure" name="plannedDeparture">
                                 </div>
                                 <div class="inv-field">
-                                    <label class="stock-filters__label" for="trip-return">Giờ dự kiến về</label>
+                                    <label class="inv-field__label" for="trip-return">Giờ dự kiến về</label>
                                     <input class="inv-control" type="datetime-local" id="trip-return" name="expectedReturn">
                                 </div>
                                 <div class="inv-field trip-fields__note">
-                                    <label class="stock-filters__label" for="trip-note">Ghi chú</label>
+                                    <label class="inv-field__label" for="trip-note">Ghi chú</label>
                                     <input class="inv-control" type="text" id="trip-note" name="note" maxlength="1000">
                                 </div>
                             </div>

@@ -46,7 +46,7 @@
                         <h2 class="inv-card__title" id="adjustment-pick-title">Chọn kho</h2>
                         <form class="invoice-filters" action="<c:url value='/adjustments/new'/>" method="get">
                             <div class="inv-field">
-                                <label class="stock-filters__label" for="adjustment-warehouse">Kho</label>
+                                <label class="inv-field__label" for="adjustment-warehouse">Kho</label>
                                 <select class="inv-control" id="adjustment-warehouse" name="warehouse" required>
                                     <c:forEach var="warehouse" items="${warehouses}">
                                         <option value="${warehouse.id}"><c:out value="${warehouse.name}"/> (<c:out value="${warehouse.code}"/>)</option>
@@ -97,7 +97,7 @@
                             <h2 class="inv-card__title" id="adjustment-reason-title">Lý do điều chỉnh</h2>
                             <div class="invoice-filters">
                                 <div class="inv-field">
-                                    <label class="stock-filters__label" for="adjustment-reason">Lý do</label>
+                                    <label class="inv-field__label" for="adjustment-reason">Lý do</label>
                                     <select class="inv-control" id="adjustment-reason" name="reason" required>
                                         <option value="">— Chọn lý do —</option>
                                         <c:forEach var="entry" items="${reasons}">

@@ -50,7 +50,7 @@
                     </div>
                     <form class="stocktake-new" id="stocktake-new-form" method="post" action="<c:url value='/stocktakes/new'/>">
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="stocktake-warehouse">Kho cần kiểm kê</label>
+                            <label class="inv-field__label" for="stocktake-warehouse">Kho cần kiểm kê</label>
                             <select class="inv-control" id="stocktake-warehouse" name="warehouse" required>
                                 <option value="">Chọn kho</option>
                                 <c:forEach var="warehouse" items="${warehouses}">
@@ -59,14 +59,14 @@
                             </select>
                         </div>
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="stocktake-scope">Phạm vi</label>
+                            <label class="inv-field__label" for="stocktake-scope">Phạm vi</label>
                             <select class="inv-control" id="stocktake-scope" name="scope">
                                 <option value="WAREHOUSE">Toàn kho</option>
                                 <option value="CATEGORY">Theo nhóm hàng</option>
                             </select>
                         </div>
                         <div class="inv-field" id="stocktake-category-field" hidden>
-                            <label class="stock-filters__label" for="stocktake-category">Nhóm hàng</label>
+                            <label class="inv-field__label" for="stocktake-category">Nhóm hàng</label>
                             <select class="inv-control" id="stocktake-category" name="category">
                                 <option value="">Chọn nhóm hàng</option>
                                 <c:forEach var="category" items="${categories}">
