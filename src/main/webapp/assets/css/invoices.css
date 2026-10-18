@@ -208,14 +208,3 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
 }
-
-.report-hub {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.report-hub li {
-    padding: 10px 0;
-    border-bottom: 1px solid #e2e8f0;
-}
