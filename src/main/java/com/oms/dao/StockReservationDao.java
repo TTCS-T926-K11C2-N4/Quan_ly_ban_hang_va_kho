@@ -90,11 +90,18 @@ public class StockReservationDao {
         }
     }
 
+    // Hạn giữ chỗ: hết ngày giao mong muốn của đơn (giờ Việt Nam, UTC+7 không có giờ mùa hè), nhưng không sớm hơn
+    // holdHours giờ kể từ bây giờ; đơn không có ngày giao thì giữ holdHours giờ. Cột tham chiếu là o.requested_delivery_date.
+    private static final String HOLD_EXPIRY_SQL = "GREATEST(UTC_TIMESTAMP() + INTERVAL ? HOUR,"
+            + " COALESCE(TIMESTAMP(DATE_ADD(o.requested_delivery_date, INTERVAL 1 DAY)) - INTERVAL 7 HOUR,"
+            + " UTC_TIMESTAMP()))";
+
     public void insertReservation(Connection connection, PendingItem item, long warehouseId, int holdHours,
                                   Long actorUserId) throws SQLException {
         String sql = "INSERT INTO stock_reservations (order_item_id, warehouse_id, product_id, qty_base, status,"
                 + " reserved_at, expires_at, created_at, created_by)"
-                + " VALUES (?, ?, ?, ?, 'ACTIVE', UTC_TIMESTAMP(), UTC_TIMESTAMP() + INTERVAL ? HOUR, UTC_TIMESTAMP(), ?)";
+                + " SELECT ?, ?, ?, ?, 'ACTIVE', UTC_TIMESTAMP(), " + HOLD_EXPIRY_SQL + ", UTC_TIMESTAMP(), ?"
+                + " FROM sales_order_items i JOIN sales_orders o ON o.id = i.order_id WHERE i.id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, item.itemId());
             statement.setLong(2, warehouseId);
@@ -106,6 +113,7 @@ public class StockReservationDao {
             } else {
                 statement.setLong(6, actorUserId);
             }
+            statement.setLong(7, item.itemId());
             statement.executeUpdate();
         }
     }
@@ -113,7 +121,8 @@ public class StockReservationDao {
     // Giữ chỗ tạo lúc gửi đơn (S4-03) chưa có hạn: bắt đầu tính hạn từ lúc duyệt. Trả về số dòng được đặt hạn.
     public int startHoldClock(Connection connection, long orderId, int holdHours) throws SQLException {
         String sql = "UPDATE stock_reservations r JOIN sales_order_items i ON i.id = r.order_item_id"
-                + " SET r.expires_at = UTC_TIMESTAMP() + INTERVAL ? HOUR"
+                + " JOIN sales_orders o ON o.id = i.order_id"
+                + " SET r.expires_at = " + HOLD_EXPIRY_SQL
                 + " WHERE i.order_id = ? AND r.status = 'ACTIVE' AND r.expires_at IS NULL";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, holdHours);
@@ -148,6 +157,22 @@ public class StockReservationDao {
             statement.setString(1, reason);
             statement.setLong(2, reservationId);
             return statement.executeUpdate() == 1;
+        }
+    }
+
+    // Nhân viên kinh doanh phụ trách và tên đại lý của đơn, để báo khi giữ chỗ hết hạn
+    public record OrderContact(Long salesRepId, String customerName) {
+    }
+
+    public OrderContact findOrderContact(Connection connection, long orderId) throws SQLException {
+        String sql = "SELECT c.sales_rep_id, c.name FROM sales_orders o JOIN customers c ON c.id = o.customer_id"
+                + " WHERE o.id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, orderId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next()
+                        ? new OrderContact(resultSet.getObject(1, Long.class), resultSet.getString(2)) : null;
+            }
         }
     }
 
