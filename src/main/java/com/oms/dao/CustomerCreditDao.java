@@ -56,14 +56,6 @@ public class CustomerCreditDao {
                 maxDebtDays = resultSet.getInt("max_debt_days");
             }
         }
-        String flagMode = null;
-        try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT `value` FROM system_settings WHERE `key` = 'credit.overdue_mode'");
-             ResultSet resultSet = statement.executeQuery()) {
-            if (resultSet.next() && resultSet.getString(1) != null) {
-                flagMode = resultSet.getString(1).trim();
-            }
-        }
         BigDecimal ledgerBalance = BigDecimal.ZERO;
         try (PreparedStatement statement = connection.prepareStatement(
                 "SELECT outstanding_amount FROM customer_balances WHERE customer_id = ?")) {
@@ -88,7 +80,7 @@ public class CustomerCreditDao {
             try (ResultSet resultSet = statement.executeQuery()) {
                 resultSet.next();
                 return new CustomerCredit(creditLimit, maxDebtDays, ledgerBalance, openOrders,
-                        resultSet.getBigDecimal(1), resultSet.getObject(2, LocalDate.class), flagMode);
+                        resultSet.getBigDecimal(1), resultSet.getObject(2, LocalDate.class));
             }
         }
     }

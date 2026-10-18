@@ -18,8 +18,8 @@ import java.util.Map;
 
 // Cờ công nợ tự động của đại lý (S7-04): OVERDUE khi còn hoá đơn quá số ngày nợ cho phép, OVER_LIMIT khi công nợ
 // vượt hạn mức, OK khi không vi phạm. Chạy mỗi ngày một lần (CreditFlagJob) và ngay sau mỗi lần ghi nhận thu tiền.
-// Cờ được ghi vào customers.credit_status kèm nhật ký khi đổi; việc chặn hay chuyển duyệt đơn mới theo
-// credit.overdue_mode do CustomerCredit quyết định từ số liệu hiện tại.
+// Cờ được ghi vào customers.credit_status kèm nhật ký khi đổi; đại lý OVERDUE bị chặn tạo đơn mới, còn OVER_LIMIT
+// thì đơn mới chuyển duyệt (CustomerCredit quyết định từ số liệu hiện tại).
 public class CreditFlagService {
 
     private static final String AUDIT_ENTITY = "CUSTOMER";

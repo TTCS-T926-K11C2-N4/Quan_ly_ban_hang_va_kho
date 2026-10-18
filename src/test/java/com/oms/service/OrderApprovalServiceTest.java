@@ -35,16 +35,6 @@ class OrderApprovalServiceTest {
                 null);
     }
 
-    // S7-04: đại lý quá hạn ở chế độ chuyển duyệt thì đơn mới ghi vi phạm nợ quá hạn, không phải vượt hạn mức
-    @Test
-    void overdueCustomerInApprovalModeRecordsOverdueDebt() {
-        CustomerCredit overdue = new CustomerCredit(new BigDecimal("1000000"), 30, BigDecimal.ZERO, BigDecimal.ZERO,
-                new BigDecimal("500000"), java.time.LocalDate.of(2026, 9, 1), "REQUIRE_APPROVAL");
-        List<Map<String, Object>> violations = OrderApprovalService.violations(quote("1", "10", null), overdue);
-        assertEquals(1, violations.size());
-        assertEquals("OVERDUE_DEBT", violations.get(0).get("type"));
-    }
-
     // Đơn không vi phạm: không có vi phạm nào nên hệ thống tự duyệt khi gửi
     @Test
     void orderWithinLimitAndAboveFloorHasNoViolation() {

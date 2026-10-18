@@ -10,46 +10,43 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// S7-04: cờ công nợ tự động và cách chặn / chuyển duyệt đơn mới theo credit.overdue_mode
+// S4-02, S7-04: cờ công nợ tự động; đại lý quá hạn bị chặn hẳn, đại lý vượt hạn mức thì đơn mới chuyển duyệt
 class CreditFlagTest {
 
-    private static CustomerCredit credit(String limit, String ledger, String overdue, String mode) {
+    private static CustomerCredit credit(String limit, String ledger, String overdue) {
         return new CustomerCredit(new BigDecimal(limit), 30, new BigDecimal(ledger), BigDecimal.ZERO,
-                new BigDecimal(overdue), overdue.equals("0") ? null : LocalDate.of(2026, 9, 1), mode);
+                new BigDecimal(overdue), overdue.equals("0") ? null : LocalDate.of(2026, 9, 1));
     }
 
     // AC1: quá hạn hoặc vượt hạn mức thì gắn cờ, quá hạn ưu tiên
     @Test
     void flagFollowsOverdueThenOverLimit() {
-        assertEquals("OK", credit("10000000", "1000000", "0", "BLOCK").getFlag());
-        assertEquals("OVER_LIMIT", credit("10000000", "10000001", "0", "BLOCK").getFlag());
-        assertEquals("OVERDUE", credit("10000000", "1000000", "500000", "BLOCK").getFlag());
-        assertEquals("OVERDUE", credit("10000000", "12000000", "500000", "BLOCK").getFlag());
+        assertEquals("OK", credit("10000000", "1000000", "0").getFlag());
+        assertEquals("OVER_LIMIT", credit("10000000", "10000001", "0").getFlag());
+        assertEquals("OVERDUE", credit("10000000", "1000000", "500000").getFlag());
+        assertEquals("OVERDUE", credit("10000000", "12000000", "500000").getFlag());
     }
 
-    // AC2: chế độ BLOCK chặn đại lý bị gắn cờ; REQUIRE_APPROVAL không chặn mà chuyển duyệt
+    // AC3 của S4-02: còn nợ quá hạn thì chặn hẳn đơn mới, kể cả khi còn hạn mức
     @Test
-    void modeDecidesBlockOrApproval() {
-        CustomerCredit blocked = credit("10000000", "1000000", "500000", "BLOCK");
-        assertTrue(blocked.isBlocking());
-        assertFalse(blocked.requiresApprovalByFlag());
-        CustomerCredit approval = credit("10000000", "1000000", "500000", "REQUIRE_APPROVAL");
-        assertFalse(approval.isBlocking());
-        assertTrue(approval.requiresApprovalByFlag());
-        assertTrue(approval.exceeds(new BigDecimal("1000")));
-        // Chế độ BLOCK chặn cả đại lý vượt hạn mức; không cấu hình thì chỉ chặn quá hạn như S4-02
-        assertTrue(credit("10000000", "10000001", "0", "BLOCK").isBlocking());
-        assertFalse(credit("10000000", "10000001", "0", null).isBlocking());
-        assertTrue(credit("10000000", "1000000", "500000", null).isBlocking());
+    void overdueCustomerIsBlocked() {
+        assertTrue(credit("10000000", "1000000", "500000").isBlocking());
+        assertTrue(credit("10000000", "12000000", "500000").isBlocking());
     }
 
-    // Đại lý sạch không bị ảnh hưởng ở cả hai chế độ
+    // Vượt hạn mức không chặn: đơn được tạo nhưng chuyển sang chờ duyệt (AC2 của S4-02)
+    @Test
+    void overLimitCustomerIsNotBlockedButNeedsApproval() {
+        CustomerCredit over = credit("10000000", "10000001", "0");
+        assertFalse(over.isBlocking());
+        assertTrue(over.exceeds(new BigDecimal("1")));
+    }
+
+    // Đại lý sạch không bị chặn và đơn trong hạn mức không cần duyệt
     @Test
     void cleanCustomerIsNotAffected() {
-        for (String mode : new String[]{"BLOCK", "REQUIRE_APPROVAL"}) {
-            CustomerCredit clean = credit("10000000", "1000000", "0", mode);
-            assertFalse(clean.isBlocking());
-            assertFalse(clean.exceeds(new BigDecimal("1000")));
-        }
+        CustomerCredit clean = credit("10000000", "1000000", "0");
+        assertFalse(clean.isBlocking());
+        assertFalse(clean.exceeds(new BigDecimal("1000")));
     }
 }
