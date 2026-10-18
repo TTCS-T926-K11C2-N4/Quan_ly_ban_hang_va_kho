@@ -46,6 +46,7 @@ public class PaymentService {
     private final AuditLogDao auditLogDao = new AuditLogDao();
     private final FileObjectDao fileObjectDao = new FileObjectDao();
     private final CreditFlagService creditFlagService = new CreditFlagService();
+    private final OrderClosureService orderClosureService = new OrderClosureService();
 
     // error != null: lỗi nghiệp vụ (hoặc "NOT_FOUND"); ngược lại id và số phiếu thu
     public static final class Outcome {
@@ -224,6 +225,7 @@ public class PaymentService {
                 "Phiếu thu " + receiptNo, actorUserId);
         PaymentDao.adjustBalance(connection, customerId, amount.negate());
         creditFlagService.evaluate(connection, customerId, actorUserId, ipAddress);
+        orderClosureService.closeSettled(connection, customerId, actorUserId, ipAddress);
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("receiptNo", receiptNo);
         values.put("customerId", customerId);
@@ -355,6 +357,7 @@ public class PaymentService {
                 PaymentDao.adjustBalance(connection, payment.customerId(), payment.amount().negate());
                 paymentDao.confirm(connection, payment.id(), actorUserId);
                 creditFlagService.evaluate(connection, payment.customerId(), actorUserId, ipAddress);
+                orderClosureService.closeSettled(connection, payment.customerId(), actorUserId, ipAddress);
                 Map<String, Object> before = new LinkedHashMap<>();
                 before.put("status", Payment.PENDING_HANDOVER);
                 Map<String, Object> after = new LinkedHashMap<>();

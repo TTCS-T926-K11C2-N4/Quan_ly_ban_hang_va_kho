@@ -30,6 +30,7 @@ public class CreditNoteService {
     private final CreditNoteDao creditNoteDao = new CreditNoteDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
     private final CreditFlagService creditFlagService = new CreditFlagService();
+    private final OrderClosureService orderClosureService = new OrderClosureService();
 
     // error != null: lỗi nghiệp vụ (hoặc "NOT_FOUND"); ngược lại id và số chứng từ
     public static final class Outcome {
@@ -146,6 +147,7 @@ public class CreditNoteService {
                 "Giảm trừ " + no + " (" + reason + ")", actorUserId);
         PaymentDao.adjustBalance(connection, sourceReturn.customerId(), total.negate());
         creditFlagService.evaluate(connection, sourceReturn.customerId(), actorUserId, ipAddress);
+        orderClosureService.closeSettled(connection, sourceReturn.customerId(), actorUserId, ipAddress);
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("creditNoteNo", no);
         values.put("invoiceNo", sourceReturn.invoiceNo());
