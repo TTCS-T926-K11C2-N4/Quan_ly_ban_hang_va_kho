@@ -1712,6 +1712,5 @@ INSERT INTO `system_settings` (`key`, `value`, `description`) VALUES
   ('auth.reset_token_minutes',      '30', 'Hiệu lực liên kết đặt lại mật khẩu (phút)'),
   ('inventory.near_expiry_days',    '30', 'Ngưỡng cảnh báo lô sắp hết hạn (ngày)'),
   ('inventory.reservation_ttl_hours','48','GIẢ ĐỊNH - cần PO xác nhận: giữ chỗ tự nhả sau bao lâu nếu đơn chưa xuất'),
-  ('credit.overdue_mode',           'REQUIRE_APPROVAL', 'Đại lý bị gắn cờ: BLOCK (chặn) hoặc REQUIRE_APPROVAL (chuyển duyệt) - S7-04'),
   ('reminder.days_before_due',      '3',  'Nhắc thanh toán trước hạn (ngày) - S7-08');
 
