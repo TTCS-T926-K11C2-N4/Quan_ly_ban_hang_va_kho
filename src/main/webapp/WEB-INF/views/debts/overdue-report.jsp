@@ -29,7 +29,7 @@
             <header class="inv-header">
                 <div>
                     <h1 class="inv-header__title">Báo cáo công nợ quá hạn</h1>
-                    <p class="inv-header__subtitle">Tuổi nợ tính từ hạn thanh toán của hoá đơn còn nợ. Đại lý xếp theo mức rủi ro: cao khi quá hạn trên 90 ngày, trung bình 31–90 ngày.</p>
+                    <p class="inv-header__subtitle">Số ngày quá hạn tính từ hạn thanh toán của hoá đơn còn nợ (khác tuổi nợ ở sổ công nợ, tính từ ngày lập hoá đơn). Đại lý xếp theo mức rủi ro: cao khi quá hạn trên 90 ngày, trung bình 31–90 ngày.</p>
                 </div>
                 <div class="inv-header__actions">
                     <a class="inv-button inv-button--primary" id="overdue-export" href="<c:url value='/debts/overdue/export'/>">Xuất Excel</a>
@@ -43,12 +43,12 @@
             </c:if>
 
             <section class="inv-card" aria-labelledby="overdue-bucket-title">
-                <h2 class="inv-card__title" id="overdue-bucket-title">Tổng hợp theo nhóm tuổi nợ</h2>
+                <h2 class="inv-card__title" id="overdue-bucket-title">Tổng hợp theo số ngày quá hạn</h2>
                 <dl class="invoice-totals">
                     <div><dt>1–30 ngày quá hạn</dt><dd><fmt:formatNumber value="${report.bucket1To30}" maxFractionDigits="0"/> ₫</dd></div>
-                    <div><dt>31–60 ngày</dt><dd><fmt:formatNumber value="${report.bucket31To60}" maxFractionDigits="0"/> ₫</dd></div>
-                    <div><dt>61–90 ngày</dt><dd><fmt:formatNumber value="${report.bucket61To90}" maxFractionDigits="0"/> ₫</dd></div>
-                    <div><dt>Trên 90 ngày</dt><dd><fmt:formatNumber value="${report.bucketOver90}" maxFractionDigits="0"/> ₫</dd></div>
+                    <div><dt>31–60 ngày quá hạn</dt><dd><fmt:formatNumber value="${report.bucket31To60}" maxFractionDigits="0"/> ₫</dd></div>
+                    <div><dt>61–90 ngày quá hạn</dt><dd><fmt:formatNumber value="${report.bucket61To90}" maxFractionDigits="0"/> ₫</dd></div>
+                    <div><dt>Trên 90 ngày quá hạn</dt><dd><fmt:formatNumber value="${report.bucketOver90}" maxFractionDigits="0"/> ₫</dd></div>
                     <div class="invoice-totals__grand"><dt>Tổng quá hạn</dt><dd id="overdue-total"><fmt:formatNumber value="${report.total}" maxFractionDigits="0"/> ₫</dd></div>
                 </dl>
             </section>
@@ -85,11 +85,11 @@
                                 <th scope="col">Nhân viên</th>
                                 <th scope="col">Rủi ro</th>
                                 <th scope="col" class="is-number">Quá hạn</th>
-                                <th scope="col" class="is-number">1–30</th>
-                                <th scope="col" class="is-number">31–60</th>
-                                <th scope="col" class="is-number">61–90</th>
-                                <th scope="col" class="is-number">&gt;90</th>
-                                <th scope="col" class="is-number">Lâu nhất (ngày)</th>
+                                <th scope="col" class="is-number">Quá hạn 1–30 ngày</th>
+                                <th scope="col" class="is-number">Quá hạn 31–60 ngày</th>
+                                <th scope="col" class="is-number">Quá hạn 61–90 ngày</th>
+                                <th scope="col" class="is-number">Quá hạn trên 90 ngày</th>
+                                <th scope="col" class="is-number">Số ngày quá hạn lâu nhất</th>
                             </tr>
                         </thead>
                         <tbody>

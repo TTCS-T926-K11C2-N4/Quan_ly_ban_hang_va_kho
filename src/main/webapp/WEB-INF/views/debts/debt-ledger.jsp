@@ -29,7 +29,7 @@
             <header class="inv-header">
                 <div>
                     <h1 class="inv-header__title">Sổ công nợ theo đại lý</h1>
-                    <p class="inv-header__subtitle">Phải thu, đã thu, còn nợ và phân tích tuổi nợ tính từ ngày lập hoá đơn. Cột "Quá hạn" là phần còn nợ của hoá đơn đã quá hạn thanh toán.</p>
+                    <p class="inv-header__subtitle">Phải thu, đã thu, còn nợ và phân tích tuổi nợ tính từ ngày lập hoá đơn. Cột "Còn nợ quá hạn" là phần còn nợ của hoá đơn đã quá hạn thanh toán; số ngày quá hạn tính từ hạn thanh toán, xem ở báo cáo công nợ quá hạn.</p>
                 </div>
                 <div class="inv-header__actions">
                     <a class="inv-button inv-button--primary" id="debt-export" href="<c:url value='/debts/export'><c:if test="${overdue}"><c:param name='overdue' value='1'/></c:if></c:url>">Xuất Excel</a>
@@ -53,11 +53,11 @@
                                 <th scope="col" class="is-number">Phải thu</th>
                                 <th scope="col" class="is-number">Đã thu</th>
                                 <th scope="col" class="is-number">Còn nợ</th>
-                                <th scope="col" class="is-number">0–30 ngày</th>
-                                <th scope="col" class="is-number">31–60 ngày</th>
-                                <th scope="col" class="is-number">61–90 ngày</th>
-                                <th scope="col" class="is-number">Trên 90 ngày</th>
-                                <th scope="col" class="is-number">Quá hạn</th>
+                                <th scope="col" class="is-number">Tuổi nợ 0–30 ngày</th>
+                                <th scope="col" class="is-number">Tuổi nợ 31–60 ngày</th>
+                                <th scope="col" class="is-number">Tuổi nợ 61–90 ngày</th>
+                                <th scope="col" class="is-number">Tuổi nợ trên 90 ngày</th>
+                                <th scope="col" class="is-number">Còn nợ quá hạn</th>
                             </tr>
                         </thead>
                         <tbody>
