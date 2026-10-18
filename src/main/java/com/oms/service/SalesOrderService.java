@@ -1,20 +1,25 @@
 package com.oms.service;
 
 import com.oms.dao.AuditLogDao;
+import com.oms.dao.CustomerCreditDao;
 import com.oms.dao.DeliveryAddressDao;
 import com.oms.dao.PermissionDao;
 import com.oms.dao.SalesOrderDao;
+import com.oms.dao.StockDao;
 import com.oms.model.Customer;
+import com.oms.model.CustomerCredit;
 import com.oms.model.DeliveryAddress;
 import com.oms.model.DraftOrder;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderProduct;
 import com.oms.model.OrderQuote;
+import com.oms.model.OrderStock;
 import com.oms.model.Permission;
 import com.oms.model.PricingRules;
 import com.oms.util.DateTimeUtil;
 import com.oms.util.DbConnection;
 import com.oms.util.JsonUtil;
+import com.oms.util.MoneyUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -25,6 +30,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +40,9 @@ import java.util.stream.Collectors;
 
 // Tạo đơn hàng cho đại lý (S3-09): chọn đại lý, điểm giao, ngày giao; thêm dòng hàng theo đơn vị tính;
 // tính tiền hàng, chiết khấu, tổng phải thu; lưu nháp để mở lại, hoặc gửi đơn (chuyển Chờ duyệt, S4-06).
-// Đại lý bị khoá giao dịch (S3-07) không tạo được đơn mới; đơn nháp đã có vẫn sửa/gửi tiếp được (có cảnh báo).
+// Đại lý bị khoá giao dịch (S3-07) hoặc có nợ quá hạn (S4-02) không tạo được đơn mới; đơn nháp đã có vẫn sửa được
+// (có cảnh báo). Vượt hạn mức công nợ hoặc dưới giá sàn (S4-01) thì đơn được đánh dấu cần duyệt.
+// Gửi đơn thì kiểm và giữ chỗ tồn khả dụng ở kho phục vụ đại lý (S4-03); vượt tồn thì không gửi được.
 public class SalesOrderService {
 
     public static final int MAX_LINES = 200;
@@ -45,7 +53,10 @@ public class SalesOrderService {
     private static final DateTimeFormatter ORDER_NO_DATE = DateTimeFormatter.ofPattern("yyMMdd");
     // Số lượng theo đơn vị đã chọn: số dương, tối đa 3 chữ số thập phân như cột qty decimal(18,3)
     private static final Pattern QTY_PATTERN = Pattern.compile("\\d{1,12}([.,]\\d{1,3})?");
+    // Đơn giá sửa tay (S4-01): số nguyên VNĐ, có thể ngăn nghìn bằng dấu chấm, tối đa 13 chữ số như decimal(18,2)
+    private static final Pattern MONEY_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{3}){1,4}|\\d{1,13}");
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+    private static final OrderStock.Level NO_STOCK = new OrderStock.Level(BigDecimal.ZERO, BigDecimal.ZERO);
     private static final String AUDIT_ENTITY = "ORDER";
     private static final String STATUS_DRAFT = "DRAFT";
     private static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
@@ -55,9 +66,21 @@ public class SalesOrderService {
     private final CustomerService customerService = new CustomerService();
     private final PermissionDao permissionDao = new PermissionDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
+    private final CustomerCreditDao creditDao = new CustomerCreditDao();
+    private final StockDao stockDao = new StockDao();
+    private final OrderApprovalService approvalService = new OrderApprovalService();
 
     public List<OrderProduct> getProducts() throws SQLException {
         return orderDao.findOrderableProducts();
+    }
+
+    // Sản phẩm đại lý được đặt trên cổng (S4-10): đang kinh doanh và có giá trong bảng giá của nhóm khách hàng mình
+    public List<OrderProduct> getProductsPricedFor(Customer customer) throws SQLException {
+        PricingRules rules = orderDao.findPricingRules(customer.getCustomerGroupId(), DateTimeUtil.today());
+        return orderDao.findOrderableProducts().stream()
+                .filter(product -> product.getUnits().stream()
+                        .anyMatch(unit -> rules.findPrice(product.getId(), unit.getId()) != null))
+                .toList();
     }
 
     public List<DeliveryAddress> getDeliveryAddresses(long customerId) throws SQLException {
@@ -91,10 +114,16 @@ public class SalesOrderService {
                 rules);
     }
 
+    // Công nợ hiện tại của đại lý (S4-02), null nếu chưa chọn đại lý
+    public CustomerCredit credit(Customer customer) throws SQLException {
+        return customer == null ? null : creditDao.find(customer.getId(), DateTimeUtil.today());
+    }
+
     // Lỗi theo tên ô ("lines.i" là dòng thứ i, "form" là lỗi chung); rỗng nghĩa là hợp lệ.
     // draft: đơn nháp đang mở lại (null khi tạo mới); submit: bấm "Tạo đơn hàng" (true) hay "Lưu nháp".
     public Map<String, String> validate(OrderForm form, Customer customer, SalesOrderDao.Draft draft,
-                                        boolean submit, List<DeliveryAddress> addresses, OrderQuote quote) {
+                                        boolean submit, List<DeliveryAddress> addresses, OrderQuote quote,
+                                        CustomerCredit credit, OrderStock stock) {
         Map<String, String> errors = new LinkedHashMap<>();
         if (customer == null) {
             errors.put("customerId", "Vui lòng chọn đại lý.");
@@ -104,7 +133,14 @@ public class SalesOrderService {
                 errors.put("customerId", "Đại lý đang bị khoá giao dịch nên không tạo được đơn mới.");
             } else if (!customer.isActive()) {
                 errors.put("customerId", "Đại lý đã ngừng giao dịch.");
+            } else if (credit != null && credit.isBlocking()) {
+                // AC3 của S4-02, S7-04: đại lý còn nợ quá hạn thì không tạo đơn mới, kể cả lưu nháp
+                errors.put("customerId", flagMessage(credit) + " nên không tạo được đơn mới.");
             }
+        } else if (submit && credit != null && credit.isBlocking()) {
+            // Đơn nháp đã có vẫn lưu được (như đại lý bị khoá) nhưng chưa gửi được cho tới khi trả khoản quá hạn
+            errors.put("form", flagMessage(credit) + " nên chưa gửi được đơn. Đơn nháp vẫn lưu được;"
+                    + " gửi lại sau khi đại lý thanh toán.");
         }
         if (customer != null && customer.getDefaultWarehouseId() == null) {
             errors.put("form", "Đại lý chưa có kho phục vụ mặc định nên chưa tạo được đơn. Vui lòng cập nhật"
@@ -148,17 +184,96 @@ public class SalesOrderService {
                 }
             }
         }
+        // AC3 của S4-03: chỉ chặn khi gửi đơn; lưu nháp vẫn được, dòng vượt tồn chỉ hiện cảnh báo
+        if (submit && stock != null) {
+            errors.putAll(shortageErrors(stock));
+        }
         return errors;
     }
 
+    // Tồn khả dụng ở kho phục vụ đại lý cho các dòng đang gõ (S4-03), null nếu chưa chọn đại lý hoặc đại lý chưa có kho
+    public OrderStock stock(Customer customer, OrderQuote quote) throws SQLException {
+        if (customer == null || quote == null || customer.getDefaultWarehouseId() == null) {
+            return null;
+        }
+        long warehouseId = customer.getDefaultWarehouseId();
+        return checkStock(quote, stockDao.findLevels(warehouseId), stockDao.findWarehouseName(warehouseId));
+    }
+
+    // Đối chiếu số đặt với tồn (không đọc CSDL nên test được). Cộng chung các dòng cùng SKU theo đơn vị cơ sở.
+    static OrderStock checkStock(OrderQuote quote, Map<Long, OrderStock.Level> levels, String warehouseName) {
+        Map<Long, BigDecimal> requested = new HashMap<>();
+        for (OrderQuote.Line line : quote.getLines()) {
+            if (line.getError() == null) {
+                requested.merge(line.getProduct().getId(), line.getQtyBase(), BigDecimal::add);
+            }
+        }
+        List<OrderStock.Line> lines = new ArrayList<>();
+        for (OrderQuote.Line line : quote.getLines()) {
+            if (line.getError() != null) {
+                lines.add(OrderStock.Line.unchecked());
+                continue;
+            }
+            // Chưa có dòng tồn ở kho (chưa từng nhập kho) thì coi như tồn 0
+            OrderStock.Level level = levels.getOrDefault(line.getProduct().getId(), NO_STOCK);
+            BigDecimal total = requested.get(line.getProduct().getId());
+            BigDecimal room = level.getAvailable().subtract(total.subtract(line.getQtyBase()));
+            lines.add(OrderStock.Line.of(level.getAvailable(), room, total.compareTo(level.getAvailable()) > 0,
+                    line.getProduct(), line.getUnit()));
+        }
+        return new OrderStock(warehouseName, lines);
+    }
+
+    private static Map<String, String> shortageErrors(OrderStock stock) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        for (int i = 0; i < stock.getLines().size(); i++) {
+            OrderStock.Line line = stock.getLines().get(i);
+            if (line.isShortage()) {
+                errors.put("lines." + i, line.getShortageMessage(stock.getWarehouseName()));
+            }
+        }
+        return errors;
+    }
+
+    // AC4 của S4-03: lúc gửi đơn, sau khi khoá dòng tồn mới thấy hết hàng (có đơn khác vừa gửi cùng SKU)
+    public static final class StockShortageException extends Exception {
+        private final Map<String, String> errors;
+
+        StockShortageException(Map<String, String> errors) {
+            super("Không đủ tồn khả dụng");
+            this.errors = errors;
+        }
+
+        public Map<String, String> getErrors() {
+            return errors;
+        }
+    }
+
+    // Lý do đại lý bị gắn cờ: quá hạn thanh toán hoặc vượt hạn mức công nợ
+    static String flagMessage(CustomerCredit credit) {
+        if (credit.isOverdue()) {
+            return overdueMessage(credit);
+        }
+        return "Đại lý đang vượt hạn mức công nợ (" + MoneyUtil.format(credit.getUsed()) + " ₫ trên hạn mức "
+                + MoneyUtil.format(credit.getCreditLimit()) + " ₫)";
+    }
+
+    public static String overdueMessage(CustomerCredit credit) {
+        return "Đại lý có " + MoneyUtil.format(credit.getOverdueAmount()) + " ₫ nợ quá hạn (hạn trả từ "
+                + credit.getOldestDueDateText() + ")";
+    }
+
     // Đơn vừa lưu: id để mở lại đơn nháp, mã đơn để báo cho người dùng
+    // approved: gửi đơn không vi phạm thì hệ thống duyệt luôn (S4-05); false là đơn nháp hoặc đơn chờ quản lý duyệt
     public static final class Saved {
         private final long id;
         private final String orderNo;
+        private final boolean approved;
 
-        Saved(long id, String orderNo) {
+        Saved(long id, String orderNo, boolean approved) {
             this.id = id;
             this.orderNo = orderNo;
+            this.approved = approved;
         }
 
         public long getId() {
@@ -168,30 +283,47 @@ public class SalesOrderService {
         public String getOrderNo() {
             return orderNo;
         }
+
+        public boolean isApproved() {
+            return approved;
+        }
     }
 
     // Gọi validate trước. null nếu đơn nháp vừa được sửa hoặc gửi ở nơi khác (version đã đổi).
+    // Gửi đơn thì giữ chỗ tồn cho từng dòng (S4-03); StockShortageException nếu tồn vừa bị đơn khác giữ mất.
     public Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
-                       OrderQuote quote, long actorUserId, String ipAddress) throws SQLException {
-        SalesOrderDao.Header header = new SalesOrderDao.Header(customer.getId(),
-                parseId(form.getDeliveryAddressId()), customer.getDefaultWarehouseId(), customer.getSalesRepId(),
-                submit, form.getRequestedDate() == null ? null : parseDate(form.getRequestedDate()),
-                quote.getSubtotal(), quote.getDiscount(), quote.getTotal(), form.getNote());
+                       OrderQuote quote, long actorUserId, String ipAddress)
+            throws SQLException, StockShortageException {
+        return save(form, customer, draft, submit, quote, actorUserId, ipAddress, null);
+    }
+
+    // copiedFrom: đơn mới được sao chép từ đơn này (S4-09), chỉ dùng khi tạo mới (draft = null)
+    public Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
+                       OrderQuote quote, long actorUserId, String ipAddress, SalesOrderDao.CopyTemplate copiedFrom)
+            throws SQLException, StockShortageException {
+        return save(form, customer, draft, submit, quote, actorUserId, ipAddress, copiedFrom, false);
+    }
+
+    // Đơn đại lý tự đặt trên cổng (S4-10): gửi ngay, luôn chờ nhân viên phụ trách xác nhận, không tự duyệt
+    public Saved savePortal(OrderForm form, Customer customer, OrderQuote quote, long actorUserId, String ipAddress)
+            throws SQLException, StockShortageException {
+        return save(form, customer, null, true, quote, actorUserId, ipAddress, null, true);
+    }
+
+    private Saved save(OrderForm form, Customer customer, SalesOrderDao.Draft draft, boolean submit,
+                       OrderQuote quote, long actorUserId, String ipAddress, SalesOrderDao.CopyTemplate copiedFrom,
+                       boolean portal) throws SQLException, StockShortageException {
+        Long warehouseId = customer.getDefaultWarehouseId();
+        Pending pending = new Pending(form, customer, submit, quote, ipAddress,
+                warehouseId == null ? null : stockDao.findWarehouseName(warehouseId), copiedFrom, portal);
         if (draft != null) {
-            String action = submit ? "ORDER_SUBMIT" : "ORDER_UPDATE";
-            AuditEntry audit = new AuditEntry(action, JsonUtil.object(draftValues(draft)),
-                    JsonUtil.object(orderValues(draft.getOrderNo(), customer.getCode(), submit, form, quote)),
-                    ipAddress);
-            return updateDraft(draft, parseVersion(form.getVersion()), header, quote, actorUserId, audit)
-                    ? new Saved(draft.getForm().getDraftId(), draft.getOrderNo()) : null;
+            return updateDraft(draft, parseVersion(form.getVersion()), pending, actorUserId);
         }
         String prefix = ORDER_NO_PREFIX + DateTimeUtil.today().format(ORDER_NO_DATE) + "-";
         for (int attempt = 1; ; attempt++) {
             String orderNo = prefix + String.format("%04d", orderDao.findMaxOrderNumber(prefix) + 1);
-            AuditEntry audit = new AuditEntry("ORDER_CREATE", null,
-                    JsonUtil.object(orderValues(orderNo, customer.getCode(), submit, form, quote)), ipAddress);
             try {
-                return new Saved(insert(orderNo, header, quote, actorUserId, audit), orderNo);
+                return insert(orderNo, pending, actorUserId);
             } catch (SQLIntegrityConstraintViolationException e) {
                 // Hai người cùng tạo đơn một lúc lấy trùng số: thử lại với số kế tiếp
                 if (attempt == ORDER_NO_ATTEMPTS) {
@@ -201,39 +333,159 @@ public class SalesOrderService {
         }
     }
 
-    private long insert(String orderNo, SalesOrderDao.Header header, OrderQuote quote, long actorUserId,
-                        AuditEntry audit) throws SQLException {
+    // Đơn sắp ghi. Cờ cần duyệt chỉ chốt được trong transaction, sau khi khoá đại lý và cộng lại công nợ (S4-02)
+    private static final class Pending {
+        private final OrderForm form;
+        private final Customer customer;
+        private final boolean submit;
+        private final OrderQuote quote;
+        private final String ipAddress;
+        private final String warehouseName;
+        private final SalesOrderDao.CopyTemplate copiedFrom;
+        private final boolean portal;
+
+        Pending(OrderForm form, Customer customer, boolean submit, OrderQuote quote, String ipAddress,
+                String warehouseName, SalesOrderDao.CopyTemplate copiedFrom, boolean portal) {
+            this.form = form;
+            this.customer = customer;
+            this.submit = submit;
+            this.quote = quote;
+            this.ipAddress = ipAddress;
+            this.warehouseName = warehouseName;
+            this.copiedFrom = copiedFrom;
+            this.portal = portal;
+        }
+
+        SalesOrderDao.Header header(boolean overCreditLimit) {
+            return new SalesOrderDao.Header(customer.getId(), parseId(form.getDeliveryAddressId()),
+                    customer.getDefaultWarehouseId(), customer.getSalesRepId(), submit,
+                    form.getRequestedDate() == null ? null : parseDate(form.getRequestedDate()), quote.getSubtotal(),
+                    quote.getDiscount(), quote.getTotal(), form.getNote(),
+                    quote.isNeedsApproval() || overCreditLimit,
+                    copiedFrom == null ? null : copiedFrom.getOrderId(), portal);
+        }
+
+        String newValues(String orderNo, boolean overCreditLimit, Map<Long, OrderStock.Level> reserving) {
+            Map<String, Object> values = orderValues(orderNo, customer.getCode(), submit, form, quote,
+                    overCreditLimit);
+            values.put("reservedLines", quote.getLines().stream()
+                    .filter(line -> reserving.containsKey(line.getProduct().getId())).count());
+            if (copiedFrom != null) {
+                values.put("copiedFromOrderNo", copiedFrom.getOrderNo());
+            }
+            return JsonUtil.object(values);
+        }
+    }
+
+    // S4-03: gửi đơn thì khoá dòng tồn các SKU của đơn và kiểm lại; trả về tồn của các SKU sẽ được giữ chỗ
+    // (gửi được nghĩa là mọi SKU đều có dòng tồn đủ hàng). Lưu nháp không đụng tới tồn.
+    private Map<Long, OrderStock.Level> lockStock(Connection connection, Pending pending)
+            throws SQLException, StockShortageException {
+        Long warehouseId = pending.customer.getDefaultWarehouseId();
+        if (!pending.submit || warehouseId == null) {
+            return Map.of();
+        }
+        List<Long> productIds = pending.quote.getLines().stream().map(line -> line.getProduct().getId()).toList();
+        Map<Long, OrderStock.Level> levels = stockDao.lockLevels(connection, warehouseId, productIds);
+        Map<String, String> errors = shortageErrors(checkStock(pending.quote, levels, pending.warehouseName));
+        if (!errors.isEmpty()) {
+            errors.put("form", "Tồn kho vừa thay đổi do có đơn khác được gửi cùng lúc. Vui lòng xem lại số lượng"
+                    + " các dòng báo đỏ.");
+            throw new StockShortageException(errors);
+        }
+        return levels;
+    }
+
+    private void reserve(Connection connection, Pending pending, List<Long> itemIds,
+                         Map<Long, OrderStock.Level> reserving, long actorUserId) throws SQLException {
+        for (int i = 0; i < itemIds.size(); i++) {
+            OrderQuote.Line line = pending.quote.getLines().get(i);
+            if (reserving.containsKey(line.getProduct().getId())) {
+                stockDao.reserve(connection, itemIds.get(i), pending.customer.getDefaultWarehouseId(),
+                        line.getProduct().getId(), line.getQtyBase(), actorUserId);
+            }
+        }
+    }
+
+    // AC2 của S4-02: khoá dòng đại lý rồi mới cộng công nợ để so với hạn mức. Gọi trước khi ghi đơn,
+    // để đơn nháp đang gửi chưa bị tính vào "đơn chưa xuất hoá đơn".
+    private CustomerCredit lockCredit(Connection connection, Pending pending) throws SQLException {
+        return creditDao.lock(connection, pending.customer.getId(), DateTimeUtil.today());
+    }
+
+    // S4-05: đơn vừa gửi (đã ghi dòng hàng và giữ chỗ) vi phạm thì vào hàng chờ duyệt, không thì hệ thống duyệt luôn
+    private boolean afterSubmit(Connection connection, long orderId, String orderNo, Pending pending,
+                                CustomerCredit credit, long actorUserId) throws SQLException, StockShortageException {
+        try {
+            return approvalService.afterSubmit(connection, orderId, orderNo, pending.quote, credit, actorUserId,
+                    pending.ipAddress, pending.portal);
+        } catch (StockReservationService.InsufficientStockException e) {
+            throw new StockShortageException(new LinkedHashMap<>(Map.of("form", e.getMessage())));
+        }
+    }
+
+    private Saved insert(String orderNo, Pending pending, long actorUserId)
+            throws SQLException, StockShortageException {
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
+                CustomerCredit credit = lockCredit(connection, pending);
+                boolean overLimit = credit != null && credit.exceeds(pending.quote.getTotal());
+                Map<Long, OrderStock.Level> reserving = lockStock(connection, pending);
+                SalesOrderDao.Header header = pending.header(overLimit);
+                AuditEntry audit = new AuditEntry(pending.copiedFrom == null ? "ORDER_CREATE" : "ORDER_COPY", null,
+                        pending.newValues(orderNo, overLimit, reserving), pending.ipAddress);
                 long orderId = orderDao.insert(connection, orderNo, header, actorUserId);
-                insertItems(connection, orderId, quote, actorUserId);
+                reserve(connection, pending, insertItems(connection, orderId, pending.quote, actorUserId), reserving,
+                        actorUserId);
+                // Vòng đời đơn (S4-06): ghi bước đầu tiên ngay khi tạo
+                orderDao.insertStatusHistory(connection, orderId, null,
+                        header.isSubmitted() ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
+                        header.isSubmitted() ? "Tạo đơn và gửi duyệt"
+                                : pending.copiedFrom == null ? "Tạo đơn nháp"
+                                : "Sao chép từ đơn " + pending.copiedFrom.getOrderNo(), actorUserId);
                 insertAudit(connection, actorUserId, orderId, audit);
+                boolean approved = header.isSubmitted()
+                        && afterSubmit(connection, orderId, orderNo, pending, credit, actorUserId);
                 connection.commit();
-                return orderId;
-            } catch (SQLException e) {
+                return new Saved(orderId, orderNo, approved);
+            } catch (SQLException | StockShortageException e) {
                 connection.rollback();
                 throw e;
             }
         }
     }
 
-    private boolean updateDraft(SalesOrderDao.Draft draft, long version, SalesOrderDao.Header header,
-                                OrderQuote quote, long actorUserId, AuditEntry audit) throws SQLException {
+    // null nếu đơn nháp vừa được sửa hoặc gửi ở nơi khác
+    private Saved updateDraft(SalesOrderDao.Draft draft, long version, Pending pending, long actorUserId)
+            throws SQLException, StockShortageException {
         long orderId = draft.getForm().getDraftId();
         try (Connection connection = DbConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
+                CustomerCredit credit = lockCredit(connection, pending);
+                boolean overLimit = credit != null && credit.exceeds(pending.quote.getTotal());
+                Map<Long, OrderStock.Level> reserving = lockStock(connection, pending);
+                SalesOrderDao.Header header = pending.header(overLimit);
+                AuditEntry audit = new AuditEntry(pending.submit ? "ORDER_SUBMIT" : "ORDER_UPDATE",
+                        JsonUtil.object(draftValues(draft)), pending.newValues(draft.getOrderNo(), overLimit, reserving),
+                        pending.ipAddress);
                 if (!orderDao.updateDraft(connection, orderId, version, header, actorUserId)) {
                     connection.rollback();
-                    return false;
+                    return null;
                 }
-                orderDao.deleteItems(connection, orderId);
-                insertItems(connection, orderId, quote, actorUserId);
+                reserve(connection, pending, syncItems(connection, orderId, pending.quote, actorUserId), reserving,
+                        actorUserId);
+                if (header.isSubmitted()) {
+                    orderDao.insertStatusHistory(connection, orderId, STATUS_DRAFT, STATUS_PENDING_APPROVAL,
+                            "Gửi duyệt", actorUserId);
+                }
                 insertAudit(connection, actorUserId, orderId, audit);
+                boolean approved = header.isSubmitted()
+                        && afterSubmit(connection, orderId, draft.getOrderNo(), pending, credit, actorUserId);
                 connection.commit();
-                return true;
-            } catch (SQLException e) {
+                return new Saved(orderId, draft.getOrderNo(), approved);
+            } catch (SQLException | StockShortageException e) {
                 connection.rollback();
                 throw e;
             }
@@ -264,17 +516,24 @@ public class SalesOrderService {
     // Giá trị ghi nhật ký: phần đầu đơn và tổng tiền; dòng hàng chỉ ghi số dòng (chi tiết đã có ở sales_order_items),
     // không có giá vốn
     static Map<String, Object> orderValues(String orderNo, String customerCode, boolean submit, OrderForm form,
-                                           OrderQuote quote) {
-        return values(orderNo, customerCode, submit ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
+                                           OrderQuote quote, boolean overCreditLimit) {
+        Map<String, Object> values = values(orderNo, customerCode, submit ? STATUS_PENDING_APPROVAL : STATUS_DRAFT,
                 form.getDeliveryAddressId(), form.getRequestedDate(), quote.getLines().size(), quote.getSubtotal(),
                 quote.getDiscount(), quote.getTotal());
+        values.put("manualPriceLines", quote.getLines().stream().filter(OrderQuote.Line::isManualPrice).count());
+        values.put("belowFloorLines", quote.getBelowFloorLines().size());
+        values.put("overCreditLimit", overCreditLimit);
+        values.put("needsApproval", quote.isNeedsApproval() || overCreditLimit);
+        return values;
     }
 
     static Map<String, Object> draftValues(SalesOrderDao.Draft draft) {
         OrderForm form = draft.getForm();
-        return values(draft.getOrderNo(), draft.getCustomerCode(), STATUS_DRAFT, form.getDeliveryAddressId(),
-                form.getRequestedDate(), form.getLines().size(), draft.getSubtotal(), draft.getDiscount(),
-                draft.getTotal());
+        Map<String, Object> values = values(draft.getOrderNo(), draft.getCustomerCode(), STATUS_DRAFT,
+                form.getDeliveryAddressId(), form.getRequestedDate(), form.getLines().size(), draft.getSubtotal(),
+                draft.getDiscount(), draft.getTotal());
+        values.put("manualPriceLines", form.getLines().stream().filter(line -> line.getPrice() != null).count());
+        return values;
     }
 
     private static Map<String, Object> values(String orderNo, String customerCode, String status,
@@ -297,12 +556,38 @@ public class SalesOrderService {
         return amount == null ? null : amount.stripTrailingZeros().toPlainString();
     }
 
-    private void insertItems(Connection connection, long orderId, OrderQuote quote, long actorUserId)
+    // Ghi dòng hàng của đơn nháp đang sửa: dòng sẵn có cập nhật tại chỗ (giữ id vì đơn bị trả lại sửa, S4-05, còn
+    // lịch sử giữ chỗ trỏ tới dòng), dòng mới thì thêm, dòng thừa thì xoá. Trả về id các dòng theo thứ tự quote.
+    private List<Long> syncItems(Connection connection, long orderId, OrderQuote quote, long actorUserId)
             throws SQLException {
+        List<Long> existing = orderDao.findItemIds(connection, orderId);
+        int keep = Math.min(existing.size(), quote.getLines().size());
+        // Xoá dòng thừa trước để số thứ tự dòng của dòng thêm mới không trùng (order_id, line_no)
+        for (Long itemId : existing.subList(keep, existing.size())) {
+            orderDao.deleteItem(connection, itemId);
+        }
+        List<Long> ids = new ArrayList<>();
+        for (int i = 0; i < quote.getLines().size(); i++) {
+            OrderQuote.Line line = quote.getLines().get(i);
+            if (i < keep) {
+                orderDao.updateItem(connection, existing.get(i), i + 1, line, actorUserId);
+                ids.add(existing.get(i));
+            } else {
+                ids.add(orderDao.insertItem(connection, orderId, i + 1, line, actorUserId));
+            }
+        }
+        return ids;
+    }
+
+    // id các dòng vừa ghi, cùng thứ tự với quote.getLines()
+    private List<Long> insertItems(Connection connection, long orderId, OrderQuote quote, long actorUserId)
+            throws SQLException {
+        List<Long> ids = new ArrayList<>();
         int lineNo = 1;
         for (OrderQuote.Line line : quote.getLines()) {
-            orderDao.insertItem(connection, orderId, lineNo++, line, actorUserId);
+            ids.add(orderDao.insertItem(connection, orderId, lineNo++, line, actorUserId));
         }
+        return ids;
     }
 
     // Tính tiền từng dòng (không đọc CSDL nên test được). Giá lấy đúng đơn vị đã chọn; bảng giá chỉ khai báo đơn vị
@@ -348,8 +633,18 @@ public class SalesOrderService {
             return new OrderQuote.Line("Chưa có giá của " + product.getSku()
                     + " trong bảng giá đang hiệu lực của nhóm khách hàng.");
         }
-        BigDecimal unitPrice = item.getPrice().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal listPrice = item.getPrice().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
         BigDecimal floorPrice = item.getFloorPrice().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
+        // S4-01: sửa giá thủ công được; dưới giá sàn thì vẫn lưu nhưng dòng bị đánh dấu, đơn phải qua duyệt
+        BigDecimal unitPrice = listPrice;
+        if (line.getPrice() != null) {
+            BigDecimal manual = parseMoney(line.getPrice());
+            if (manual == null) {
+                return new OrderQuote.Line("Đơn giá phải là số tiền lớn hơn 0, vd 15.500.");
+            }
+            unitPrice = manual;
+        }
+        boolean manualPrice = unitPrice.compareTo(listPrice) != 0;
         BigDecimal amount = money(unitPrice.multiply(qty));
 
         Long bestPolicy = null;
@@ -362,8 +657,8 @@ public class SalesOrderService {
                 bestPolicy = policy.getId();
             }
         }
-        return new OrderQuote.Line(product, unit, qty, converted.getQtyBase(), unitPrice, floorPrice, item.getId(),
-                bestPolicy, amount, bestDiscount);
+        return new OrderQuote.Line(product, unit, qty, converted.getQtyBase(), listPrice, unitPrice, floorPrice,
+                manualPrice, item.getId(), bestPolicy, amount, bestDiscount);
     }
 
     // null nếu chính sách không áp cho dòng này (khác SKU/nhóm hàng, hoặc chưa đạt bậc số lượng nhỏ nhất)
@@ -391,6 +686,15 @@ public class SalesOrderService {
 
     private static BigDecimal money(BigDecimal value) {
         return value.setScale(0, RoundingMode.HALF_UP).setScale(2);
+    }
+
+    // Đơn giá sửa tay: "15500" hoặc "15.500"; null nếu sai định dạng hoặc không lớn hơn 0
+    static BigDecimal parseMoney(String text) {
+        if (text == null || !MONEY_PATTERN.matcher(text).matches()) {
+            return null;
+        }
+        BigDecimal money = new BigDecimal(text.replace(".", "")).setScale(2);
+        return money.signum() > 0 ? money : null;
     }
 
     static BigDecimal parseQty(String text) {

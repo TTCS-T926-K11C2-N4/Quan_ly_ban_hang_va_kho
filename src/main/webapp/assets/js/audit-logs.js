@@ -28,7 +28,9 @@
         taxCode: "Mã số thuế", contactName: "Người liên hệ", paymentTerms: "Điều khoản thanh toán",
         orderNo: "Mã đơn", customerCode: "Mã đại lý", deliveryAddressId: "Điểm giao (mã id)",
         requestedDate: "Ngày giao mong muốn", lineCount: "Số dòng hàng", subtotal: "Tiền hàng",
-        discount: "Chiết khấu", total: "Tổng phải thu",
+        discount: "Chiết khấu", total: "Tổng phải thu", releasedReservations: "Số dòng giữ chỗ đã nhả",
+        manualPriceLines: "Số dòng sửa giá tay", belowFloorLines: "Số dòng dưới giá sàn", overCreditLimit: "Vượt hạn mức công nợ",
+        needsApproval: "Cần duyệt", reservedLines: "Số dòng đã giữ chỗ tồn", autoApproved: "Hệ thống tự duyệt",
         label: "Tên điểm giao", address: "Địa chỉ", receiverName: "Người nhận", receiverPhone: "SĐT người nhận",
         routeNote: "Ghi chú đường đi", isDefault: "Điểm mặc định",
         salesRep: "Người phụ trách", regions: "Địa bàn",
@@ -40,7 +42,9 @@
     var LOOKUP_ALIAS = { parentId: "categoryId" };
     var STATUS_LABELS = {
         ACTIVE: "Hoạt động", LOCKED: "Bị khoá", TEMP_LOCKED: "Khoá tạm", PENDING: "Chờ duyệt",
-        DISCONTINUED: "Ngừng kinh doanh", INACTIVE: "Tạm ngưng", DRAFT: "Nháp", PENDING_APPROVAL: "Chờ duyệt"
+        DISCONTINUED: "Ngừng kinh doanh", INACTIVE: "Tạm ngưng", DRAFT: "Nháp", PENDING_APPROVAL: "Chờ duyệt",
+        APPROVED: "Đã duyệt", PICKING: "Đang soạn hàng", SHIPPED: "Đã xuất kho", DELIVERED: "Đã giao", CLOSED: "Đóng",
+        REJECTED: "Bị từ chối", CANCELLED: "Đã huỷ"
     };
 
     var lookups = {};

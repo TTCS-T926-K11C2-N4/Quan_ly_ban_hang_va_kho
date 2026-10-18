@@ -7,7 +7,7 @@
     --color-account-row-tint: #fafbfd;
     --color-account-placeholder: #9aa5b5;
 
-    padding: 28px 40px 40px;
+    padding: 18px 28px 24px;
     color: var(--color-account-text);
 }
 
@@ -16,7 +16,7 @@
 }
 
 .accounts-page .page-header__subtitle {
-    margin-top: 10px;
+    margin-top: 4px;
     font-size: 12px;
     color: var(--color-account-muted);
 }
@@ -26,7 +26,7 @@
     display: flex;
     align-items: flex-end;
     gap: 20px;
-    margin-top: 21px;
+    margin-top: 14px;
     padding: 8px 18px 8px;
     border-radius: 10px;
     background: var(--color-surface);
@@ -160,7 +160,7 @@
 
 /* Bảng */
 .account-table-card {
-    margin-top: 20px;
+    margin-top: 14px;
     border-radius: 12px;
     background: var(--color-surface);
 }
@@ -183,7 +183,7 @@
 }
 
 .account-table th {
-    height: 58px;
+    height: 44px;
     font-size: 11px;
     font-weight: 600;
     color: var(--color-account-muted);
@@ -191,7 +191,7 @@
 }
 
 .account-table td {
-    height: 58px;
+    height: 46px;
     vertical-align: middle;
 }
 
@@ -413,40 +413,40 @@ a.pagination__item:hover {
 
 /* Form tạo / sửa tài khoản (S1-09) */
 .account-form {
-    margin-top: 21px;
+    margin-top: 14px;
     overflow: hidden;
     border-radius: 12px;
     background: var(--color-surface);
 }
 
 .account-form__section {
-    padding: 24px 28px 23px;
+    padding: 16px 24px 14px;
 }
 
 /* Đường kẻ giữa hai phần thụt 28px hai bên như Figma */
 .account-form__section--divided {
     position: relative;
-    padding-top: 20px;
-    padding-bottom: 16px;
+    padding-top: 14px;
+    padding-bottom: 12px;
 }
 
 .account-form__section--divided::before {
     content: "";
     position: absolute;
     top: 0;
-    right: 28px;
-    left: 28px;
+    right: 24px;
+    left: 24px;
     height: 1px;
     background: var(--color-account-border);
 }
 
 .account-form__section-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
 }
 
 .account-form__section-desc {
-    margin-top: 8px;
+    margin-top: 4px;
     font-size: 11px;
     color: var(--color-account-muted);
 }
@@ -454,12 +454,12 @@ a.pagination__item:hover {
 .account-form__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 37px 48px;
-    margin-top: 24px;
+    gap: 16px 40px;
+    margin-top: 12px;
 }
 
 .account-form__grid--assignments {
-    margin-top: 33px;
+    margin-top: 18px;
 }
 
 .form-group {
@@ -476,7 +476,7 @@ a.pagination__item:hover {
 
 .form-group__control {
     width: 100%;
-    height: 44px;
+    height: 38px;
     padding: 0 14px;
     border: 1px solid var(--color-account-border);
     border-radius: 7px;

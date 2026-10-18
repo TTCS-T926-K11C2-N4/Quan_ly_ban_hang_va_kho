@@ -1,5 +1,6 @@
 package com.oms.controller;
 
+import com.oms.model.Permission;
 import com.oms.model.SessionUser;
 import com.oms.service.DashboardService;
 import jakarta.servlet.ServletException;
@@ -31,6 +32,11 @@ public class DashboardServlet extends HttpServlet {
         // Người đăng nhập (currentUser) JSP đọc thẳng từ session.
         try {
             request.setAttribute("summary", dashboardService.getSummary());
+            // S5-09: cảnh báo tồn dưới mức tối thiểu cho người xem được tồn kho
+            if (user.can(Permission.INVENTORY_VIEW)) {
+                request.setAttribute("lowStockRows", dashboardService.getLowStockRows());
+                request.setAttribute("lowStockTotal", dashboardService.countLowStockRows());
+            }
         } catch (SQLException e) {
             log("Không tải được số liệu tổng quan", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

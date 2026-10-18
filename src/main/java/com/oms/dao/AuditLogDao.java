@@ -53,6 +53,12 @@ public class AuditLogDao {
             + " WHEN 'PRODUCT' THEN COALESCE(p.sku, " + jsonField("sku") + ")"
             + " WHEN 'PRODUCT_CATEGORY' THEN COALESCE(c.code, " + jsonField("code") + ")"
             + " WHEN 'PRICE' THEN COALESCE(pl.code, " + jsonField("code") + ")"
+            // Phiếu nhập kho: mã phiếu ghi sẵn trong giá trị trước/sau (S5-04)
+            + " WHEN 'GOODS_RECEIPT' THEN COALESCE(" + jsonField("receiptNo") + ")"
+            // Phiếu soạn hàng: mã phiếu ghi sẵn trong giá trị trước/sau (S6-03)
+            + " WHEN 'PICK_LIST' THEN COALESCE(" + jsonField("pickNo") + ")"
+            // Phiếu xuất kho: mã phiếu xuất ghi sẵn trong giá trị trước/sau (S6-05)
+            + " WHEN 'DELIVERY_NOTE' THEN COALESCE(" + jsonField("deliveryNo") + ")"
             // Chính sách chiết khấu: mã CK-xxxx ghi sẵn trong giá trị trước/sau
             + " WHEN 'DISCOUNT_POLICY' THEN COALESCE(" + jsonField("code") + ")"
             // Khoá/mở giao dịch gắn với đại lý: mã đại lý ghi sẵn trong giá trị trước/sau
@@ -61,6 +67,9 @@ public class AuditLogDao {
             + " WHEN 'DELIVERY_ADDRESS' THEN COALESCE(" + jsonField("code") + ")"
             + " WHEN 'UNIT' THEN COALESCE(un.code, " + jsonField("code") + ")"
             + " WHEN 'SUPPLIER' THEN COALESCE(sp.code, " + jsonField("code") + ")"
+            // Kho: mã kho; vị trí kho: mã kho/mã vị trí, ghi sẵn trong giá trị trước/sau (S5-03)
+            + " WHEN 'WAREHOUSE' THEN COALESCE(" + jsonField("code") + ")"
+            + " WHEN 'WAREHOUSE_LOCATION' THEN COALESCE(" + jsonField("code") + ")"
             // Hạn mức công nợ gắn với đại lý: mã đại lý ghi sẵn trong giá trị trước/sau
             + " WHEN 'CREDIT_LIMIT' THEN COALESCE(" + jsonField("code") + ")"
             // Đơn hàng: mã đơn ghi sẵn trong giá trị trước/sau

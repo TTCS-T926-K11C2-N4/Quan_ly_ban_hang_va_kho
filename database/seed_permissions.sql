@@ -13,6 +13,9 @@
 -- (AC của S3-05; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự nâng hạn mức cho đại lý của mình).
 -- Phân công / chuyển giao nhân viên kinh doanh phụ trách đại lý: quyền riêng CUSTOMER_ASSIGN cho Quản lý kinh doanh
 -- (AC của S3-06; Nhân viên kinh doanh có CUSTOMER_MANAGE nhưng không được tự đổi người phụ trách).
+-- Chốt phiếu kiểm kê (S5-08): quyền riêng STOCKTAKE_FINALIZE, chỉ Quản lý kho (AC "Chỉ Quản lý kho được chốt"; Admin cũng không).
+-- Khai báo kho và vị trí lưu trong kho: quyền riêng WAREHOUSE_MANAGE cho Quản lý kho (vai trò của S5-03;
+-- Nhân viên kho có INVENTORY_MANAGE để nhập kho nhưng không tự thêm, sửa kho).
 -- ADMIN có mọi quyền còn lại (xem câu lệnh cuối file).
 --
 -- src/test/java/com/oms/security/AccessRulesTest.java đọc trực tiếp file này:
@@ -37,13 +40,17 @@ INSERT INTO `permissions` (`code`, `module`, `action`, `description`) VALUES
   ('ORDER_APPROVE', 'Duyệt đơn & giá đặc biệt', 'APPROVE', 'Duyệt đơn vượt hạn mức, giá dưới giá sàn'),
   ('INVENTORY_VIEW', 'Tồn kho & nhập kho', 'VIEW', 'Xem tồn kho và phiếu nhập'),
   ('INVENTORY_MANAGE', 'Tồn kho & nhập kho', 'MANAGE', 'Nhập kho, chuyển kho, kiểm kê'),
+  ('WAREHOUSE_MANAGE', 'Tồn kho & nhập kho', 'MANAGE', 'Thêm, sửa kho và vị trí lưu trong kho'),
+  ('STOCKTAKE_FINALIZE', 'Tồn kho & nhập kho', 'APPROVE', 'Chốt phiếu kiểm kê, điều chỉnh tồn về số đếm'),
   ('DELIVERY_VIEW', 'Phiếu xuất & giao hàng', 'VIEW', 'Xem phiếu xuất và giao hàng'),
   ('DELIVERY_MANAGE', 'Phiếu xuất & giao hàng', 'MANAGE', 'Soạn, xuất và giao hàng'),
   ('INVOICE_VIEW', 'Hoá đơn & công nợ', 'VIEW', 'Xem hoá đơn và công nợ'),
   ('INVOICE_MANAGE', 'Hoá đơn & công nợ', 'MANAGE', 'Phát hành hoá đơn, ghi nhận thanh toán'),
+  ('PAYMENT_COLLECT', 'Hoá đơn & công nợ', 'CREATE', 'Thu tiền theo tuyến tại cửa hàng, chờ nộp về công ty'),
   ('RETURN_VIEW', 'Trả hàng & điều chỉnh', 'VIEW', 'Xem phiếu trả hàng và điều chỉnh'),
   ('RETURN_MANAGE', 'Trả hàng & điều chỉnh', 'MANAGE', 'Lập phiếu trả hàng và điều chỉnh'),
   ('REPORT_VIEW', 'Báo cáo & dashboard', 'VIEW', 'Xem báo cáo và dashboard'),
+  ('SALES_TARGET_MANAGE', 'Báo cáo & dashboard', 'MANAGE', 'Đặt và sửa chỉ tiêu doanh số theo tháng cho nhân viên và khu vực'),
   ('USER_VIEW', 'Người dùng & nhật ký', 'VIEW', 'Xem tài khoản người dùng và nhật ký'),
   ('USER_MANAGE', 'Người dùng & nhật ký', 'MANAGE', 'Tạo, sửa, khoá tài khoản người dùng'),
   ('AUDIT_LOG_VIEW', 'Người dùng & nhật ký', 'VIEW', 'Xem nhật ký thao tác trên tồn kho, giá, công nợ, hoá đơn')
@@ -74,6 +81,7 @@ FROM (VALUES
   ROW('SALES_REP', 'INVENTORY_VIEW', 'ALL'),
   ROW('SALES_REP', 'DELIVERY_VIEW', 'ASSIGNED'),
   ROW('SALES_REP', 'INVOICE_VIEW', 'ASSIGNED'),
+  ROW('SALES_REP', 'PAYMENT_COLLECT', 'ASSIGNED'),
   ROW('SALES_REP', 'RETURN_VIEW', 'ASSIGNED'),
   ROW('SALES_REP', 'RETURN_MANAGE', 'ASSIGNED'),
   ROW('SALES_REP', 'REPORT_VIEW', 'ASSIGNED'),
@@ -91,6 +99,8 @@ FROM (VALUES
   ROW('WH_MANAGER', 'ORDER_VIEW', 'ALL'),
   ROW('WH_MANAGER', 'INVENTORY_VIEW', 'ALL'),
   ROW('WH_MANAGER', 'INVENTORY_MANAGE', 'ALL'),
+  ROW('WH_MANAGER', 'WAREHOUSE_MANAGE', 'ALL'),
+  ROW('WH_MANAGER', 'STOCKTAKE_FINALIZE', 'ALL'),
   ROW('WH_MANAGER', 'DELIVERY_VIEW', 'ALL'),
   ROW('WH_MANAGER', 'DELIVERY_MANAGE', 'ALL'),
   ROW('WH_MANAGER', 'RETURN_VIEW', 'ALL'),
@@ -125,6 +135,7 @@ FROM (VALUES
   ROW('SALES_MANAGER', 'INVENTORY_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'DELIVERY_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'INVOICE_VIEW', 'ALL'),
+  ROW('SALES_MANAGER', 'SALES_TARGET_MANAGE', 'ALL'),
   ROW('SALES_MANAGER', 'RETURN_VIEW', 'ALL'),
   ROW('SALES_MANAGER', 'RETURN_MANAGE', 'ALL'),
   ROW('SALES_MANAGER', 'REPORT_VIEW', 'ALL'),
@@ -136,7 +147,7 @@ JOIN `permissions` p ON p.`code` = m.permission_code;
 INSERT INTO `role_permissions` (`role_id`, `permission_id`, `data_scope`)
 SELECT r.`id`, p.`id`, 'ALL'
 FROM `roles` r
-JOIN `permissions` p ON p.`code` NOT IN ('COST_PRICE_VIEW', 'CREDIT_MANAGE')
+JOIN `permissions` p ON p.`code` NOT IN ('COST_PRICE_VIEW', 'CREDIT_MANAGE', 'STOCKTAKE_FINALIZE')
 WHERE r.`code` = 'ADMIN';
 
 COMMIT;

@@ -1,0 +1,70 @@
+/* Thẻ kho (S6-02): dùng khung inv-* của kho, chỉ thêm phần riêng của thẻ kho */
+.stock-card-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
+    padding: 16px 18px;
+}
+
+.stock-card-filters__product {
+    flex: 1 1 320px;
+}
+
+.stock-card-empty {
+    padding: 18px 20px;
+    font-size: 13px;
+    color: var(--inv-muted, #64748b);
+}
+
+.stock-card-type {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stock-card-type--in {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.stock-card-type--out {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.stock-card-change--in {
+    color: #166534;
+    font-weight: 600;
+}
+
+.stock-card-change--out {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.stock-card-doc {
+    margin-right: 6px;
+    color: var(--inv-muted, #64748b);
+    font-size: 12px;
+}
+
+.stock-card-doc__link {
+    font-weight: 600;
+}
+
+.stock-card-note {
+    display: block;
+    color: var(--inv-muted, #64748b);
+    font-size: 12px;
+}
+
+.stock-card-paging {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}

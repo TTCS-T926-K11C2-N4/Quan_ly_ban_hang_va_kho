@@ -1,9 +1,11 @@
 package com.oms.dao;
 
 import com.oms.model.DraftOrder;
+import com.oms.model.OrderDetail;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderProduct;
 import com.oms.model.OrderQuote;
+import com.oms.model.OrderStatus;
 import com.oms.model.PricingRules;
 import com.oms.util.DbConnection;
 
@@ -150,14 +152,17 @@ public class SalesOrderDao {
     public long insert(Connection connection, String orderNo, Header header, long actorUserId) throws SQLException {
         String sql = "INSERT INTO sales_orders (order_no, customer_id, delivery_address_id, warehouse_id, sales_rep_id,"
                 + " source, status, requested_delivery_date, subtotal_amount, discount_amount, total_amount, note,"
-                + " submitted_at, created_at, created_by, updated_at, updated_by)"
-                + " VALUES (?, ?, ?, ?, ?, 'SALES_REP', ?, ?, ?, ?, ?, ?, " + submittedAt(header)
-                + ", UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
+                + " needs_approval, submitted_at, created_at, created_by, updated_at, updated_by,"
+                + " copied_from_order_id)"
+                + " VALUES (?, ?, ?, ?, ?, '" + (header.portal ? "PORTAL" : "SALES_REP") + "', ?, ?, ?, ?, ?, ?, ?, "
+                + submittedAt(header)
+                + ", UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, orderNo);
             int next = bindHeader(statement, 2, header);
             statement.setLong(next++, actorUserId);
-            statement.setLong(next, actorUserId);
+            statement.setLong(next++, actorUserId);
+            setNullableLong(statement, next, header.copiedFromOrderId);
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 keys.next();
@@ -166,12 +171,52 @@ public class SalesOrderDao {
         }
     }
 
+    // Đơn nguồn để sao chép (S4-09): đại lý, điểm giao, ghi chú và các dòng (chỉ sản phẩm, đơn vị, số lượng; giá và
+    // chiết khấu không lấy từ đơn cũ). null nếu không có đơn này.
+    public CopyTemplate findCopyTemplate(long orderId) throws SQLException {
+        String headerSql = "SELECT order_no, customer_id, delivery_address_id, note FROM sales_orders WHERE id = ?";
+        String itemSql = "SELECT i.product_id, p.sku, p.name, i.unit_id, i.qty FROM sales_order_items i"
+                + " JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.line_no";
+        try (Connection connection = DbConnection.getConnection()) {
+            String orderNo;
+            long customerId;
+            long deliveryAddressId;
+            String note;
+            try (PreparedStatement statement = connection.prepareStatement(headerSql)) {
+                statement.setLong(1, orderId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) {
+                        return null;
+                    }
+                    orderNo = resultSet.getString("order_no");
+                    customerId = resultSet.getLong("customer_id");
+                    deliveryAddressId = resultSet.getLong("delivery_address_id");
+                    note = resultSet.getString("note");
+                }
+            }
+            List<OrderForm.Line> lines = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(itemSql)) {
+                statement.setLong(1, orderId);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        lines.add(new OrderForm.Line(String.valueOf(resultSet.getLong("product_id")),
+                                resultSet.getString("sku") + " - " + resultSet.getString("name"),
+                                String.valueOf(resultSet.getLong("unit_id")),
+                                resultSet.getBigDecimal("qty").stripTrailingZeros().toPlainString(), null));
+                    }
+                }
+            }
+            return new CopyTemplate(orderId, orderNo, customerId, deliveryAddressId, note, lines);
+        }
+    }
+
     // Chỉ sửa được đơn còn nháp và đúng version lúc mở; false nếu đơn vừa được sửa/gửi ở nơi khác
     public boolean updateDraft(Connection connection, long id, long version, Header header, long actorUserId)
             throws SQLException {
         String sql = "UPDATE sales_orders SET customer_id = ?, delivery_address_id = ?, warehouse_id = ?,"
                 + " sales_rep_id = ?, status = ?, requested_delivery_date = ?, subtotal_amount = ?,"
-                + " discount_amount = ?, total_amount = ?, note = ?, submitted_at = " + submittedAt(header) + ","
+                + " discount_amount = ?, total_amount = ?, note = ?, needs_approval = ?,"
+                + " submitted_at = " + submittedAt(header) + ","
                 + " version = version + 1, updated_at = UTC_TIMESTAMP(), updated_by = ?"
                 + " WHERE id = ? AND version = ? AND status = 'DRAFT'";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -183,38 +228,109 @@ public class SalesOrderDao {
         }
     }
 
-    public void deleteItems(Connection connection, long orderId) throws SQLException {
+    // Id các dòng hàng hiện có của đơn, theo số thứ tự dòng
+    public List<Long> findItemIds(Connection connection, long orderId) throws SQLException {
+        List<Long> ids = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(
-                "DELETE FROM sales_order_items WHERE order_id = ?")) {
+                "SELECT id FROM sales_order_items WHERE order_id = ? ORDER BY line_no")) {
             statement.setLong(1, orderId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    ids.add(resultSet.getLong(1));
+                }
+            }
+        }
+        return ids;
+    }
+
+    // Bỏ một dòng khỏi đơn nháp. Đơn bị trả lại sửa (S4-05) có thể còn dòng giữ chỗ đã nhả trỏ tới dòng này:
+    // xoá theo chỉ những dòng giữ chỗ đó (nháp không còn giữ chỗ ACTIVE) để xoá được dòng hàng
+    public void deleteItem(Connection connection, long itemId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "DELETE FROM stock_reservations WHERE order_item_id = ? AND status = 'RELEASED'")) {
+            statement.setLong(1, itemId);
+            statement.executeUpdate();
+        }
+        try (PreparedStatement statement = connection.prepareStatement(
+                "DELETE FROM sales_order_items WHERE id = ?")) {
+            statement.setLong(1, itemId);
+            statement.executeUpdate();
+        }
+    }
+
+    // Ghi đè dòng hàng sẵn có (giữ nguyên id để lịch sử giữ chỗ của dòng vẫn trỏ đúng)
+    public void updateItem(Connection connection, long itemId, int lineNo, OrderQuote.Line line, long actorUserId)
+            throws SQLException {
+        String sql = "UPDATE sales_order_items SET line_no = ?, product_id = ?, unit_id = ?, unit_factor = ?, qty = ?,"
+                + " qty_base = ?, unit_price = ?, floor_price = ?, price_list_item_id = ?, discount_policy_id = ?,"
+                + " is_manual_price = ?, is_below_floor = ?, discount_amount = ?, line_total = ?,"
+                + " updated_at = UTC_TIMESTAMP(), updated_by = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            int next = bindItem(statement, 1, lineNo, line);
+            statement.setLong(next++, actorUserId);
+            statement.setLong(next, itemId);
             statement.executeUpdate();
         }
     }
 
     // Chụp lại đơn vị, hệ số, giá, giá sàn, chiết khấu của dòng để đổi bảng giá/hệ số sau này không làm sai đơn
-    public void insertItem(Connection connection, long orderId, int lineNo, OrderQuote.Line line, long actorUserId)
+    // Trả về id dòng vừa ghi (để giữ chỗ tồn khi gửi đơn, S4-03)
+    public long insertItem(Connection connection, long orderId, int lineNo, OrderQuote.Line line, long actorUserId)
             throws SQLException {
         String sql = "INSERT INTO sales_order_items (order_id, line_no, product_id, unit_id, unit_factor, qty, qty_base,"
-                + " unit_price, floor_price, price_list_item_id, discount_policy_id, discount_amount, line_total,"
-                + " created_at, created_by, updated_at, updated_by)"
-                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                + " unit_price, floor_price, price_list_item_id, discount_policy_id, is_manual_price, is_below_floor,"
+                + " discount_amount, line_total, created_at, created_by, updated_at, updated_by)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), ?, UTC_TIMESTAMP(), ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, orderId);
-            statement.setInt(2, lineNo);
-            statement.setLong(3, line.getProduct().getId());
-            statement.setLong(4, line.getUnit().getId());
-            statement.setBigDecimal(5, line.getUnit().getFactor());
-            statement.setBigDecimal(6, line.getQty());
-            statement.setBigDecimal(7, line.getQtyBase());
-            statement.setBigDecimal(8, line.getUnitPrice());
-            statement.setBigDecimal(9, line.getFloorPrice());
-            setNullableLong(statement, 10, line.getPriceListItemId());
-            setNullableLong(statement, 11, line.getDiscountPolicyId());
-            statement.setBigDecimal(12, line.getDiscount());
-            statement.setBigDecimal(13, line.getTotal());
-            statement.setLong(14, actorUserId);
-            statement.setLong(15, actorUserId);
+            int next = bindItem(statement, 2, lineNo, line);
+            statement.setLong(next++, actorUserId);
+            statement.setLong(next, actorUserId);
             statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                keys.next();
+                return keys.getLong(1);
+            }
+        }
+    }
+
+    private static int bindItem(PreparedStatement statement, int start, int lineNo, OrderQuote.Line line)
+            throws SQLException {
+        int index = start;
+        statement.setInt(index++, lineNo);
+        statement.setLong(index++, line.getProduct().getId());
+        statement.setLong(index++, line.getUnit().getId());
+        statement.setBigDecimal(index++, line.getUnit().getFactor());
+        statement.setBigDecimal(index++, line.getQty());
+        statement.setBigDecimal(index++, line.getQtyBase());
+        statement.setBigDecimal(index++, line.getUnitPrice());
+        statement.setBigDecimal(index++, line.getFloorPrice());
+        setNullableLong(statement, index++, line.getPriceListItemId());
+        setNullableLong(statement, index++, line.getDiscountPolicyId());
+        statement.setBoolean(index++, line.isManualPrice());
+        statement.setBoolean(index++, line.isBelowFloor());
+        statement.setBigDecimal(index++, line.getDiscount());
+        statement.setBigDecimal(index++, line.getTotal());
+        return index;
+    }
+
+    // Đổi trạng thái đơn đang chờ duyệt (S4-05). version = null khi gọi ngay trong transaction gửi đơn (tự duyệt);
+    // duyệt thì ghi approved_at. false nếu đơn vừa đổi trạng thái hoặc được sửa ở nơi khác.
+    public boolean changeStatus(Connection connection, long id, Long version, String fromStatus, String toStatus,
+                                long actorUserId) throws SQLException {
+        String sql = "UPDATE sales_orders SET status = ?,"
+                + (OrderStatus.APPROVED.equals(toStatus) ? " approved_at = UTC_TIMESTAMP()," : "")
+                + " version = version + 1, updated_at = UTC_TIMESTAMP(), updated_by = ?"
+                + " WHERE id = ? AND status = ?" + (version == null ? "" : " AND version = ?");
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, toStatus);
+            statement.setLong(2, actorUserId);
+            statement.setLong(3, id);
+            statement.setString(4, fromStatus);
+            if (version != null) {
+                statement.setLong(5, version);
+            }
+            return statement.executeUpdate() == 1;
         }
     }
 
@@ -237,7 +353,7 @@ public class SalesOrderDao {
                     drafts.add(new DraftOrder(resultSet.getLong("id"), resultSet.getString("order_no"),
                             resultSet.getString("name"), resultSet.getBoolean("is_blocked"),
                             resultSet.getBigDecimal("total_amount"),
-                            resultSet.getObject("updated_at", LocalDateTime.class)));
+                            resultSet.getObject("updated_at", LocalDateTime.class), DRAFT));
                 }
             }
         }
@@ -249,8 +365,9 @@ public class SalesOrderDao {
         String headerSql = "SELECT o.customer_id, c.code AS customer_code, o.order_no, o.delivery_address_id,"
                 + " o.requested_delivery_date, o.note, o.subtotal_amount, o.discount_amount, o.total_amount, o.version"
                 + " FROM sales_orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ? AND o.status = 'DRAFT'";
-        String itemSql = "SELECT i.product_id, p.sku, p.name, i.unit_id, i.qty FROM sales_order_items i"
-                + " JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.line_no";
+        String itemSql = "SELECT i.product_id, p.sku, p.name, i.unit_id, i.qty, i.unit_price, i.is_manual_price"
+                + " FROM sales_order_items i JOIN products p ON p.id = i.product_id WHERE i.order_id = ?"
+                + " ORDER BY i.line_no";
         try (Connection connection = DbConnection.getConnection()) {
             long customerId;
             String customerCode;
@@ -289,12 +406,176 @@ public class SalesOrderDao {
                         lines.add(new OrderForm.Line(String.valueOf(resultSet.getLong("product_id")),
                                 resultSet.getString("sku") + " - " + resultSet.getString("name"),
                                 String.valueOf(resultSet.getLong("unit_id")),
-                                resultSet.getBigDecimal("qty").stripTrailingZeros().toPlainString()));
+                                resultSet.getBigDecimal("qty").stripTrailingZeros().toPlainString(),
+                                // Mở lại đơn nháp giữ giá sửa tay; dòng theo bảng giá thì tính lại theo giá hiện hành
+                                resultSet.getBoolean("is_manual_price")
+                                        ? resultSet.getBigDecimal("unit_price").stripTrailingZeros().toPlainString() : null));
                     }
                 }
             }
             return new Draft(customerId, customerCode, orderNo, new OrderForm(String.valueOf(customerId),
                     deliveryAddressId, requestedDate, note, id, String.valueOf(version), lines), subtotal, discount, total);
+        }
+    }
+
+    // Chi tiết đơn cho màn Chi tiết đơn hàng (S4-06); null nếu không có đơn này
+    public OrderDetail findDetail(long id) throws SQLException {
+        String headerSql = "SELECT o.id, o.order_no, o.status, o.version, o.customer_id, c.code AS customer_code,"
+                + " c.name AS customer_name, c.tax_code, c.phone AS customer_phone, c.address AS customer_address,"
+                + " g.name AS group_name, a.label, a.address AS delivery_address, a.receiver_name, a.receiver_phone,"
+                + " a.route_note, w.name AS warehouse_name, rep.full_name AS rep_name, cb.full_name AS created_by_name,"
+                + " o.requested_delivery_date, o.created_at, o.submitted_at, o.approved_at, o.cancelled_at,"
+                + " o.cancel_reason, xb.full_name AS cancelled_by_name, o.needs_approval, o.subtotal_amount,"
+                + " o.discount_amount, o.total_amount, o.note FROM sales_orders o"
+                + " JOIN customers c ON c.id = o.customer_id JOIN customer_groups g ON g.id = c.customer_group_id"
+                + " JOIN customer_delivery_addresses a ON a.id = o.delivery_address_id"
+                + " JOIN warehouses w ON w.id = o.warehouse_id LEFT JOIN users rep ON rep.id = o.sales_rep_id"
+                + " LEFT JOIN users cb ON cb.id = o.created_by LEFT JOIN users xb ON xb.id = o.cancelled_by"
+                + " WHERE o.id = ?";
+        String itemSql = "SELECT i.line_no, p.sku, p.name, u.name AS unit_name, bu.name AS base_unit_name, i.qty,"
+                + " i.qty_base, i.unit_price, i.floor_price, i.is_manual_price, i.is_below_floor, i.discount_amount,"
+                + " i.line_total FROM sales_order_items i"
+                + " JOIN products p ON p.id = i.product_id JOIN units u ON u.id = i.unit_id"
+                + " JOIN units bu ON bu.id = p.base_unit_id WHERE i.order_id = ? ORDER BY i.line_no";
+        String historySql = "SELECT h.from_status, h.to_status, h.note, h.created_at, u.full_name"
+                + " FROM order_status_history h LEFT JOIN users u ON u.id = h.created_by WHERE h.order_id = ?"
+                + " ORDER BY h.created_at, h.id";
+        try (Connection connection = DbConnection.getConnection()) {
+            List<OrderDetail.Item> items = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(itemSql)) {
+                statement.setLong(1, id);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        items.add(new OrderDetail.Item(resultSet.getInt("line_no"), resultSet.getString("sku"),
+                                resultSet.getString("name"), resultSet.getString("unit_name"),
+                                resultSet.getString("base_unit_name"), resultSet.getBigDecimal("qty"),
+                                resultSet.getBigDecimal("qty_base"), resultSet.getBigDecimal("unit_price"),
+                                resultSet.getBigDecimal("floor_price"), resultSet.getBoolean("is_manual_price"),
+                                resultSet.getBoolean("is_below_floor"), resultSet.getBigDecimal("discount_amount"),
+                                resultSet.getBigDecimal("line_total")));
+                    }
+                }
+            }
+            List<OrderDetail.HistoryEntry> history = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(historySql)) {
+                statement.setLong(1, id);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        history.add(new OrderDetail.HistoryEntry(resultSet.getString("from_status"),
+                                resultSet.getString("to_status"), resultSet.getString("note"),
+                                resultSet.getObject("created_at", LocalDateTime.class),
+                                resultSet.getString("full_name")));
+                    }
+                }
+            }
+            try (PreparedStatement statement = connection.prepareStatement(headerSql)) {
+                statement.setLong(1, id);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next()) {
+                        return null;
+                    }
+                    return new OrderDetail(resultSet.getLong("id"), resultSet.getString("order_no"),
+                            resultSet.getString("status"), resultSet.getLong("version"),
+                            resultSet.getLong("customer_id"), resultSet.getString("customer_code"),
+                            resultSet.getString("customer_name"), resultSet.getString("tax_code"),
+                            resultSet.getString("customer_phone"), resultSet.getString("customer_address"),
+                            resultSet.getString("group_name"), resultSet.getString("label"),
+                            resultSet.getString("delivery_address"), resultSet.getString("receiver_name"),
+                            resultSet.getString("receiver_phone"), resultSet.getString("route_note"),
+                            resultSet.getString("warehouse_name"), resultSet.getString("rep_name"),
+                            resultSet.getString("created_by_name"),
+                            resultSet.getObject("requested_delivery_date", LocalDate.class),
+                            resultSet.getObject("created_at", LocalDateTime.class),
+                            resultSet.getObject("submitted_at", LocalDateTime.class),
+                            resultSet.getObject("approved_at", LocalDateTime.class),
+                            resultSet.getObject("cancelled_at", LocalDateTime.class),
+                            resultSet.getString("cancel_reason"), resultSet.getString("cancelled_by_name"),
+                            resultSet.getBoolean("needs_approval"), resultSet.getBigDecimal("subtotal_amount"),
+                            resultSet.getBigDecimal("discount_amount"), resultSet.getBigDecimal("total_amount"),
+                            resultSet.getString("note"), items, history);
+                }
+            }
+        }
+    }
+
+    // Đơn đã gửi (không còn nháp) mới cập nhật gần nhất; salesRepId như findDrafts
+    public List<DraftOrder> findRecentSubmitted(Long salesRepId, int limit) throws SQLException {
+        String sql = "SELECT o.id, o.order_no, c.name, c.is_blocked, o.status, o.total_amount, o.updated_at"
+                + " FROM sales_orders o JOIN customers c ON c.id = o.customer_id WHERE o.status <> 'DRAFT'"
+                + (salesRepId == null ? "" : " AND c.sales_rep_id = ?") + " ORDER BY o.updated_at DESC, o.id DESC"
+                + " LIMIT ?";
+        List<DraftOrder> orders = new ArrayList<>();
+        try (Connection connection = DbConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            int next = 1;
+            if (salesRepId != null) {
+                statement.setLong(next++, salesRepId);
+            }
+            statement.setInt(next, limit);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    orders.add(new DraftOrder(resultSet.getLong("id"), resultSet.getString("order_no"),
+                            resultSet.getString("name"), resultSet.getBoolean("is_blocked"),
+                            resultSet.getBigDecimal("total_amount"),
+                            resultSet.getObject("updated_at", LocalDateTime.class), resultSet.getString("status")));
+                }
+            }
+        }
+        return orders;
+    }
+
+    // Lịch sử đổi trạng thái chỉ được thêm (trigger chặn sửa/xoá); fromStatus = null khi đơn vừa được tạo
+    public void insertStatusHistory(Connection connection, long orderId, String fromStatus, String toStatus,
+                                    String note, long actorUserId) throws SQLException {
+        String sql = "INSERT INTO order_status_history (order_id, from_status, to_status, note, created_at, created_by)"
+                + " VALUES (?, ?, ?, ?, UTC_TIMESTAMP(), ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, orderId);
+            statement.setString(2, fromStatus);
+            statement.setString(3, toStatus);
+            statement.setString(4, note);
+            statement.setLong(5, actorUserId);
+            statement.executeUpdate();
+        }
+    }
+
+    // Huỷ đơn khi còn đúng trạng thái và đúng version lúc mở; false nếu đơn vừa đổi trạng thái / được sửa nơi khác
+    public boolean cancel(Connection connection, long id, long version, String fromStatus, String reason,
+                          long actorUserId) throws SQLException {
+        String sql = "UPDATE sales_orders SET status = 'CANCELLED', cancel_reason = ?, cancelled_at = UTC_TIMESTAMP(),"
+                + " cancelled_by = ?, version = version + 1, updated_at = UTC_TIMESTAMP(), updated_by = ?"
+                + " WHERE id = ? AND version = ? AND status = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, reason);
+            statement.setLong(2, actorUserId);
+            statement.setLong(3, actorUserId);
+            statement.setLong(4, id);
+            statement.setLong(5, version);
+            statement.setString(6, fromStatus);
+            return statement.executeUpdate() == 1;
+        }
+    }
+
+    // Nhả tồn đang giữ chỗ cho các dòng của đơn (giữ chỗ tạo khi gửi đơn, S4-03): trừ lại qty_reserved_base rồi
+    // đánh dấu RELEASED, cùng transaction; trả về số dòng giữ chỗ đã nhả
+    public int releaseReservations(Connection connection, long orderId, String reason) throws SQLException {
+        String balanceSql = "UPDATE stock_balances b JOIN (SELECT r.warehouse_id, r.product_id, SUM(r.qty_base) AS qty"
+                + " FROM stock_reservations r JOIN sales_order_items i ON i.id = r.order_item_id"
+                + " WHERE i.order_id = ? AND r.status = 'ACTIVE' GROUP BY r.warehouse_id, r.product_id) x"
+                + " ON x.warehouse_id = b.warehouse_id AND x.product_id = b.product_id"
+                + " SET b.qty_reserved_base = b.qty_reserved_base - x.qty, b.version = b.version + 1,"
+                + " b.updated_at = UTC_TIMESTAMP()";
+        try (PreparedStatement statement = connection.prepareStatement(balanceSql)) {
+            statement.setLong(1, orderId);
+            statement.executeUpdate();
+        }
+        String sql = "UPDATE stock_reservations SET status = 'RELEASED', released_at = UTC_TIMESTAMP(),"
+                + " release_reason = ? WHERE status = 'ACTIVE'"
+                + " AND order_item_id IN (SELECT id FROM sales_order_items WHERE order_id = ?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, reason);
+            statement.setLong(2, orderId);
+            return statement.executeUpdate();
         }
     }
 
@@ -318,6 +599,7 @@ public class SalesOrderDao {
         statement.setBigDecimal(index++, header.discount);
         statement.setBigDecimal(index++, header.total);
         statement.setString(index++, header.note);
+        statement.setBoolean(index++, header.needsApproval);
         return index;
     }
 
@@ -341,10 +623,13 @@ public class SalesOrderDao {
         final BigDecimal discount;
         final BigDecimal total;
         final String note;
+        final boolean needsApproval;
+        final Long copiedFromOrderId;
+        final boolean portal;
 
         public Header(long customerId, long deliveryAddressId, long warehouseId, Long salesRepId, boolean submitted,
                       LocalDate requestedDate, BigDecimal subtotal, BigDecimal discount, BigDecimal total,
-                      String note) {
+                      String note, boolean needsApproval, Long copiedFromOrderId, boolean portal) {
             this.customerId = customerId;
             this.deliveryAddressId = deliveryAddressId;
             this.warehouseId = warehouseId;
@@ -355,6 +640,57 @@ public class SalesOrderDao {
             this.discount = discount;
             this.total = total;
             this.note = note;
+            this.needsApproval = needsApproval;
+            this.copiedFromOrderId = copiedFromOrderId;
+            this.portal = portal;
+        }
+
+        public boolean isSubmitted() {
+            return submitted;
+        }
+    }
+
+    // Đơn gốc của lần sao chép (S4-09)
+    public static class CopyTemplate {
+        private final long orderId;
+        private final String orderNo;
+        private final long customerId;
+        private final long deliveryAddressId;
+        private final String note;
+        private final List<OrderForm.Line> lines;
+
+        CopyTemplate(long orderId, String orderNo, long customerId, long deliveryAddressId, String note,
+                     List<OrderForm.Line> lines) {
+            this.orderId = orderId;
+            this.orderNo = orderNo;
+            this.customerId = customerId;
+            this.deliveryAddressId = deliveryAddressId;
+            this.note = note;
+            this.lines = lines;
+        }
+
+        public long getOrderId() {
+            return orderId;
+        }
+
+        public String getOrderNo() {
+            return orderNo;
+        }
+
+        public long getCustomerId() {
+            return customerId;
+        }
+
+        public long getDeliveryAddressId() {
+            return deliveryAddressId;
+        }
+
+        public String getNote() {
+            return note;
+        }
+
+        public List<OrderForm.Line> getLines() {
+            return lines;
         }
     }
 

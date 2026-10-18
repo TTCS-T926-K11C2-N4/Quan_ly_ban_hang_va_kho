@@ -1,0 +1,320 @@
+/* Duyệt đơn (S4-05) theo thiết kế Sprint 4 màn 5; thẻ, bảng hàng hoá, hộp thoại dùng chung orders.css */
+
+/* Danh sách chờ duyệt */
+.approval-queue {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.approval-queue__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.approval-queue__count {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.approval-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: min(100%, 420px);
+}
+
+.approval-search__icon {
+    position: absolute;
+    left: 10px;
+    pointer-events: none;
+}
+
+.approval-search__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-left: 32px;
+}
+
+.approval-table__action {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.approval-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.approval-reason {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.approval-reason--credit {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.approval-reason--floor {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.approval-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 36px 16px;
+    text-align: center;
+}
+
+.approval-empty__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-sales-heading);
+}
+
+.approval-empty__text {
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+/* Màn duyệt một đơn: trái là thông tin + lý do, phải là hàng hoá, lịch sử duyệt (thu gọn) trải hết bề ngang */
+.approval-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 12px;
+    margin-top: 12px;
+    align-items: start;
+}
+
+.approval-grid__main {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.approval-grid__items {
+    margin-top: 0;
+}
+
+.approval-grid > .approval-history {
+    grid-column: 1 / -1;
+    margin-top: 0;
+}
+
+.approval-grid .order-card,
+.approval-grid .order-items-card {
+    margin-top: 0;
+}
+
+/* Nút Duyệt / Từ chối / Trả lại ở hàng tiêu đề, luôn thấy mà không phải cuộn */
+.approval-toolbar {
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.approval-toolbar .approval-action {
+    display: inline-flex;
+    height: 34px;
+    padding: 0 14px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.approval-history__summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.approval-history__summary::-webkit-details-marker {
+    display: none;
+}
+
+.approval-history__summary::after {
+    content: "Mở ra";
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.approval-history[open] .approval-history__summary::after {
+    content: "Thu gọn";
+}
+
+.approval-history__count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--color-sales-muted);
+}
+
+.approval-history[open] .approval-history__summary {
+    margin-bottom: 8px;
+}
+
+.approval-amount {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-sales-heading);
+}
+
+.approval-amount--danger {
+    color: #b91c1c;
+}
+
+.approval-alert {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    border: 1px solid #fca5a5;
+    border-radius: 10px;
+    background: #fef2f2;
+    font-size: 12px;
+    color: #7f1d1d;
+}
+
+.approval-alert__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #b91c1c;
+}
+
+.approval-alert__list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding-left: 18px;
+    line-height: 1.5;
+}
+
+.approval-alert__meta {
+    color: #991b1b;
+    opacity: 0.8;
+}
+
+.approval-row--below td {
+    background: #fef2f2;
+}
+
+.approval-history__table {
+    font-size: 12px;
+}
+
+.approval-history__note {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--color-sales-muted);
+}
+
+.approval-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    border: 1px solid var(--color-sales-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-sales-text);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.approval-action:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.approval-action--approve {
+    border-color: #16a34a;
+    background: #16a34a;
+    color: #ffffff;
+}
+
+.approval-action--approve:hover {
+    background: #15803d;
+}
+
+.approval-action--reject {
+    border-color: #f87171;
+    color: #dc2626;
+}
+
+.approval-action--reject:hover {
+    background: #fef2f2;
+}
+
+.approval-action--return {
+    border-color: #1e3a8a;
+    color: #1e3a8a;
+}
+
+.approval-action--return:hover {
+    background: #eff6ff;
+}
+
+.approval-action--back {
+    background: var(--color-sales-soft);
+}
+
+/* Hộp thoại duyệt / từ chối / trả lại */
+.approval-dialog__icon--approve {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.approval-dialog__icon--return {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.approval-dialog__approve {
+    border-color: #16a34a;
+    background: #16a34a;
+    color: #ffffff;
+}
+
+.approval-dialog__approve:hover {
+    background: #15803d;
+}
+
+.approval-dialog__count {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--color-sales-muted);
+    text-align: right;
+}
+
+.approval-dialog button[disabled] {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+@media (max-width: 1023px) {
+    .approval-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

@@ -223,6 +223,81 @@
     padding: 20px 22px 24px;
 }
 
+/* Hàng sắp hết: hàng riêng rộng bằng cả lưới, cùng lề với khối Đơn hàng gần đây */
+.panel--stock {
+    margin-top: 24px;
+    padding: 22px 24px 24px;
+}
+
+.panel__count {
+    display: inline-block;
+    min-width: 22px;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #fef2f2;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    color: #dc2626;
+    vertical-align: 2px;
+}
+
+.data-table--stock td {
+    height: 56px;
+    padding-top: 16px;
+}
+
+.data-table__num {
+    padding-right: 24px;
+    text-align: right;
+}
+
+.data-table__low strong {
+    color: #dc2626;
+}
+
+/* Không có hàng dưới mức tối thiểu: báo tin tốt rõ ràng thay vì một dòng chữ trơn */
+.stock-empty {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 0 4px;
+}
+
+.stock-empty__icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #16a34a;
+    -webkit-mask: none;
+    mask: none;
+    position: relative;
+}
+
+.stock-empty__icon::after {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    background-color: #f0fdf4;
+    -webkit-mask: url("../img/icons/inventory/circle-check.svg") center / contain no-repeat;
+    mask: url("../img/icons/inventory/circle-check.svg") center / contain no-repeat;
+}
+
+.stock-empty__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-navy);
+}
+
+.stock-empty__note {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
 .quick-actions {
     display: flex;
     flex-direction: column;

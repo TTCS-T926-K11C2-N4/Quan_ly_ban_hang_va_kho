@@ -19,7 +19,7 @@
     --shadow-card: 0 14px 34px rgba(8, 20, 46, 0.14);
     --shadow-topbar: 0 2px 10px rgba(8, 20, 46, 0.06);
     --font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-    --sidebar-width: 292px;
+    --sidebar-width: 264px;
 }
 
 *,
@@ -69,7 +69,7 @@ ol {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    padding-bottom: 32px;
+    padding-bottom: 16px;
     overflow-y: auto;
     color: var(--color-sidebar-text);
     background:
@@ -85,8 +85,8 @@ ol {
     flex-shrink: 0;
     align-items: flex-start;
     gap: 15px;
-    height: 91px;
-    padding: 15px 0 0 6px;
+    height: 76px;
+    padding: 10px 0 0 6px;
 }
 
 /* Đường kẻ thụt 24px hai bên, khác lề của logo (6px) nên không dùng border */
@@ -102,13 +102,13 @@ ol {
 
 .app-sidebar__logo {
     display: block;
-    width: 63px;
-    height: 63px;
+    width: 54px;
+    height: 54px;
     object-fit: cover;
 }
 
 .app-sidebar__brand-title {
-    padding-top: 13px;
+    padding-top: 8px;
     font-size: 16px;
     font-weight: 700;
     color: #ffffff;
@@ -122,7 +122,7 @@ ol {
 }
 
 .app-menu__title {
-    margin: 25px 28px 0;
+    margin: 14px 28px 0;
     font-size: 10px;
     font-weight: 600;
     color: var(--color-sidebar-label);
@@ -131,8 +131,8 @@ ol {
 .app-menu__list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-top: 16px;
+    gap: 4px;
+    margin-top: 10px;
     padding: 0 16px;
     list-style: none;
 }
@@ -141,7 +141,7 @@ ol {
     display: flex;
     align-items: center;
     gap: 14px;
-    height: 46px;
+    height: 40px;
     padding: 0 14px;
     border-radius: 9px;
     font-size: 14px;
@@ -223,7 +223,7 @@ ol {
     position: relative;
     display: flex;
     align-items: center;
-    height: 38px;
+    height: 34px;
     padding: 0 14px;
     border-radius: 8px;
     font-size: 13px;
@@ -279,6 +279,22 @@ ol {
 .app-menu__icon--dashboard { --menu-icon: url("../img/icons/menu/dashboard.svg"); }
 .app-menu__icon--accounts { --menu-icon: url("../img/icons/menu/accounts.svg"); }
 .app-menu__icon--sales { --menu-icon: url("../img/icons/menu/sales.svg"); }
+.app-menu__icon--approvals { --menu-icon: url("../img/icons/menu/approvals.svg"); }
+
+/* Số đơn chờ duyệt cạnh mục "Duyệt đơn" (S4-05) */
+.app-menu__count {
+    min-width: 20px;
+    height: 20px;
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #ef4444;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 20px;
+    color: #ffffff;
+    text-align: center;
+}
 .app-menu__icon--products { --menu-icon: url("../img/icons/menu/products.svg"); }
 .app-menu__icon--warehouse { --menu-icon: url("../img/icons/menu/warehouse.svg"); }
 .app-menu__icon--suppliers { --menu-icon: url("../img/icons/menu/suppliers.svg"); }
@@ -287,7 +303,7 @@ ol {
 .app-user {
     flex-shrink: 0;
     margin: auto 20px 0;
-    padding: 18px 14px 12px;
+    padding: 12px 12px 8px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.12);
 }
@@ -382,7 +398,7 @@ ol {
     flex-shrink: 0;
     align-items: center;
     gap: 32px;
-    height: 78px;
+    height: 60px;
     padding: 0 122px 0 30px;
     background: var(--color-surface);
     box-shadow: var(--shadow-topbar);
@@ -427,6 +443,17 @@ ol {
 .app-breadcrumb__list li + li::before {
     content: "/";
     margin: 0 8px;
+}
+
+/* Cấp cha có link (breadcrumbParent): cùng màu chữ breadcrumb, gạch chân khi rê chuột */
+.app-breadcrumb__link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.app-breadcrumb__link:hover {
+    color: var(--color-text);
+    text-decoration: underline;
 }
 
 .app-search {
@@ -500,18 +527,18 @@ ol {
 
 /* Nội dung trang */
 .app-content {
-    padding: 34px 30px 40px;
+    padding: 20px 28px 28px;
 }
 
 .page-header__title {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--color-navy);
 }
 
 .page-header__subtitle {
-    margin-top: 8px;
-    font-size: 14px;
+    margin-top: 4px;
+    font-size: 13px;
     color: var(--color-text-muted);
 }
 

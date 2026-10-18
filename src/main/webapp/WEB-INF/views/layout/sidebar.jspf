@@ -19,6 +19,36 @@
                     <span class="app-menu__icon app-menu__icon--dashboard" aria-hidden="true"></span>${currentUser.customer ? 'Trang chủ' : 'Tổng quan'}
                 </a>
             </li>
+            <c:if test="${currentUser.customer and currentUser.can('ORDER_MANAGE')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'portal-order-new' ? ' app-menu__link--active' : ''}" id="menu-portal-order-new"
+                   href="<c:url value='/portal/order/new'/>"${activeMenu == 'portal-order-new' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Đặt hàng
+                </a>
+            </li>
+            </c:if>
+            <c:if test="${currentUser.customer and currentUser.can('ORDER_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'portal-orders' ? ' app-menu__link--active' : ''}" id="menu-portal-orders"
+                   href="<c:url value='/portal/orders'/>"${activeMenu == 'portal-orders' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Đơn hàng của tôi
+                </a>
+            </li>
+            </c:if>
+            <c:if test="${currentUser.customer and currentUser.can('INVOICE_VIEW')}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'portal-debts' ? ' app-menu__link--active' : ''}" id="menu-portal-debts"
+                   href="<c:url value='/portal/debts'/>"${activeMenu == 'portal-debts' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--reports" aria-hidden="true"></span>Công nợ của tôi
+                </a>
+            </li>
+            <li>
+                <a class="app-menu__link${activeMenu == 'portal-statements' ? ' app-menu__link--active' : ''}" id="menu-portal-statements"
+                   href="<c:url value='/portal/statements'/>"${activeMenu == 'portal-statements' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--reports" aria-hidden="true"></span>Đối chiếu công nợ
+                </a>
+            </li>
+            </c:if>
             <c:if test="${currentUser.can('USER_VIEW') or currentUser.can('AUDIT_LOG_VIEW') or (currentUser.can('CUSTOMER_VIEW') and not currentUser.customer)}">
             <li>
                 <%-- Giống nhóm Sản phẩm; trang đặt activeSubmenu: account-list | audit-logs | customers | assignments.
@@ -55,12 +85,40 @@
                 </details>
             </li>
             </c:if>
-            <c:if test="${currentUser.can('ORDER_VIEW')}">
+            <c:if test="${currentUser.can('ORDER_VIEW') and not currentUser.customer}">
             <li>
-                <%-- Chưa có danh sách đơn (S4-07): người tạo được đơn vào thẳng màn Tạo đơn hàng (S3-09) --%>
-                <a class="app-menu__link${activeMenu == 'sales' ? ' app-menu__link--active' : ''}" id="menu-sales"
-                   href="<c:url value="${currentUser.can('ORDER_MANAGE') and not currentUser.customer ? '/orders/new' : '/sales'}"/>"${activeMenu == 'sales' ? ' aria-current="page"' : ''}>
+                <%-- Nhóm Bán hàng chỉ cho nhân viên nội bộ (đại lý dùng Đặt hàng / Đơn hàng của tôi ở đầu menu):
+                     Danh sách đơn hàng (S4-07) và Tạo đơn hàng (S3-09, cần quyền tạo đơn);
+                     trang đặt activeSubmenu: order-list | order-new --%>
+                <details class="app-menu__group"${activeMenu == 'sales' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'sales' ? ' app-menu__toggle--current' : ''}" id="menu-sales">
                     <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Bán hàng
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'order-list' ? ' app-submenu__link--active' : ''}" id="menu-order-list"
+                           href="<c:url value='/orders'/>"${activeSubmenu == 'order-list' ? ' aria-current="page"' : ''}>Danh sách đơn hàng</a>
+                    </li>
+                    <c:if test="${currentUser.can('ORDER_MANAGE') and not currentUser.customer}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'order-new' ? ' app-submenu__link--active' : ''}" id="menu-order-new"
+                           href="<c:url value='/orders/new'/>"${activeSubmenu == 'order-new' ? ' aria-current="page"' : ''}>Tạo đơn hàng</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
+            </li>
+            </c:if>
+            <c:if test="${currentUser.can('ORDER_APPROVAL_VIEW')}">
+            <li>
+                <%-- Duyệt đơn vượt hạn mức / dưới giá sàn (S4-05); số đếm do ApprovalBadgeFilter đặt khi mở trang --%>
+                <a class="app-menu__link${activeMenu == 'approvals' ? ' app-menu__link--active' : ''}" id="menu-approvals"
+                   href="<c:url value='/approvals'/>"${activeMenu == 'approvals' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--approvals" aria-hidden="true"></span>Duyệt đơn
+                    <c:if test="${pendingApprovalCount > 0}">
+                        <span class="app-menu__count" aria-label="${pendingApprovalCount} đơn chờ duyệt">${pendingApprovalCount > 99 ? '99+' : pendingApprovalCount}</span>
+                    </c:if>
                 </a>
             </li>
             </c:if>
@@ -115,10 +173,163 @@
                 </a>
             </li>
             <li>
-                <a class="app-menu__link${activeMenu == 'warehouse' ? ' app-menu__link--active' : ''}" id="menu-warehouse"
-                   href="<c:url value='/warehouse'/>"${activeMenu == 'warehouse' ? ' aria-current="page"' : ''}>
+                <%-- Nhóm Kho hàng (EP-05, thiết kế Sprint 5); trang đặt activeSubmenu:
+                     warehouses (S5-03) | goods-receipts (S5-04) | stock (S5-05) | reservations (S5-06) |
+                     pick-lists (S6-03, S6-05) | deliveries (S6-08).
+                     Mỗi mục chỉ hiện khi ứng dụng đã có Servlet của màn đó (tên đăng ký mặc định của @WebServlet là
+                     tên đầy đủ của lớp), để merge lẻ từng story không hiện mục dẫn tới trang chưa có --%>
+                <c:set var="servlets" value="${pageContext.servletContext.servletRegistrations}"/>
+                <details class="app-menu__group"${activeMenu == 'warehouse' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'warehouse' ? ' app-menu__toggle--current' : ''}" id="menu-warehouse">
                     <span class="app-menu__icon app-menu__icon--warehouse" aria-hidden="true"></span>Kho hàng
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <c:if test="${not empty servlets['com.oms.controller.WarehouseListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'warehouses' ? ' app-submenu__link--active' : ''}" id="menu-warehouses"
+                           href="<c:url value='/warehouses'/>"${activeSubmenu == 'warehouses' ? ' aria-current="page"' : ''}>Danh sách kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.GoodsReceiptListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'goods-receipts' ? ' app-submenu__link--active' : ''}" id="menu-goods-receipts"
+                           href="<c:url value='/goods-receipts'/>"${activeSubmenu == 'goods-receipts' ? ' aria-current="page"' : ''}>Phiếu nhập kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.TransferListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'transfers' ? ' app-submenu__link--active' : ''}" id="menu-transfers"
+                           href="<c:url value='/transfers'/>"${activeSubmenu == 'transfers' ? ' aria-current="page"' : ''}>Chuyển kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.StockLedgerServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'stock' ? ' app-submenu__link--active' : ''}" id="menu-stock"
+                           href="<c:url value='/stock'/>"${activeSubmenu == 'stock' ? ' aria-current="page"' : ''}>Sổ tồn kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.StocktakeListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'stocktakes' ? ' app-submenu__link--active' : ''}" id="menu-stocktakes"
+                           href="<c:url value='/stocktakes'/>"${activeSubmenu == 'stocktakes' ? ' aria-current="page"' : ''}>Kiểm kê kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.AdjustmentListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'adjustments' ? ' app-submenu__link--active' : ''}" id="menu-adjustments"
+                           href="<c:url value='/adjustments'/>"${activeSubmenu == 'adjustments' ? ' aria-current="page"' : ''}>Điều chỉnh tồn kho</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.ReservationListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'reservations' ? ' app-submenu__link--active' : ''}" id="menu-reservations"
+                           href="<c:url value='/stock/reservations'/>"${activeSubmenu == 'reservations' ? ' aria-current="page"' : ''}>Giữ chỗ tồn</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.LotListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'lots' ? ' app-submenu__link--active' : ''}" id="menu-lots"
+                           href="<c:url value='/lots'/>"${activeSubmenu == 'lots' ? ' aria-current="page"' : ''}>Lô và hạn dùng</a>
+                    </li>
+                    </c:if>
+                    <%-- Sprint 6: phiếu soạn hàng (S6-03); cần thêm quyền xem giao hàng --%>
+                    <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.PickListListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'pick-lists' ? ' app-submenu__link--active' : ''}" id="menu-pick-lists"
+                           href="<c:url value='/pick-lists'/>"${activeSubmenu == 'pick-lists' ? ' aria-current="page"' : ''}>Phiếu soạn hàng</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.TripListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'trips' ? ' app-submenu__link--active' : ''}" id="menu-trips"
+                           href="<c:url value='/trips'/>"${activeSubmenu == 'trips' ? ' aria-current="page"' : ''}>Chuyến giao hàng</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('DELIVERY_VIEW') and not empty servlets['com.oms.controller.DeliveryListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'deliveries' ? ' app-submenu__link--active' : ''}" id="menu-deliveries"
+                           href="<c:url value='/deliveries'/>"${activeSubmenu == 'deliveries' ? ' aria-current="page"' : ''}>Xác nhận giao hàng</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty servlets['com.oms.controller.StockCardServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'stock-card' ? ' app-submenu__link--active' : ''}" id="menu-stock-card"
+                           href="<c:url value='/stock/card'/>"${activeSubmenu == 'stock-card' ? ' aria-current="page"' : ''}>Thẻ kho</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
+            </li>
+            </c:if>
+            <c:if test="${not currentUser.customer and (currentUser.can('ORDER_MANAGE') or currentUser.can('WAREHOUSE_MANAGE') or currentUser.can('INVOICE_MANAGE'))}">
+            <li>
+                <a class="app-menu__link${activeMenu == 'returns' ? ' app-menu__link--active' : ''}" id="menu-returns"
+                   href="<c:url value='/returns'/>"${activeMenu == 'returns' ? ' aria-current="page"' : ''}>
+                    <span class="app-menu__icon app-menu__icon--sales" aria-hidden="true"></span>Trả hàng
                 </a>
+            </li>
+            </c:if>
+            <%-- Hoá đơn & công nợ (EP-07, Sprint 7): trang đặt activeMenu = finance, activeSubmenu: invoices --%>
+            <c:if test="${(currentUser.can('INVOICE_VIEW') or currentUser.can('PAYMENT_COLLECT')) and not currentUser.customer}">
+            <li>
+                <c:set var="financeServlets" value="${pageContext.servletContext.servletRegistrations}"/>
+                <details class="app-menu__group"${activeMenu == 'finance' ? ' open' : ''}>
+                <summary class="app-menu__link app-menu__toggle${activeMenu == 'finance' ? ' app-menu__toggle--current' : ''}" id="menu-finance">
+                    <span class="app-menu__icon app-menu__icon--reports" aria-hidden="true"></span>Hoá đơn &amp; công nợ
+                    <span class="app-menu__chevron" aria-hidden="true"></span>
+                </summary>
+                <ul class="app-submenu">
+                    <c:if test="${not empty financeServlets['com.oms.controller.InvoiceListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'invoices' ? ' app-submenu__link--active' : ''}" id="menu-invoices"
+                           href="<c:url value='/invoices'/>"${activeSubmenu == 'invoices' ? ' aria-current="page"' : ''}>Hoá đơn bán hàng</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty financeServlets['com.oms.controller.PaymentListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'payments' ? ' app-submenu__link--active' : ''}" id="menu-payments"
+                           href="<c:url value='/payments'/>"${activeSubmenu == 'payments' ? ' aria-current="page"' : ''}>Thu tiền</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${not empty financeServlets['com.oms.controller.DebtLedgerServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'debts' ? ' app-submenu__link--active' : ''}" id="menu-debts"
+                           href="<c:url value='/debts'/>"${activeSubmenu == 'debts' ? ' aria-current="page"' : ''}>Sổ công nợ</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('INVOICE_VIEW') and not empty financeServlets['com.oms.controller.OverdueReportServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'overdue' ? ' app-submenu__link--active' : ''}" id="menu-overdue"
+                           href="<c:url value='/debts/overdue'/>"${activeSubmenu == 'overdue' ? ' aria-current="page"' : ''}>Công nợ quá hạn</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('INVOICE_VIEW') and not empty financeServlets['com.oms.controller.StatementServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'statements' ? ' app-submenu__link--active' : ''}" id="menu-statements"
+                           href="<c:url value='/statements'/>"${activeSubmenu == 'statements' ? ' aria-current="page"' : ''}>Đối chiếu công nợ</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('INVOICE_VIEW') and not empty financeServlets['com.oms.controller.CreditNoteListServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'credit-notes' ? ' app-submenu__link--active' : ''}" id="menu-credit-notes"
+                           href="<c:url value='/credit-notes'/>"${activeSubmenu == 'credit-notes' ? ' aria-current="page"' : ''}>Chứng từ giảm trừ</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('PAYMENT_COLLECT') and not empty financeServlets['com.oms.controller.CollectionServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'collections' ? ' app-submenu__link--active' : ''}" id="menu-collections"
+                           href="<c:url value='/collections'/>"${activeSubmenu == 'collections' ? ' aria-current="page"' : ''}>Thu tiền tại cửa hàng</a>
+                    </li>
+                    </c:if>
+                    <c:if test="${currentUser.can('INVOICE_MANAGE') and not empty financeServlets['com.oms.controller.ReconciliationServlet']}">
+                    <li>
+                        <a class="app-submenu__link${activeSubmenu == 'reconcile' ? ' app-submenu__link--active' : ''}" id="menu-reconcile"
+                           href="<c:url value='/collections/reconcile'/>"${activeSubmenu == 'reconcile' ? ' aria-current="page"' : ''}>Đối chiếu tiền thu</a>
+                    </li>
+                    </c:if>
+                </ul>
+                </details>
             </li>
             </c:if>
             <c:if test="${currentUser.can('REPORT_VIEW')}">

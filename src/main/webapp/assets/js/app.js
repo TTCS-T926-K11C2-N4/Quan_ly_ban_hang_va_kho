@@ -26,6 +26,53 @@
     });
 })();
 
+// Giữ vị trí cuộn của sidebar khi chuyển trang hoặc F5: mỗi trang do server dựng lại nên sidebar luôn bắt đầu ở
+// đầu. Lưu scrollTop vào sessionStorage lúc rời trang, khôi phục lúc nạp. Nhóm menu đang mở có thể khác giữa các
+// trang làm vị trí lệch, nên nếu mục đang chọn nằm ngoài vùng nhìn thấy thì cuộn vừa đủ để nó hiện ra.
+(function () {
+    var sidebar = document.getElementById("app-sidebar");
+    var KEY = "oms.sidebarScrollTop";
+    if (!sidebar) {
+        return;
+    }
+
+    function save() {
+        try {
+            sessionStorage.setItem(KEY, String(sidebar.scrollTop));
+        } catch (e) {
+            // Trình duyệt chặn sessionStorage (chế độ riêng tư): bỏ qua, sidebar về đầu như trước
+        }
+    }
+
+    var saved = null;
+    try {
+        saved = sessionStorage.getItem(KEY);
+    } catch (e) {
+        saved = null;
+    }
+    if (saved !== null && !isNaN(saved)) {
+        sidebar.scrollTop = Number(saved);
+    }
+
+    var active = sidebar.querySelector(".app-submenu__link--active, .app-menu__link--active, .app-menu__toggle--current");
+    if (active) {
+        var box = sidebar.getBoundingClientRect();
+        var item = active.getBoundingClientRect();
+        if (item.top < box.top) {
+            sidebar.scrollTop -= box.top - item.top + 12;
+        } else if (item.bottom > box.bottom) {
+            sidebar.scrollTop += item.bottom - box.bottom + 12;
+        }
+    }
+
+    sidebar.addEventListener("click", function (event) {
+        if (event.target.closest("a")) {
+            save();
+        }
+    });
+    window.addEventListener("pagehide", save);
+})();
+
 // Thông báo dạng toast (góc trên phải): chuyển các hộp .account-flash / .sales-flash server gửi về thành toast màu
 // đặc có icon, tiêu đề, nút đóng. Thành công / thông tin tự ẩn (có thanh đếm giờ, rê chuột thì dừng); cảnh báo / lỗi
 // phải tự đóng. Hộp gốc chỉ bị ẩn, tắt JavaScript thì vẫn hiện như cũ. Hộp cố định (data-toast="off") để nguyên.

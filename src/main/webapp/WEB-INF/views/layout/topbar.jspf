@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Trang include cần đặt breadcrumbSection và breadcrumbPage --%>
+<%-- Trang include cần đặt breadcrumbSection và breadcrumbPage; trang con (vd Tạo phiếu nhập) đặt thêm
+     breadcrumbParent và breadcrumbParentUrl để hiện cấp cha có link quay lại --%>
 <header class="app-topbar">
     <button class="app-topbar__menu-toggle" type="button" id="sidebar-toggle"
             aria-controls="app-sidebar" aria-expanded="false" aria-label="Mở menu">
@@ -11,6 +12,9 @@
     <nav class="app-breadcrumb" aria-label="Breadcrumb">
         <ol class="app-breadcrumb__list">
             <li><c:out value="${breadcrumbSection}"/></li>
+            <c:if test="${not empty breadcrumbParent}">
+                <li><a class="app-breadcrumb__link" href="<c:url value='${breadcrumbParentUrl}'/>"><c:out value="${breadcrumbParent}"/></a></li>
+            </c:if>
             <li aria-current="page"><c:out value="${breadcrumbPage}"/></li>
         </ol>
     </nav>
@@ -22,11 +26,11 @@
                value="<c:out value='${param.keyword}'/>" placeholder="Tìm kiếm..." maxlength="100">
     </form>
 
-    <button class="app-topbar__notification" type="button" id="notification-button"
-            aria-label="Thông báo${unreadNotificationCount > 0 ? ' (có thông báo mới)' : ''}">
+    <a class="app-topbar__notification" href="<c:url value='/notifications'/>" id="notification-button"
+       aria-label="Thông báo${unreadNotificationCount > 0 ? ' (có thông báo mới)' : ''}">
         <img src="<c:url value='/assets/img/icons/bell.svg'/>" alt="" width="24" height="24">
         <c:if test="${unreadNotificationCount > 0}">
             <span class="app-topbar__notification-dot" aria-hidden="true"></span>
         </c:if>
-    </button>
+    </a>
 </header>

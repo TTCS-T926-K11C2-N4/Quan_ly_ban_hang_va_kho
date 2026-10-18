@@ -2,12 +2,15 @@ package com.oms.controller;
 
 import com.oms.dao.SalesOrderDao;
 import com.oms.model.Customer;
+import com.oms.model.CustomerCredit;
 import com.oms.model.DeliveryAddress;
 import com.oms.model.OrderForm;
 import com.oms.model.OrderProduct;
 import com.oms.model.OrderQuote;
 import com.oms.model.Permission;
 import com.oms.service.CustomerService;
+import com.oms.service.OrderApprovalService;
+import com.oms.service.OrderLifecycleService;
 import com.oms.service.SalesOrderService;
 import com.oms.util.DateTimeUtil;
 import jakarta.servlet.ServletException;
@@ -33,6 +36,8 @@ public class OrderNewServlet extends HttpServlet {
 
     private final CustomerService customerService = new CustomerService();
     private final SalesOrderService orderService = new SalesOrderService();
+    private final OrderLifecycleService lifecycle = new OrderLifecycleService();
+    private final OrderApprovalService approvalService = new OrderApprovalService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -87,22 +92,32 @@ public class OrderNewServlet extends HttpServlet {
                     : orderService.getDeliveryAddresses(customer.getId());
             OrderQuote quote = customer == null ? null
                     : orderService.quote(customer, form.getLines(), orderService.getProducts());
-            Map<String, String> errors = orderService.validate(form, customer, draft, submit, addresses, quote);
+            Map<String, String> errors = orderService.validate(form, customer, draft, submit, addresses, quote,
+                    orderService.credit(customer), orderService.stock(customer, quote));
             if (!errors.isEmpty()) {
                 show(request, response, form, draft, errors);
                 return;
             }
-            SalesOrderService.Saved saved = orderService.save(form, customer, draft, submit, quote, userId,
-                    request.getRemoteAddr());
+            SalesOrderService.Saved saved;
+            try {
+                saved = orderService.save(form, customer, draft, submit, quote, userId, request.getRemoteAddr());
+            } catch (SalesOrderService.StockShortageException e) {
+                show(request, response, form, draft, e.getErrors());
+                return;
+            }
             if (saved == null) {
                 show(request, response, form, draft, Map.of("form", "Đơn nháp vừa được cập nhật ở nơi khác."
                         + " Mở lại đơn nháp để xem bản mới nhất trước khi sửa tiếp."));
                 return;
             }
             if (submit) {
-                request.getSession().setAttribute(FLASH_MESSAGE, "Đã tạo đơn hàng " + saved.getOrderNo() + " cho \""
-                        + customer.getName() + "\" và chuyển sang chờ duyệt.");
-                response.sendRedirect(request.getContextPath() + "/orders/new");
+                // Gửi đơn xong mở trang chi tiết để theo dõi vòng đời đơn (S4-06)
+                // S4-05: đơn không vi phạm được duyệt luôn; đơn vượt hạn mức / dưới giá sàn chờ Quản lý kinh doanh
+                request.getSession().setAttribute(OrderViewServlet.FLASH_MESSAGE, "Đã tạo đơn hàng "
+                        + saved.getOrderNo() + " cho \"" + customer.getName() + "\". " + (saved.isApproved()
+                        ? "Đơn không vi phạm hạn mức, giá sàn nên đã được duyệt và giữ chỗ tồn."
+                        : "Đơn vượt hạn mức hoặc có dòng dưới giá sàn nên đang chờ Quản lý kinh doanh duyệt."));
+                response.sendRedirect(request.getContextPath() + "/orders/view?id=" + saved.getId());
             } else {
                 request.getSession().setAttribute(FLASH_MESSAGE, "Đã lưu nháp đơn " + saved.getOrderNo()
                         + ". Có thể bấm \"Mở lại\" để gõ tiếp bất cứ lúc nào.");
@@ -133,11 +148,23 @@ public class OrderNewServlet extends HttpServlet {
         request.setAttribute("selectedCustomer", customer);
         request.setAttribute("addresses", customer == null ? List.of()
                 : orderService.getDeliveryAddresses(customer.getId()));
-        request.setAttribute("quote", customer == null ? null
-                : orderService.quote(customer, form.getLines(), products));
+        OrderQuote quote = customer == null ? null : orderService.quote(customer, form.getLines(), products);
+        CustomerCredit credit = orderService.credit(customer);
+        request.setAttribute("quote", quote);
+        // S4-03: tồn khả dụng dưới ô Số lượng của từng dòng
+        request.setAttribute("stock", orderService.stock(customer, quote));
+        // S4-02: khối công nợ dưới ô Đại lý; vượt hạn mức thì báo cần duyệt, quá hạn thì chặn đơn mới
+        request.setAttribute("credit", credit);
+        request.setAttribute("overCreditLimit", credit != null && credit.exceeds(quote.getTotal()));
+        request.setAttribute("overdueMessage", credit != null && credit.isOverdue()
+                ? SalesOrderService.overdueMessage(credit) : null);
         request.setAttribute("form", form);
         request.setAttribute("draft", draft);
+        // Đơn bị Quản lý trả lại sửa (S4-05): hiện ý kiến của lần trả lại gần nhất trên đơn nháp
+        request.setAttribute("returnComment", draft == null ? null
+                : approvalService.findLatestReturnComment(draft.getForm().getDraftId()));
         request.setAttribute("drafts", orderService.findVisibleDrafts(userId));
+        request.setAttribute("recentOrders", lifecycle.findVisibleRecent(userId));
         request.setAttribute("errors", errors);
         request.setAttribute("today", DateTimeUtil.today().toString());
         request.getRequestDispatcher(VIEW).forward(request, response);
