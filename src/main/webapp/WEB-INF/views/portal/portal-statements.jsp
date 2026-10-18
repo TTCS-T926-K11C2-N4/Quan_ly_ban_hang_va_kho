@@ -15,6 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="<c:url value='/assets/css/app.css'/>">
+    <link rel="stylesheet" href="<c:url value='/assets/css/customers.css'/>">
     <link rel="stylesheet" href="<c:url value='/assets/css/orders.css'/>">
     <link rel="stylesheet" href="<c:url value='/assets/css/portal.css'/>">
 </head>
@@ -24,7 +25,7 @@
     <div class="app-shell">
         <%@ include file="/WEB-INF/views/layout/topbar.jspf" %>
 
-        <main class="app-content portal-orders">
+        <main class="app-content sales-page portal-orders">
             <header class="page-header">
                 <h1 class="page-header__title">Đối chiếu công nợ</h1>
                 <p class="page-header__subtitle">Biên bản công ty gửi theo kỳ. Kiểm tra số liệu rồi xác nhận hoặc báo lệch.</p>
