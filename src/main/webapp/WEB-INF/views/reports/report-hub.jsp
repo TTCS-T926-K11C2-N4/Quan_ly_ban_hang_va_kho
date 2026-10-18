@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="<c:url value='/assets/css/app.css'/>">
     <link rel="stylesheet" href="<c:url value='/assets/css/inventory.css'/>">
-    <link rel="stylesheet" href="<c:url value='/assets/css/invoices.css'/>">
+    <link rel="stylesheet" href="<c:url value='/assets/css/reports.css'/>">
 </head>
 <body class="app-page">
     <%@ include file="/WEB-INF/views/layout/sidebar.jspf" %>
@@ -26,33 +26,92 @@
             <header class="inv-header">
                 <div>
                     <h1 class="inv-header__title">Báo cáo</h1>
-                    <p class="inv-header__subtitle">Chọn báo cáo cần xem. Mỗi báo cáo xuất được ra Excel.</p>
+                    <p class="inv-header__subtitle">Chọn báo cáo theo việc bạn cần theo dõi. Các báo cáo lọc được theo thời gian và có nút Xuất Excel để tải số liệu.</p>
                 </div>
             </header>
-            <section class="inv-card" aria-label="Danh sách báo cáo">
-                <ul class="report-hub" id="report-hub">
-                    <li><a class="inv-table__main" id="report-executive" href="<c:url value='/executive'/>">Dashboard điều hành</a>
-                        <span class="inv-table__sub">Doanh số, đơn chờ xử lý, công nợ quá hạn và tồn dưới mức tối thiểu toàn công ty (cần quyền xem toàn bộ).</span></li>
-                    <li><a class="inv-table__main" id="report-sales" href="<c:url value='/reports/sales'/>">Doanh số nhiều chiều</a>
-                        <span class="inv-table__sub">Theo nhân viên, khu vực, đại lý, nhóm hàng, SKU; so với kỳ trước; biên lợi nhuận cho người xem được giá vốn.</span></li>
-                    <c:if test="${currentUser.can('SALES_TARGET_MANAGE')}">
-                        <li><a class="inv-table__main" id="report-targets" href="<c:url value='/targets'/>">Chỉ tiêu doanh số</a>
-                            <span class="inv-table__sub">Đặt chỉ tiêu tháng cho nhân viên và khu vực, theo dõi tiến độ.</span></li>
-                    </c:if>
-                    <li><a class="inv-table__main" id="report-my-target" href="<c:url value='/targets/my'/>">Chỉ tiêu của tôi</a>
-                        <span class="inv-table__sub">Tiến độ chỉ tiêu doanh số tháng của chính bạn.</span></li>
-                    <c:if test="${currentUser.can('INVENTORY_VIEW')}">
-                        <li><a class="inv-table__main" id="report-stock" href="<c:url value='/reports/stock'/>">Tồn kho và vòng quay hàng</a>
-                            <span class="inv-table__sub">Giá trị tồn theo kho, nhóm hàng; số ngày tồn và hàng chậm luân chuyển.</span></li>
-                    </c:if>
-                    <c:if test="${currentUser.can('INVOICE_VIEW') and not currentUser.customer}">
-                        <li><a class="inv-table__main" id="report-overdue" href="<c:url value='/debts/overdue'/>">Công nợ quá hạn theo tuổi nợ</a>
-                            <span class="inv-table__sub">Tổng hợp theo nhóm tuổi nợ, nhân viên phụ trách và mức rủi ro.</span></li>
-                        <li><a class="inv-table__main" id="report-debts" href="<c:url value='/debts'/>">Sổ công nợ theo đại lý</a>
-                            <span class="inv-table__sub">Phải thu, đã thu, còn nợ và phân tích tuổi nợ.</span></li>
-                    </c:if>
-                </ul>
-            </section>
+
+            <div class="report-groups" id="report-hub">
+                <c:if test="${canViewCompany}">
+                    <section class="report-group" aria-labelledby="report-group-overview">
+                        <h2 class="report-group__title" id="report-group-overview">Tổng quan toàn công ty</h2>
+                        <div class="report-tiles">
+                            <a class="report-tile" id="report-executive" href="<c:url value='/executive'/>">
+                                <span class="report-tile__icon tone-navy"><span class="inv-icon inv-icon--layers" aria-hidden="true"></span></span>
+                                <span class="report-tile__body">
+                                    <span class="report-tile__title">Bảng điều hành</span>
+                                    <span class="report-tile__desc">Xem nhanh trong một màn: doanh số hôm nay và tháng này, đơn chờ duyệt, đơn chờ xuất kho, công nợ quá hạn, hàng dưới tồn tối thiểu.</span>
+                                </span>
+                            </a>
+                        </div>
+                    </section>
+                </c:if>
+
+                <section class="report-group" aria-labelledby="report-group-sales">
+                    <h2 class="report-group__title" id="report-group-sales">Bán hàng</h2>
+                    <div class="report-tiles">
+                        <a class="report-tile" id="report-sales" href="<c:url value='/reports/sales'/>">
+                            <span class="report-tile__icon tone-blue"><span class="inv-icon inv-icon--sheet" aria-hidden="true"></span></span>
+                            <span class="report-tile__body">
+                                <span class="report-tile__title">Doanh số bán hàng</span>
+                                <span class="report-tile__desc">Doanh số và sản lượng theo nhân viên, khu vực, đại lý, nhóm hàng hoặc từng mặt hàng; so sánh với kỳ trước.</span>
+                            </span>
+                        </a>
+                        <c:if test="${currentUser.can('SALES_TARGET_MANAGE')}">
+                            <a class="report-tile" id="report-targets" href="<c:url value='/targets'/>">
+                                <span class="report-tile__icon tone-blue"><span class="inv-icon inv-icon--pencil" aria-hidden="true"></span></span>
+                                <span class="report-tile__body">
+                                    <span class="report-tile__title">Giao chỉ tiêu doanh số</span>
+                                    <span class="report-tile__desc">Đặt chỉ tiêu tháng cho từng nhân viên và khu vực, theo dõi đã đạt bao nhiêu phần trăm.</span>
+                                </span>
+                            </a>
+                        </c:if>
+                        <a class="report-tile" id="report-my-target" href="<c:url value='/targets/my'/>">
+                            <span class="report-tile__icon tone-blue"><span class="inv-icon inv-icon--user" aria-hidden="true"></span></span>
+                            <span class="report-tile__body">
+                                <span class="report-tile__title">Tiến độ chỉ tiêu của tôi</span>
+                                <span class="report-tile__desc">Chỉ tiêu tháng này của bạn, doanh số đã đạt và phần còn thiếu.</span>
+                            </span>
+                        </a>
+                    </div>
+                </section>
+
+                <c:if test="${currentUser.can('INVENTORY_VIEW')}">
+                    <section class="report-group" aria-labelledby="report-group-stock">
+                        <h2 class="report-group__title" id="report-group-stock">Kho hàng</h2>
+                        <div class="report-tiles">
+                            <a class="report-tile" id="report-stock" href="<c:url value='/reports/stock'/>">
+                                <span class="report-tile__icon tone-green"><span class="inv-icon inv-icon--warehouse" aria-hidden="true"></span></span>
+                                <span class="report-tile__body">
+                                    <span class="report-tile__title">Giá trị tồn kho và hàng bán chậm</span>
+                                    <span class="report-tile__desc">Giá trị hàng đang tồn theo kho và nhóm hàng; số ngày tồn bình quân, mặt hàng lâu bán.</span>
+                                </span>
+                            </a>
+                        </div>
+                    </section>
+                </c:if>
+
+                <c:if test="${currentUser.can('INVOICE_VIEW') and not currentUser.customer}">
+                    <section class="report-group" aria-labelledby="report-group-debt">
+                        <h2 class="report-group__title" id="report-group-debt">Công nợ</h2>
+                        <div class="report-tiles">
+                            <a class="report-tile" id="report-overdue" href="<c:url value='/debts/overdue'/>">
+                                <span class="report-tile__icon tone-red"><span class="inv-icon inv-icon--triangle-alert" aria-hidden="true"></span></span>
+                                <span class="report-tile__body">
+                                    <span class="report-tile__title">Công nợ quá hạn</span>
+                                    <span class="report-tile__desc">Khoản nợ đã quá hạn thanh toán, chia theo số ngày quá hạn và nhân viên phụ trách; đại lý có rủi ro cao nhất.</span>
+                                </span>
+                            </a>
+                            <a class="report-tile" id="report-debts" href="<c:url value='/debts'/>">
+                                <span class="report-tile__icon tone-amber"><span class="inv-icon inv-icon--rows" aria-hidden="true"></span></span>
+                                <span class="report-tile__body">
+                                    <span class="report-tile__title">Sổ công nợ đại lý</span>
+                                    <span class="report-tile__desc">Từng đại lý phải thu, đã thu, còn nợ bao nhiêu và nợ đã bao lâu.</span>
+                                </span>
+                            </a>
+                        </div>
+                    </section>
+                </c:if>
+            </div>
         </main>
     </div>
 

@@ -21,6 +21,14 @@ class SalesReportServiceTest {
         assertArrayEquals(new LocalDate[]{LocalDate.of(2026, 8, 31), LocalDate.of(2026, 9, 30)}, prev);
     }
 
+    // Link "Doanh số nhiều chiều" ở trang Báo cáo không có ?dim: trước đây Map.of.containsKey(null) văng lỗi 500
+    @Test
+    void missingOrUnknownDimensionFallsBackToSalesRep() {
+        assertEquals("REP", SalesReportService.dimensionOrDefault(null));
+        assertEquals("REP", SalesReportService.dimensionOrDefault("KHONG_CO"));
+        assertEquals("SKU", SalesReportService.dimensionOrDefault("SKU"));
+    }
+
     @Test
     void changeAndMarginPercentages() {
         assertEquals(0, new BigDecimal("25.0").compareTo(
