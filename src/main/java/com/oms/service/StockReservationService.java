@@ -1,6 +1,7 @@
 package com.oms.service;
 
 import com.oms.dao.AuditLogDao;
+import com.oms.dao.NotificationDao;
 import com.oms.dao.PermissionDao;
 import com.oms.dao.StockReservationDao;
 import com.oms.dao.SystemSettingDao;
@@ -25,9 +26,11 @@ import java.util.Map;
 //  * reserve: gọi khi đơn chuyển sang Đã duyệt (S4-05), TRONG transaction duyệt đơn. Dòng đã giữ chỗ từ lúc gửi đơn
 //    (S4-03, chưa có hạn) thì bắt đầu tính hạn giữ chỗ; dòng chưa giữ thì khoá sổ tồn, trừ tồn khả dụng
 //    (cộng qty_reserved_base) và ghi stock_reservations. Thiếu tồn thì ném lỗi để transaction hoàn lại toàn bộ.
+//  * Hạn giữ chỗ là hết ngày giao mong muốn của đơn, tối thiểu inventory.reservation_ttl_hours giờ kể từ lúc tính hạn;
+//    đơn không có ngày giao thì giữ đúng số giờ đó (xem StockReservationDao.HOLD_EXPIRY_SQL).
 //  * Huỷ đơn nhả giữ chỗ ở OrderLifecycleService (SalesOrderDao.releaseReservations, S4-03).
-//  * releaseExpired: ReservationExpiryJob gọi định kỳ, nhả giữ chỗ đã duyệt quá inventory.reservation_ttl_hours giờ
-//    mà chưa xuất kho.
+//  * releaseExpired: ReservationExpiryJob gọi định kỳ, nhả giữ chỗ đã hết hạn mà chưa xuất kho và báo nhân viên
+//    kinh doanh phụ trách đại lý.
 public class StockReservationService {
 
     public static final int PAGE_SIZE = 10;
@@ -35,8 +38,10 @@ public class StockReservationService {
     static final String HOLD_HOURS_SETTING = "inventory.reservation_ttl_hours";
     static final int DEFAULT_HOLD_HOURS = 48;
     private static final String AUDIT_ENTITY = "ORDER";
+    private static final String NOTIFICATION_TYPE = "RESERVATION_EXPIRED";
 
     private final StockReservationDao reservationDao = new StockReservationDao();
+    private final NotificationDao notificationDao = new NotificationDao();
     private final SystemSettingDao settingDao = new SystemSettingDao();
     private final PermissionDao permissionDao = new PermissionDao();
     private final AuditLogDao auditLogDao = new AuditLogDao();
@@ -135,7 +140,8 @@ public class StockReservationService {
                         values.put("orderNo", order.orderNo());
                         values.put("releasedReservations", released);
                         auditLogDao.insert(connection, null, "ORDER_RESERVATION_EXPIRE", AUDIT_ENTITY, orderId, null,
-                                JsonUtil.object(values), "Quá " + holdHours() + " giờ chưa xuất kho", null);
+                                JsonUtil.object(values), "Giữ chỗ hết hạn mà chưa xuất kho", null);
+                        notifySalesRep(connection, orderId, order.orderNo());
                         orders++;
                     }
                     connection.commit();
@@ -146,6 +152,20 @@ public class StockReservationService {
             }
         }
         return orders;
+    }
+
+    // Đại lý chưa có nhân viên kinh doanh phụ trách thì không có ai để báo
+    private void notifySalesRep(Connection connection, long orderId, String orderNo) throws SQLException {
+        StockReservationDao.OrderContact contact = reservationDao.findOrderContact(connection, orderId);
+        if (contact == null || contact.salesRepId() == null) {
+            return;
+        }
+        notificationDao.insert(connection, contact.salesRepId(), NOTIFICATION_TYPE,
+                "Đơn " + orderNo + " hết hạn giữ chỗ hàng",
+                "Đơn " + orderNo + " của " + contact.customerName() + " đã qua ngày giao mong muốn mà chưa xuất kho,"
+                        + " hàng không còn được giữ. Đơn vẫn ở trạng thái Đã duyệt; hệ thống giữ lại hàng khi kho tạo"
+                        + " phiếu soạn nếu còn tồn.",
+                "ORDER", orderId, false);
     }
 
     int holdHours() throws SQLException {

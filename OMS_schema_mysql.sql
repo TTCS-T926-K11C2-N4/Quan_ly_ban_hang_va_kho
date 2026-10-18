@@ -1711,6 +1711,6 @@ INSERT INTO `system_settings` (`key`, `value`, `description`) VALUES
   ('auth.lock_minutes',             '15', 'Thời gian khoá tạm (phút)'),
   ('auth.reset_token_minutes',      '30', 'Hiệu lực liên kết đặt lại mật khẩu (phút)'),
   ('inventory.near_expiry_days',    '30', 'Ngưỡng cảnh báo lô sắp hết hạn (ngày)'),
-  ('inventory.reservation_ttl_hours','48','GIẢ ĐỊNH - cần PO xác nhận: giữ chỗ tự nhả sau bao lâu nếu đơn chưa xuất'),
+  ('inventory.reservation_ttl_hours','48','Giữ chỗ cho đơn đã duyệt hết hạn vào cuối ngày giao mong muốn nhưng không sớm hơn số giờ này kể từ lúc duyệt; đơn không có ngày giao giữ đúng số giờ này'),
   ('reminder.days_before_due',      '3',  'Nhắc thanh toán trước hạn (ngày) - S7-08');
 
