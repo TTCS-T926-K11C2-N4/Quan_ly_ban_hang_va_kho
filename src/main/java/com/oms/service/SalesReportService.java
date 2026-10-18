@@ -36,11 +36,16 @@ public class SalesReportService {
     // salesRepId: chỉ đại lý do nhân viên đó phụ trách (null: tất cả)
     public SalesReport report(String dimension, LocalDate from, LocalDate to, boolean showMargin, Long salesRepId)
             throws SQLException {
-        String dim = KEY_EXPRESSIONS.containsKey(dimension) ? dimension : "REP";
+        String dim = dimensionOrDefault(dimension);
         LocalDate[] previous = SalesReport.previousPeriod(from, to);
         Map<String, BigDecimal[]> current = query(dim, from, to, salesRepId);
         Map<String, BigDecimal[]> before = query(dim, previous[0], previous[1], salesRepId);
         return SalesReport.build(dim, from, to, showMargin, current, before);
+    }
+
+    // Mở từ trang Báo cáo không kèm ?dim: Map.of không nhận khoá null nên phải kiểm tra trước, mặc định theo nhân viên
+    static String dimensionOrDefault(String dimension) {
+        return dimension != null && KEY_EXPRESSIONS.containsKey(dimension) ? dimension : "REP";
     }
 
     private static Map<String, BigDecimal[]> query(String dimension, LocalDate from, LocalDate to, Long salesRepId)
