@@ -134,7 +134,7 @@ public class SalesOrderService {
             } else if (!customer.isActive()) {
                 errors.put("customerId", "Đại lý đã ngừng giao dịch.");
             } else if (credit != null && credit.isBlocking()) {
-                // AC3 của S4-02, S7-04: đại lý bị gắn cờ ở chế độ chặn thì không tạo đơn mới, kể cả lưu nháp
+                // AC3 của S4-02, S7-04: đại lý còn nợ quá hạn thì không tạo đơn mới, kể cả lưu nháp
                 errors.put("customerId", flagMessage(credit) + " nên không tạo được đơn mới.");
             }
         } else if (submit && credit != null && credit.isBlocking()) {
