@@ -11,19 +11,47 @@
 .portal-orders__address,
 .portal-orders__note {
     margin: 0 0 12px;
+    font-size: 14px;
 }
 
 .portal-orders__table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 13px;
+    color: var(--color-sales-heading, #0f172a);
 }
 
 .portal-orders__table th,
 .portal-orders__table td {
-    padding: 10px 8px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--color-sales-border, #e2e8f0);
     text-align: left;
     vertical-align: top;
+}
+
+/* Tiêu đề cột giống bảng nội bộ: chữ nhỏ in hoa, nền nhạt */
+.portal-orders__table th {
+    background: var(--color-sales-soft, #f8fafc);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--color-sales-muted, #64748b);
+    white-space: nowrap;
+}
+
+.portal-orders__table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* Không có dữ liệu: khung trắng giữa trang thay vì một dòng chữ trơn */
+.portal-orders > .sales-empty {
+    margin-top: 12px;
+    padding: 32px 16px;
+    border: 1px dashed var(--color-sales-control-border, #cbd5e1);
+    border-radius: 12px;
+    background: #fff;
+    text-align: center;
 }
 
 .portal-orders__num {
@@ -33,7 +61,12 @@
 
 .portal-orders__link {
     font-weight: 600;
+    color: #1e3a8a;
     text-decoration: none;
+}
+
+.portal-orders__link:hover {
+    text-decoration: underline;
 }
 
 .portal-orders__sku {
@@ -313,6 +346,7 @@
 
 .portal-step__label {
     margin-top: 6px;
+    font-size: 13px;
     font-weight: 600;
 }
 
