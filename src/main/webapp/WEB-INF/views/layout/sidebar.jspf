@@ -85,9 +85,10 @@
                 </details>
             </li>
             </c:if>
-            <c:if test="${currentUser.can('ORDER_VIEW')}">
+            <c:if test="${currentUser.can('ORDER_VIEW') and not currentUser.customer}">
             <li>
-                <%-- Nhóm Bán hàng: Danh sách đơn hàng (S4-07) và Tạo đơn hàng (S3-09, cần quyền tạo đơn);
+                <%-- Nhóm Bán hàng chỉ cho nhân viên nội bộ (đại lý dùng Đặt hàng / Đơn hàng của tôi ở đầu menu):
+                     Danh sách đơn hàng (S4-07) và Tạo đơn hàng (S3-09, cần quyền tạo đơn);
                      trang đặt activeSubmenu: order-list | order-new --%>
                 <details class="app-menu__group"${activeMenu == 'sales' ? ' open' : ''}>
                 <summary class="app-menu__link app-menu__toggle${activeMenu == 'sales' ? ' app-menu__toggle--current' : ''}" id="menu-sales">
