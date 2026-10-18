@@ -4,7 +4,7 @@
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="finance"/>
 <c:set var="activeSubmenu" value="reconcile"/>
-<c:set var="breadcrumbSection" value="Hoá đơn &amp; công nợ"/>
+<c:set var="breadcrumbSection" value="Hoá đơn & công nợ"/>
 <c:set var="breadcrumbPage" value="Đối chiếu tiền thu"/>
 <!DOCTYPE html>
 <html lang="vi">
@@ -36,11 +36,11 @@
             <section class="inv-card" aria-labelledby="reconcile-title">
                 <form class="invoice-filters" action="<c:url value='/collections/reconcile'/>" method="get">
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="reconcile-from">Từ ngày</label>
+                        <label class="inv-field__label" for="reconcile-from">Từ ngày</label>
                         <input class="inv-control" type="date" id="reconcile-from" name="from" value="${from}">
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="reconcile-to">Đến ngày</label>
+                        <label class="inv-field__label" for="reconcile-to">Đến ngày</label>
                         <input class="inv-control" type="date" id="reconcile-to" name="to" value="${to}">
                     </div>
                     <button class="inv-button" type="submit" id="reconcile-filter">Xem</button>

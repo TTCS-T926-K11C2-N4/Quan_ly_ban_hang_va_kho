@@ -123,7 +123,7 @@
                             <h2 class="inv-card__title" id="return-reason-title">Lý do trả hàng</h2>
                             <div class="invoice-filters">
                                 <div class="inv-field">
-                                    <label class="stock-filters__label" for="return-reason">Lý do</label>
+                                    <label class="inv-field__label" for="return-reason">Lý do</label>
                                     <select class="inv-control" id="return-reason" name="reason" required>
                                         <option value="">— Chọn lý do —</option>
                                         <c:forEach var="entry" items="${reasons}">

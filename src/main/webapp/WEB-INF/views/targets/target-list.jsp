@@ -43,7 +43,7 @@
                 <h2 class="visually-hidden" id="target-month-title">Chọn tháng</h2>
                 <form class="invoice-filters" action="<c:url value='/targets'/>" method="get">
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="target-month">Tháng</label>
+                        <label class="inv-field__label" for="target-month">Tháng</label>
                         <input class="inv-control" type="month" id="target-month" name="month" value="${month}">
                     </div>
                     <button class="inv-button" type="submit" id="target-view">Xem</button>

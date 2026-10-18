@@ -39,7 +39,7 @@
                 <h2 class="visually-hidden" id="sales-filter-title">Bộ lọc</h2>
                 <form class="invoice-filters" action="<c:url value='/reports/sales'/>" method="get">
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="sales-dim">Nhóm theo</label>
+                        <label class="inv-field__label" for="sales-dim">Nhóm theo</label>
                         <select class="inv-control" id="sales-dim" name="dim">
                             <c:forEach var="entry" items="${dimensions}">
                                 <option value="${entry.key}"${report.dimension == entry.key ? ' selected' : ''}><c:out value="${entry.value}"/></option>
@@ -47,11 +47,11 @@
                         </select>
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="sales-from">Từ ngày</label>
+                        <label class="inv-field__label" for="sales-from">Từ ngày</label>
                         <input class="inv-control" type="date" id="sales-from" name="from" value="${from}">
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="sales-to">Đến ngày</label>
+                        <label class="inv-field__label" for="sales-to">Đến ngày</label>
                         <input class="inv-control" type="date" id="sales-to" name="to" value="${to}">
                     </div>
                     <button class="inv-button" type="submit" id="sales-filter">Xem báo cáo</button>

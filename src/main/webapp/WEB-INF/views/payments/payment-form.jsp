@@ -4,7 +4,7 @@
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="finance"/>
 <c:set var="activeSubmenu" value="payments"/>
-<c:set var="breadcrumbSection" value="Hoá đơn &amp; công nợ"/>
+<c:set var="breadcrumbSection" value="Hoá đơn & công nợ"/>
 <c:set var="breadcrumbPage" value="Ghi nhận thu tiền"/>
 <!DOCTYPE html>
 <html lang="vi">
@@ -77,18 +77,18 @@
                     <h2 class="inv-card__title" id="payment-detail-title">Thông tin thu tiền</h2>
                     <div class="invoice-filters">
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="payment-amount">Số tiền thu (₫)</label>
+                            <label class="inv-field__label" for="payment-amount">Số tiền thu (₫)</label>
                             <input class="inv-control" type="text" inputmode="numeric" id="payment-amount" name="amount" required value="<c:out value='${amount}'/>">
                         </div>
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="payment-method">Hình thức thu</label>
+                            <label class="inv-field__label" for="payment-method">Hình thức thu</label>
                             <select class="inv-control" id="payment-method" name="method">
                                 <option value="CASH"${method != 'BANK_TRANSFER' ? ' selected' : ''}>Tiền mặt</option>
                                 <option value="BANK_TRANSFER"${method == 'BANK_TRANSFER' ? ' selected' : ''}>Chuyển khoản</option>
                             </select>
                         </div>
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="payment-date">Ngày thu</label>
+                            <label class="inv-field__label" for="payment-date">Ngày thu</label>
                             <input class="inv-control" type="date" id="payment-date" name="date" value="<c:out value='${date}'/>">
                         </div>
                     </div>

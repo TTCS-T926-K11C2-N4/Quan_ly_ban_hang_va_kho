@@ -4,7 +4,7 @@
 <fmt:setLocale value="vi_VN"/>
 <c:set var="activeMenu" value="finance"/>
 <c:set var="activeSubmenu" value="debts"/>
-<c:set var="breadcrumbSection" value="Hoá đơn &amp; công nợ"/>
+<c:set var="breadcrumbSection" value="Hoá đơn & công nợ"/>
 <c:set var="breadcrumbPage" value="Sổ chi tiết công nợ"/>
 <!DOCTYPE html>
 <html lang="vi">
@@ -43,7 +43,7 @@
                 <h2 class="visually-hidden" id="detail-filter-title">Bộ lọc</h2>
                 <form class="invoice-filters" action="<c:url value='/debts/detail'/>" method="get">
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="detail-customer">Đại lý</label>
+                        <label class="inv-field__label" for="detail-customer">Đại lý</label>
                         <select class="inv-control" id="detail-customer" name="customer" required>
                             <c:forEach var="customer" items="${customers}">
                                 <option value="${customer.id}"${customerId == customer.id ? ' selected' : ''}><c:out value="${customer.name}"/> (<c:out value="${customer.code}"/>)</option>
@@ -51,11 +51,11 @@
                         </select>
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="detail-from">Từ ngày</label>
+                        <label class="inv-field__label" for="detail-from">Từ ngày</label>
                         <input class="inv-control" type="date" id="detail-from" name="from" value="${from}">
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="detail-to">Đến ngày</label>
+                        <label class="inv-field__label" for="detail-to">Đến ngày</label>
                         <input class="inv-control" type="date" id="detail-to" name="to" value="${to}">
                     </div>
                     <button class="inv-button" type="submit" id="detail-filter">Xem sổ</button>
