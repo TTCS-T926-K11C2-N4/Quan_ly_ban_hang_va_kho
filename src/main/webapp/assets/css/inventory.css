@@ -288,6 +288,26 @@
     box-shadow: var(--inv-card-shadow);
 }
 
+/* Thẻ không có lề trong: tiêu đề đặt thẳng trong thẻ (không qua inv-card__head) cần lề riêng,
+   cùng lề 18px với inv-card__head để chữ không dính mép */
+.inv-card > .inv-card__title {
+    padding: 14px 18px 0;
+}
+
+.inv-card > .inv-card__subtitle {
+    padding: 0 18px;
+}
+
+.inv-card > .inv-card__title + .inv-table-scroll,
+.inv-card > .inv-card__subtitle + .inv-table-scroll {
+    margin-top: 12px;
+}
+
+.inv-card > .inv-card__title:last-child,
+.inv-card > .inv-card__subtitle:last-child {
+    padding-bottom: 14px;
+}
+
 .inv-card__head {
     display: flex;
     align-items: center;

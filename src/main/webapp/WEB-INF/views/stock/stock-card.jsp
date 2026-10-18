@@ -46,7 +46,7 @@
                 </div>
                 <form class="stock-card-filters" id="stock-card-form" action="<c:url value='/stock/card'/>" method="get">
                     <div class="inv-field stock-card-filters__product">
-                        <label class="stock-filters__label" for="card-product">Sản phẩm</label>
+                        <label class="inv-field__label" for="card-product">Sản phẩm</label>
                         <select class="inv-control" id="card-product" name="product" required>
                             <option value="">Chọn sản phẩm</option>
                             <c:forEach var="product" items="${products}">
@@ -55,7 +55,7 @@
                         </select>
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="card-warehouse">Kho</label>
+                        <label class="inv-field__label" for="card-warehouse">Kho</label>
                         <select class="inv-control" id="card-warehouse" name="warehouse">
                             <option value="">Tất cả kho</option>
                             <c:forEach var="warehouse" items="${warehouses}">
@@ -64,11 +64,11 @@
                         </select>
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="card-from">Từ ngày</label>
+                        <label class="inv-field__label" for="card-from">Từ ngày</label>
                         <input class="inv-control" type="date" id="card-from" name="from" value="${filter.dateFromText}">
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="card-to">Đến ngày</label>
+                        <label class="inv-field__label" for="card-to">Đến ngày</label>
                         <input class="inv-control" type="date" id="card-to" name="to" value="${filter.dateToText}">
                     </div>
                     <button class="inv-button inv-button--primary" type="submit" id="card-submit">Xem thẻ kho</button>

@@ -162,7 +162,7 @@
                     <form class="transfer-new" id="transfer-add-form" method="post" action="<c:url value='/transfers/line/add'/>">
                         <input type="hidden" name="id" value="${transfer.id}">
                         <div class="inv-field transfer-new__note">
-                            <label class="stock-filters__label" for="transfer-lot">Lô hàng ở kho đi</label>
+                            <label class="inv-field__label" for="transfer-lot">Lô hàng ở kho đi</label>
                             <select class="inv-control" id="transfer-lot" name="lot" required>
                                 <option value="">Chọn SKU / lô</option>
                                 <c:forEach var="lot" items="${lotOptions}">
@@ -171,7 +171,7 @@
                             </select>
                         </div>
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="transfer-qty">Số lượng chuyển</label>
+                            <label class="inv-field__label" for="transfer-qty">Số lượng chuyển</label>
                             <input class="inv-control" type="text" id="transfer-qty" name="qty" inputmode="decimal" maxlength="17" required placeholder="0">
                         </div>
                         <button class="inv-button inv-button--primary" type="submit" id="transfer-add">Thêm dòng</button>

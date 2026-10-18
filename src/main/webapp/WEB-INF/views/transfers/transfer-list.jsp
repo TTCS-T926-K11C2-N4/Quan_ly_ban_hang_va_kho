@@ -50,7 +50,7 @@
                     </div>
                     <form class="transfer-new" id="transfer-new-form" method="post" action="<c:url value='/transfers/new'/>">
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="transfer-from">Kho đi</label>
+                            <label class="inv-field__label" for="transfer-from">Kho đi</label>
                             <select class="inv-control" id="transfer-from" name="from" required>
                                 <option value="">Chọn kho đi</option>
                                 <c:forEach var="warehouse" items="${warehouses}">
@@ -59,7 +59,7 @@
                             </select>
                         </div>
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="transfer-to">Kho đến</label>
+                            <label class="inv-field__label" for="transfer-to">Kho đến</label>
                             <select class="inv-control" id="transfer-to" name="to" required>
                                 <option value="">Chọn kho đến</option>
                                 <c:forEach var="warehouse" items="${warehouses}">
@@ -68,7 +68,7 @@
                             </select>
                         </div>
                         <div class="inv-field transfer-new__note">
-                            <label class="stock-filters__label" for="transfer-note">Ghi chú</label>
+                            <label class="inv-field__label" for="transfer-note">Ghi chú</label>
                             <input class="inv-control" type="text" id="transfer-note" name="note" maxlength="1000" placeholder="Tuỳ chọn">
                         </div>
                         <button class="inv-button inv-button--primary" type="submit" id="transfer-create">Tạo phiếu</button>

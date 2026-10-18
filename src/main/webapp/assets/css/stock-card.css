@@ -4,6 +4,7 @@
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 12px 16px;
+    padding: 16px 18px;
 }
 
 .stock-card-filters__product {
@@ -12,6 +13,7 @@
 
 .stock-card-empty {
     padding: 18px 20px;
+    font-size: 13px;
     color: var(--inv-muted, #64748b);
 }
 

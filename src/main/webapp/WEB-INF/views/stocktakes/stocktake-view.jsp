@@ -132,7 +132,7 @@
                     <form class="stocktake-finalize" id="stocktake-finalize-form" method="post" action="<c:url value='/stocktakes/finalize'/>" novalidate>
                         <input type="hidden" name="id" value="${stocktake.id}">
                         <div class="inv-field">
-                            <label class="stock-filters__label" for="stocktake-reason">Lý do điều chỉnh tồn<span class="stocktake-required">*</span></label>
+                            <label class="inv-field__label" for="stocktake-reason">Lý do điều chỉnh tồn<span class="stocktake-required">*</span></label>
                             <textarea class="inv-control stocktake-reason" id="stocktake-reason" name="reason" rows="2" maxlength="${reasonMaxLength}"
                                       placeholder="Vd: Kiểm kê định kỳ cuối tháng, chênh lệch do hao hụt…" required></textarea>
                             <p class="stocktake-error" id="stocktake-reason-error" role="alert" hidden>Vui lòng nhập lý do điều chỉnh tồn.</p>
