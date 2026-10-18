@@ -1,25 +1,84 @@
 /* Lô và hạn sử dụng (S6-01): dùng khung inv-* của kho, chỉ thêm phần riêng của lô */
-.lot-filters {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 12px 16px;
-    margin-bottom: 12px;
+
+/* Thẻ thống kê: biểu tượng bên trái, nền nhạt theo mức cảnh báo */
+.lot-stat {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 14px;
+    align-items: start;
+    padding: 16px 18px;
 }
 
-.lot-filters__keyword {
-    flex: 1 1 260px;
+.lot-stat .inv-stat__icon {
+    position: static;
+    grid-row: 1 / span 3;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+
+.lot-stat .inv-stat__icon .inv-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.lot-stat > p {
+    grid-column: 2;
+}
+
+.lot-stat .inv-stat__value {
+    margin-top: 4px;
+}
+
+.lot-stat--danger {
+    border-color: #fecaca;
+    background: #fffafa;
+}
+
+.lot-stat--warning {
+    border-color: #fde68a;
+    background: #fffcf2;
+}
+
+.lot-stat--success {
+    border-color: #bbf7d0;
+    background: #f7fef9;
+}
+
+/* Bộ lọc nằm trong thẻ: cùng lề với tiêu đề thẻ, ô tìm chiếm phần còn lại */
+.lot-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 220px) minmax(0, 200px) auto;
+    align-items: end;
+    gap: 14px 16px;
+    padding: 16px 18px;
+}
+
+.lot-filters--single {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.lot-filters .inv-control,
+.lot-threshold .inv-control {
+    height: 38px;
+    font-size: 13px;
+}
+
+.lot-filters__submit {
+    height: 38px;
+    padding: 0 20px;
 }
 
 .lot-threshold {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: 10px 14px;
+    gap: 12px 16px;
+    padding: 16px 18px;
 }
 
 .lot-threshold__input {
-    width: 110px;
+    width: 120px;
 }
 
 .lot-pill {
@@ -85,5 +144,26 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
-    margin-top: 12px;
+    padding: 12px 18px;
+}
+
+@media (max-width: 900px) {
+    .lot-filters {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .lot-filters__keyword {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 560px) {
+    .lot-filters,
+    .lot-filters--single {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lot-filters__submit {
+        width: 100%;
+    }
 }
