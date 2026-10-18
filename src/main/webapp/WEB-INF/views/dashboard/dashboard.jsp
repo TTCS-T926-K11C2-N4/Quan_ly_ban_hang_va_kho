@@ -80,13 +80,13 @@
                 <article class="summary-card summary-card--orange">
                     <div class="summary-card__head">
                         <span class="summary-card__icon summary-card__icon--low-stock" aria-hidden="true"></span>
-                        <p class="summary-card__label">Sản phẩm sắp hết / hết hàng</p>
+                        <p class="summary-card__label">Sản phẩm hết hàng hoặc sắp hết</p>
                         <c:if test="${summary.lowStockProductCount > 0}">
                             <span class="summary-card__tag summary-card__tag--alert">Cần xử lý</span>
                         </c:if>
                     </div>
                     <p class="summary-card__value"><fmt:formatNumber value="${summary.lowStockProductCount}"/></p>
-                    <p class="summary-card__note">${summary.lowStockProductCount > 0 ? 'Sản phẩm cần xử lý' : 'Không có sản phẩm cần xử lý'}</p>
+                    <p class="summary-card__note">${summary.lowStockProductCount > 0 ? 'Tính theo tổng tồn của mọi kho' : 'Không có sản phẩm cần xử lý'}</p>
                     <div class="summary-card__compare">
                         <span class="summary-card__trend" aria-hidden="true"></span>
                         <div>
@@ -97,45 +97,6 @@
                     <img class="summary-card__art" src="<c:url value='/assets/img/illustrations/dashboard/low-stock.svg'/>" alt="" width="120" height="100">
                 </article>
             </section>
-
-            <%-- S5-09: hàng chạm mức tồn tối thiểu theo từng kho; xem đủ ở sổ tồn --%>
-            <c:if test="${currentUser.can('INVENTORY_VIEW')}">
-                <section class="panel" aria-labelledby="low-stock-title" id="low-stock-panel">
-                    <header class="panel__header">
-                        <h2 class="panel__title" id="low-stock-title">Hàng dưới mức tồn tối thiểu</h2>
-                        <a class="panel__link" id="low-stock-link" href="<c:url value='/stock'><c:param name='level' value='LOW'/></c:url>">Xem sổ tồn<c:if test="${lowStockTotal > 0}"> (${lowStockTotal})</c:if></a>
-                    </header>
-                    <c:choose>
-                        <c:when test="${empty lowStockRows}">
-                            <p class="summary-card__note">Không có SKU nào chạm mức tồn tối thiểu.</p>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="table-scroll">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Sản phẩm</th>
-                                            <th scope="col">Kho</th>
-                                            <th scope="col">Khả dụng</th>
-                                            <th scope="col">Tối thiểu</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach var="row" items="${lowStockRows}">
-                                            <tr>
-                                                <td><c:out value="${row.sku}"/> · <c:out value="${row.productName}"/></td>
-                                                <td><c:out value="${row.warehouseName}"/></td>
-                                                <td><strong><fmt:formatNumber value="${row.available}" maxFractionDigits="3"/></strong> <c:out value="${row.baseUnitName}"/></td>
-                                                <td><fmt:formatNumber value="${row.minStock}" maxFractionDigits="3"/></td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
-                </section>
-            </c:if>
 
             <div class="dashboard-grid">
                 <section class="panel panel--orders" aria-labelledby="recent-orders-title">
@@ -222,6 +183,52 @@
                     </section>
                 </div>
             </div>
+
+            <%-- S5-09: hàng chạm mức tồn tối thiểu theo từng kho; xem đủ ở sổ tồn.
+                 Đặt thành hàng riêng dưới lưới vì bảng 4 cột không vừa cột phải 362px --%>
+            <c:if test="${currentUser.can('INVENTORY_VIEW')}">
+                <section class="panel panel--stock" aria-labelledby="low-stock-title" id="low-stock-panel">
+                    <header class="panel__header">
+                        <h2 class="panel__title" id="low-stock-title">Mặt hàng chạm mức tối thiểu theo kho<c:if test="${lowStockTotal > 0}"> <span class="panel__count">${lowStockTotal}</span></c:if></h2>
+                        <a class="panel__link" id="low-stock-link" href="<c:url value='/stock'><c:param name='level' value='LOW'/></c:url>">Xem sổ tồn</a>
+                    </header>
+                    <c:choose>
+                        <c:when test="${empty lowStockRows}">
+                            <div class="stock-empty" id="low-stock-empty">
+                                <span class="stock-empty__icon" aria-hidden="true"></span>
+                                <div>
+                                    <p class="stock-empty__title">Chưa có mặt hàng nào chạm mức tồn tối thiểu</p>
+                                    <p class="stock-empty__note">Chỉ tính hàng còn tồn nhưng khả dụng đã xuống bằng hoặc dưới mức tối thiểu của kho. Hàng đã hết sạch xem ở Sổ tồn kho.</p>
+                                </div>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="table-scroll">
+                                <table class="data-table data-table--stock">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Sản phẩm</th>
+                                            <th scope="col">Kho</th>
+                                            <th scope="col" class="data-table__num">Khả dụng</th>
+                                            <th scope="col" class="data-table__num">Tối thiểu</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach var="row" items="${lowStockRows}">
+                                            <tr>
+                                                <td><span class="data-table__code"><c:out value="${row.sku}"/></span> · <c:out value="${row.productName}"/></td>
+                                                <td><c:out value="${row.warehouseName}"/></td>
+                                                <td class="data-table__num data-table__low"><strong><fmt:formatNumber value="${row.available}" maxFractionDigits="3"/></strong> <c:out value="${row.baseUnitName}"/></td>
+                                                <td class="data-table__num"><fmt:formatNumber value="${row.minStock}" maxFractionDigits="3"/></td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </section>
+            </c:if>
         </main>
     </div>
 
