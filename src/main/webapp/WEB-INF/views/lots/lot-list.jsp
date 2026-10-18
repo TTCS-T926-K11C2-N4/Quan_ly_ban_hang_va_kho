@@ -48,17 +48,20 @@
             </c:if>
 
             <section class="inv-stats" aria-label="Tình trạng hạn dùng của các lô còn hàng">
-                <article class="inv-stat inv-stat--stacked">
+                <article class="inv-stat inv-stat--stacked lot-stat lot-stat--danger">
+                    <span class="inv-stat__icon tone-red"><span class="inv-icon inv-icon--package" aria-hidden="true"></span></span>
                     <p class="inv-stat__label">Lô quá hạn</p>
                     <p class="inv-stat__value" id="stat-expired"><fmt:formatNumber value="${expiredCount}" minIntegerDigits="2"/></p>
                     <p class="inv-stat__note">Không được soạn / xuất trừ khi Quản lý kho cho phép</p>
                 </article>
-                <article class="inv-stat inv-stat--stacked">
+                <article class="inv-stat inv-stat--stacked lot-stat lot-stat--warning">
+                    <span class="inv-stat__icon tone-amber"><span class="inv-icon inv-icon--triangle-alert" aria-hidden="true"></span></span>
                     <p class="inv-stat__label">Lô sắp hết hạn</p>
                     <p class="inv-stat__value" id="stat-near"><fmt:formatNumber value="${nearCount}" minIntegerDigits="2"/></p>
                     <p class="inv-stat__note">Trong <strong>${nearDays}</strong> ngày tới</p>
                 </article>
-                <article class="inv-stat inv-stat--stacked">
+                <article class="inv-stat inv-stat--stacked lot-stat lot-stat--success">
+                    <span class="inv-stat__icon tone-green"><span class="inv-icon inv-icon--circle-check" aria-hidden="true"></span></span>
                     <p class="inv-stat__label">Lô còn hạn</p>
                     <p class="inv-stat__value" id="stat-ok"><fmt:formatNumber value="${okCount}" minIntegerDigits="2"/></p>
                     <p class="inv-stat__note">${noneCount} lô không khai báo hạn</p>
@@ -67,13 +70,17 @@
 
             <c:if test="${canApprove}">
                 <section class="inv-card" aria-labelledby="lot-threshold-title">
-                    <h2 class="inv-card__title" id="lot-threshold-title">Ngưỡng cảnh báo sắp hết hạn</h2>
+                    <div class="inv-card__head">
+                        <h2 class="inv-card__title" id="lot-threshold-title">Ngưỡng cảnh báo sắp hết hạn</h2>
+                    </div>
                     <form class="lot-threshold" id="lot-threshold-form" method="post" action="<c:url value='/lots/threshold'/>">
                         <input type="hidden" name="r_keyword" value="<c:out value='${keyword}'/>">
                         <input type="hidden" name="r_warehouse" value="${warehouseId}">
                         <input type="hidden" name="r_status" value="${status.code}">
-                        <label class="stock-filters__label" for="lot-days">Cảnh báo khi hạn dùng còn không quá (ngày)</label>
-                        <input class="inv-control lot-threshold__input" type="number" id="lot-days" name="days" min="1" max="365" value="${nearDays}" required>
+                        <div class="inv-field">
+                            <label class="inv-field__label" for="lot-days">Cảnh báo khi hạn dùng còn không quá (ngày)</label>
+                            <input class="inv-control lot-threshold__input" type="number" id="lot-days" name="days" min="1" max="365" value="${nearDays}" required>
+                        </div>
                         <button class="inv-button inv-button--primary" type="submit" id="lot-threshold-save">Lưu ngưỡng</button>
                     </form>
                 </section>
@@ -89,11 +96,14 @@
                 </div>
                 <form class="lot-filters" id="lot-filter-form" action="<c:url value='/lots'/>" method="get" role="search">
                     <div class="inv-field lot-filters__keyword">
-                        <label class="stock-filters__label" for="lot-keyword">SKU, tên hàng hoặc số lô</label>
-                        <input class="inv-control" type="search" id="lot-keyword" name="keyword" maxlength="100" value="<c:out value='${keyword}'/>">
+                        <label class="inv-field__label" for="lot-keyword">SKU, tên hàng hoặc số lô</label>
+                        <span class="inv-search">
+                            <span class="inv-icon inv-icon--search" aria-hidden="true"></span>
+                            <input class="inv-control" type="search" id="lot-keyword" name="keyword" maxlength="100" placeholder="Nhập SKU, tên hàng hoặc số lô..." value="<c:out value='${keyword}'/>">
+                        </span>
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="lot-warehouse">Kho</label>
+                        <label class="inv-field__label" for="lot-warehouse">Kho</label>
                         <select class="inv-control" id="lot-warehouse" name="warehouse">
                             <option value="">Tất cả kho</option>
                             <c:forEach var="warehouse" items="${warehouses}">
@@ -102,7 +112,7 @@
                         </select>
                     </div>
                     <div class="inv-field">
-                        <label class="stock-filters__label" for="lot-status">Tình trạng</label>
+                        <label class="inv-field__label" for="lot-status">Tình trạng</label>
                         <select class="inv-control" id="lot-status" name="status">
                             <option value="">Tất cả</option>
                             <c:forEach var="item" items="${statuses}">
@@ -111,7 +121,9 @@
                         </select>
                     </div>
                     <input type="hidden" name="sku" value="<c:out value='${productKeyword}'/>">
-                    <button class="inv-button inv-button--primary" type="submit" id="lot-filter-submit">Lọc</button>
+                    <button class="inv-button inv-button--primary lot-filters__submit" type="submit" id="lot-filter-submit">
+                        <span class="inv-icon inv-icon--search" aria-hidden="true"></span>Lọc
+                    </button>
                 </form>
                 <div class="inv-table-scroll">
                     <table class="inv-table lot-table" id="lot-table">
@@ -195,15 +207,18 @@
                         <p class="inv-card__subtitle">SKU bật quản lý lô thì nhập kho phải ghi số lô và hạn dùng; SKU tắt dùng một lô mặc định.</p>
                     </div>
                 </div>
-                <form class="lot-filters" action="<c:url value='/lots'/>" method="get" role="search">
+                <form class="lot-filters lot-filters--single" action="<c:url value='/lots'/>" method="get" role="search">
                     <div class="inv-field lot-filters__keyword">
-                        <label class="stock-filters__label" for="lot-sku">Tìm SKU</label>
-                        <input class="inv-control" type="search" id="lot-sku" name="sku" maxlength="100" value="<c:out value='${productKeyword}'/>">
+                        <label class="inv-field__label" for="lot-sku">Tìm SKU</label>
+                        <span class="inv-search">
+                            <span class="inv-icon inv-icon--search" aria-hidden="true"></span>
+                            <input class="inv-control" type="search" id="lot-sku" name="sku" maxlength="100" placeholder="Nhập mã SKU hoặc tên sản phẩm..." value="<c:out value='${productKeyword}'/>">
+                        </span>
                     </div>
                     <input type="hidden" name="keyword" value="<c:out value='${keyword}'/>">
                     <input type="hidden" name="warehouse" value="${warehouseId}">
                     <input type="hidden" name="status" value="${status.code}">
-                    <button class="inv-button" type="submit">Tìm</button>
+                    <button class="inv-button lot-filters__submit" type="submit">Tìm</button>
                 </form>
                 <div class="inv-table-scroll">
                     <table class="inv-table" id="lot-products-table">
