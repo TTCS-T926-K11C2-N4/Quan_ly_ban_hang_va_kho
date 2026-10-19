@@ -30,7 +30,8 @@
             </header>
 
             <section class="summary-grid" aria-label="Chỉ số hôm nay">
-                <%-- Chưa lưu số liệu theo ngày nên chưa so được với hôm qua: hiện "—" thay vì số tự đặt --%>
+                <%-- So với hôm qua hiện "—" khi hôm qua bằng 0; thẻ chỉ hiện khi người xem có quyền xem đơn / hoá đơn --%>
+                <c:if test="${summary.showOrders}">
                 <article class="summary-card summary-card--blue">
                     <div class="summary-card__head">
                         <span class="summary-card__icon summary-card__icon--orders" aria-hidden="true"></span>
@@ -38,14 +39,14 @@
                         <span class="summary-card__tag summary-card__tag--today">Hôm nay</span>
                     </div>
                     <p class="summary-card__value"><fmt:formatNumber value="${summary.todayOrderCount}"/></p>
-                    <c:if test="${not summary.hasSalesData}"><p class="summary-card__note">Chưa có đơn hàng</p></c:if>
+                    <p class="summary-card__note">Đơn đã gửi trong ngày</p>
                     <div class="summary-card__compare">
                         <span class="summary-card__trend" aria-hidden="true"></span>
                         <div>
                             <p class="summary-card__compare-label">So với hôm qua</p>
                             <p class="summary-card__compare-value">
                                 <c:choose>
-                                    <c:when test="${summary.hasSalesData}"><fmt:formatNumber value="${summary.orderChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</c:when>
+                                    <c:when test="${not empty summary.orderChangePercent}"><fmt:formatNumber value="${summary.orderChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</c:when>
                                     <c:otherwise>—</c:otherwise>
                                 </c:choose>
                             </p>
@@ -53,7 +54,9 @@
                     </div>
                     <img class="summary-card__art" src="<c:url value='/assets/img/illustrations/dashboard/orders.svg'/>" alt="" width="120" height="100">
                 </article>
+                </c:if>
 
+                <c:if test="${summary.showRevenue}">
                 <article class="summary-card summary-card--green">
                     <div class="summary-card__head">
                         <span class="summary-card__icon summary-card__icon--revenue" aria-hidden="true"></span>
@@ -61,14 +64,14 @@
                         <span class="summary-card__tag summary-card__tag--today">Hôm nay</span>
                     </div>
                     <p class="summary-card__value"><fmt:formatNumber value="${summary.todayRevenue}" maxFractionDigits="0"/> ₫</p>
-                    <c:if test="${not summary.hasSalesData}"><p class="summary-card__note">Chưa có dữ liệu bán hàng</p></c:if>
+                    <p class="summary-card__note">Theo hoá đơn phát hành trong ngày</p>
                     <div class="summary-card__compare">
                         <span class="summary-card__trend" aria-hidden="true"></span>
                         <div>
                             <p class="summary-card__compare-label">So với hôm qua</p>
                             <p class="summary-card__compare-value">
                                 <c:choose>
-                                    <c:when test="${summary.hasSalesData}"><fmt:formatNumber value="${summary.revenueChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</c:when>
+                                    <c:when test="${not empty summary.revenueChangePercent}"><fmt:formatNumber value="${summary.revenueChangePercent}" pattern="+#,##0.0;-#,##0.0"/>%</c:when>
                                     <c:otherwise>—</c:otherwise>
                                 </c:choose>
                             </p>
@@ -76,6 +79,7 @@
                     </div>
                     <img class="summary-card__art" src="<c:url value='/assets/img/illustrations/dashboard/revenue.svg'/>" alt="" width="120" height="100">
                 </article>
+                </c:if>
 
                 <article class="summary-card summary-card--orange">
                     <div class="summary-card__head">
@@ -117,7 +121,7 @@
                             <tbody>
                                 <c:forEach var="order" items="${recentOrders}">
                                     <tr>
-                                        <td class="data-table__code"><c:out value="${order.code}"/></td>
+                                        <td class="data-table__code"><a href="<c:url value='/orders/view'><c:param name='id' value='${order.id}'/></c:url>"><c:out value="${order.code}"/></a></td>
                                         <td><c:out value="${order.customerName}"/></td>
                                         <td><c:out value="${order.statusLabel}"/></td>
                                         <td><fmt:formatNumber value="${order.totalAmount}" maxFractionDigits="0"/> ₫</td>
@@ -125,7 +129,7 @@
                                 </c:forEach>
                                 <c:if test="${empty recentOrders}">
                                     <tr>
-                                        <td class="data-table__empty" colspan="4">Chưa có đơn hàng nào. Đơn hàng sẽ hiện ở đây khi có chức năng tạo đơn.</td>
+                                        <td class="data-table__empty" colspan="4">Chưa có đơn hàng nào.</td>
                                     </tr>
                                 </c:if>
                             </tbody>

@@ -28,10 +28,11 @@ public class DashboardServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + user.getHomePath());
             return;
         }
-        // Chỉ hiện số thật; phần chưa có dữ liệu (doanh thu, đơn hàng) JSP ghi rõ thay vì số mẫu.
+        // Số đơn, doanh thu và đơn gần đây giới hạn theo phạm vi quyền của người xem.
         // Người đăng nhập (currentUser) JSP đọc thẳng từ session.
         try {
-            request.setAttribute("summary", dashboardService.getSummary());
+            request.setAttribute("summary", dashboardService.getSummary(user.getId()));
+            request.setAttribute("recentOrders", dashboardService.getRecentOrders(user.getId()));
             // S5-09: cảnh báo tồn dưới mức tối thiểu cho người xem được tồn kho
             if (user.can(Permission.INVENTORY_VIEW)) {
                 request.setAttribute("lowStockRows", dashboardService.getLowStockRows());
@@ -42,8 +43,6 @@ public class DashboardServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
-        request.setAttribute("recentOrders", dashboardService.getRecentOrders());
-
         request.getRequestDispatcher(VIEW).forward(request, response);
     }
 }
