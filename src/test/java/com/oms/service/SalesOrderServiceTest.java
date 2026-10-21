@@ -24,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SalesOrderServiceTest {
 
+    // Ngày giao phải từ hôm nay trở đi: tính theo ngày chạy test để test không hỏng khi qua ngày
+    private static final String TOMORROW = DateTimeUtil.today().plusDays(1).toString();
+
     private static final long CAN = 1;
     private static final long CASE = 2;
 
@@ -261,7 +264,7 @@ class SalesOrderServiceTest {
         assertEquals("3 Lon", stock.getLines().get(1).getMaxText());
 
         // Lưu nháp vẫn được, gửi đơn thì bị chặn kèm gợi ý
-        OrderForm form = new OrderForm("5", "8", "2026-10-20", null, null, null, List.of());
+        OrderForm form = new OrderForm("5", "8", TOMORROW, null, null, null, List.of());
         SalesOrderService service = new SalesOrderService();
         assertTrue(service.validate(form, customer(false), null, false, ADDRESSES, null, null, stock).isEmpty());
         assertEquals("Vượt tồn khả dụng: Kho trung tâm còn 75 Lon (≈ 3 Thùng). Đặt tối đa 2 Thùng.",
@@ -275,7 +278,7 @@ class SalesOrderServiceTest {
         OrderStock stock = SalesOrderService.checkStock(quote, Map.of(), "Kho trung tâm");
         OrderStock.Line line = stock.getLines().get(0);
         assertTrue(line.isChecked() && line.isSoldOut() && line.isShortage());
-        OrderForm form = new OrderForm("5", "8", "2026-10-20", null, null, null, List.of());
+        OrderForm form = new OrderForm("5", "8", TOMORROW, null, null, null, List.of());
         assertEquals("Hết hàng: Kho trung tâm không còn tồn khả dụng của mặt hàng này.", new SalesOrderService()
                 .validate(form, customer(false), null, true, ADDRESSES, null, null, stock).get("lines.0"));
     }
@@ -283,7 +286,7 @@ class SalesOrderServiceTest {
     // S2-04: nhật ký đơn ghi phần đầu đơn và tổng tiền đã tính, gửi đơn thì trạng thái là Chờ duyệt
     @Test
     void auditValuesOfSubmittedOrder() {
-        OrderForm form = new OrderForm("5", "8", "2026-10-20", null, null, null, List.of(line("2", "2")));
+        OrderForm form = new OrderForm("5", "8", TOMORROW, null, null, null, List.of(line("2", "2")));
         OrderQuote quote = SalesOrderService.price(form.getLines(), PRODUCTS, rules(List.of()));
         Map<String, Object> values = SalesOrderService.orderValues("DH261008-0001", "DL001", true, form, quote,
                 true);
