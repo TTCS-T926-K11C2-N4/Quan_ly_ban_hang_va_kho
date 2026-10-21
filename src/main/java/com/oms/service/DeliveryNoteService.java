@@ -41,7 +41,6 @@ import java.util.regex.Pattern;
 public class DeliveryNoteService {
 
     private static final ZoneId DISPLAY_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
-    private static final Pattern QTY_PATTERN = Pattern.compile("\\d{1,12}([.,]\\d{1,3})?");
     private static final Pattern TIME_PATTERN = Pattern.compile("([01]\\d|2[0-3]):[0-5]\\d");
     // Giờ giao bổ sung mặc định khi chỉ chọn ngày
     static final LocalTime DEFAULT_BACKORDER_TIME = LocalTime.of(8, 0);
